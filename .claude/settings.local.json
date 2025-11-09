@@ -1,4 +1,5 @@
 {
+  "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
       "Bash(pnpm install)",
@@ -6,10 +7,12 @@
       "Bash(pnpm run type-check:*)",
       "Bash(pnpm build:*)",
       "Bash(pnpm turbo run build:*)",
-      "Bash(pnpm turbo run lint:*)"
+      "Bash(pnpm turbo run lint:*)",
+      "Bash(pnpm ui:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm run build:*)"
     ],
     "deny": [],
     "ask": []
-  },
-  "includeCoAuthoredBy": false
+  }
 }

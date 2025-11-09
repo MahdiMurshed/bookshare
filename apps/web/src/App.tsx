@@ -1,22 +1,75 @@
-import { useState } from "react";
-import { Button } from "@repo/ui/components/button";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { Home } from "./pages/Home";
+import { SignIn } from "./pages/SignIn";
+import { SignUp } from "./pages/SignUp";
 
 import "@repo/ui/styles/globals.css";
 
-function App() {
-  const [count, setCount] = useState(0);
+// Protected route wrapper - uncomment when adding protected routes
+// function ProtectedRoute({ children }: { children: React.ReactNode }) {
+//   const { user, loading } = useAuth();
+//
+//   if (loading) {
+//     return (
+//       <div className="flex min-h-screen items-center justify-center">
+//         <div className="text-lg text-gray-600">Loading...</div>
+//       </div>
+//     );
+//   }
+//
+//   if (!user) {
+//     return <Navigate to="/signin" replace />;
+//   }
+//
+//   return <>{children}</>;
+// }
 
+// Public route wrapper (redirects to home if already authenticated)
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-lg text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function App() {
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-xl font-bold mb-2">This is a Vite application</h1>
-      <p className="mb-4">
-        This shadcn/ui button is shared between Vite, NextJS and any other
-        application.
-      </p>
-      <Button onClick={() => setCount((count) => count + 1)}>
-        Count is {count}
-      </Button>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route
+            path="/signin"
+            element={
+              <PublicRoute>
+                <SignIn />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <PublicRoute>
+                <SignUp />
+              </PublicRoute>
+            }
+          />
+          {/* Add more protected routes here as needed */}
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
