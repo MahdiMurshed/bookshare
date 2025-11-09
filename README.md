@@ -145,9 +145,10 @@ export async function getBooks() {
 
 ### Phase 1: MVP (Current)
 - ✅ Turborepo monorepo setup
-- 🚧 Supabase configuration
-- 🚧 Web app: Authentication + Book CRUD + Borrow Requests
-- 🚧 API abstraction layer
+- ✅ Supabase configuration
+- ✅ Web app: Authentication
+- 🚧 Web app: Book CRUD + Borrow Requests
+- ✅ API abstraction layer
 
 ### Phase 2: Core Expansion
 - Reviews and notifications
