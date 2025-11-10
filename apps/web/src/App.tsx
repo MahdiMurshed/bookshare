@@ -5,25 +5,26 @@ import { SignIn } from "./pages/SignIn";
 import { SignUp } from "./pages/SignUp";
 
 import "@repo/ui/styles/globals.css";
+import MyLibrary from "./pages/MyLibrary";
 
 // Protected route wrapper - uncomment when adding protected routes
-// function ProtectedRoute({ children }: { children: React.ReactNode }) {
-//   const { user, loading } = useAuth();
-//
-//   if (loading) {
-//     return (
-//       <div className="flex min-h-screen items-center justify-center">
-//         <div className="text-lg text-gray-600">Loading...</div>
-//       </div>
-//     );
-//   }
-//
-//   if (!user) {
-//     return <Navigate to="/signin" replace />;
-//   }
-//
-//   return <>{children}</>;
-// }
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-lg text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/signin" replace />;
+  }
+
+  return <>{children}</>;
+}
 
 // Public route wrapper (redirects to home if already authenticated)
 function PublicRoute({ children }: { children: React.ReactNode }) {
@@ -64,6 +65,14 @@ function App() {
               <PublicRoute>
                 <SignUp />
               </PublicRoute>
+            }
+          />
+          <Route
+            path="/my-library"
+            element={
+              <ProtectedRoute>
+                <MyLibrary />
+              </ProtectedRoute>
             }
           />
           {/* Add more protected routes here as needed */}
