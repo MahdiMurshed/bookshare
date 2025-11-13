@@ -26,15 +26,14 @@ export function DeleteBookModal({ book, open, onOpenChange, onSuccess, userId }:
   const handleDelete = async () => {
     if (!book) return;
 
-    deleteBookMutation.mutate(book.id, {
-      onSuccess: () => {
-        onOpenChange(false);
-        onSuccess();
-      },
-      onError: (error) => {
-        console.error('Failed to delete book:', error);
-      },
-    });
+    try {
+      await deleteBookMutation.mutateAsync(book.id);
+      onOpenChange(false);
+      onSuccess();
+    } catch (error) {
+      console.error('Failed to delete book:', error);
+      // Error is automatically captured in deleteBookMutation.error
+    }
   };
 
   return (
