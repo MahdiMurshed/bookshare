@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -25,6 +25,7 @@ import {
 } from '@repo/ui/components/form';
 import { updateBook, type Book } from '@repo/api-client';
 import { bookFormSchema, type BookFormValues } from '../../lib/validations/book';
+import { BOOK_GENRES, BOOK_CONDITIONS } from '../../lib/constants/book';
 
 interface EditBookModalProps {
   book: Book | null;
@@ -33,32 +34,7 @@ interface EditBookModalProps {
   onSuccess: () => void;
 }
 
-const genres = [
-  'Fiction',
-  'Non-Fiction',
-  'Mystery',
-  'Science Fiction',
-  'Fantasy',
-  'Romance',
-  'Thriller',
-  'Biography',
-  'History',
-  'Self-Help',
-  'Poetry',
-  'Other',
-];
-
-const conditions: Array<'excellent' | 'good' | 'fair' | 'poor'> = [
-  'excellent',
-  'good',
-  'fair',
-  'poor',
-];
-
 export function EditBookModal({ book, open, onOpenChange, onSuccess }: EditBookModalProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
   const form = useForm<BookFormValues>({
     resolver: zodResolver(bookFormSchema),
     defaultValues: {
@@ -71,6 +47,8 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess }: EditBookM
       cover_image_url: '',
     },
   });
+
+  const { isSubmitting } = form.formState;
 
   // Pre-fill form when book changes
   useEffect(() => {
@@ -90,9 +68,6 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess }: EditBookM
   const handleFormSubmit = async (values: BookFormValues) => {
     if (!book) return;
 
-    setIsSubmitting(true);
-    setSubmitError(null);
-
     try {
       await updateBook(book.id, {
         title: values.title.trim(),
@@ -108,9 +83,9 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess }: EditBookM
       onSuccess();
     } catch (error) {
       console.error('Failed to update book:', error);
-      setSubmitError(error instanceof Error ? error.message : 'Failed to update book. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+      form.setError('root', {
+        message: error instanceof Error ? error.message : 'Failed to update book. Please try again.',
+      });
     }
   };
 
@@ -171,9 +146,9 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess }: EditBookM
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {genres.map((g) => (
-                          <SelectItem key={g} value={g}>
-                            {g}
+                        {BOOK_GENRES.map((genre) => (
+                          <SelectItem key={genre} value={genre}>
+                            {genre}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -216,9 +191,9 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess }: EditBookM
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {conditions.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c.charAt(0).toUpperCase() + c.slice(1)}
+                        {BOOK_CONDITIONS.map((condition) => (
+                          <SelectItem key={condition} value={condition}>
+                            {condition.charAt(0).toUpperCase() + condition.slice(1)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -270,9 +245,9 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess }: EditBookM
             </div>
 
             {/* Error Message */}
-            {submitError && (
+            {form.formState.errors.root && (
               <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-600 text-sm">{submitError}</p>
+                <p className="text-red-600 text-sm">{form.formState.errors.root.message}</p>
               </div>
             )}
 

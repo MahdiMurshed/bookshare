@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Card } from '@repo/ui/components/card';
@@ -21,38 +20,14 @@ import {
 } from '@repo/ui/components/form';
 import { createBook, mapCategoryToGenre, type BookSearchResult } from '@repo/api-client';
 import { bookFormSchema, type BookFormValues } from '../../lib/validations/book';
+import { BOOK_GENRES, BOOK_CONDITIONS } from '../../lib/constants/book';
 
 interface AddBookFormProps {
   onSubmit: () => void;
   onCancel: () => void;
 }
 
-const genres = [
-  'Fiction',
-  'Non-Fiction',
-  'Mystery',
-  'Science Fiction',
-  'Fantasy',
-  'Romance',
-  'Thriller',
-  'Biography',
-  'History',
-  'Self-Help',
-  'Poetry',
-  'Other',
-];
-
-const conditions: Array<'excellent' | 'good' | 'fair' | 'poor'> = [
-  'excellent',
-  'good',
-  'fair',
-  'poor',
-];
-
 export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
   const form = useForm<BookFormValues>({
     resolver: zodResolver(bookFormSchema),
     defaultValues: {
@@ -66,6 +41,8 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
     },
   });
 
+  const { isSubmitting } = form.formState;
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -78,11 +55,9 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
   };
 
   const handleBookSelect = (book: BookSearchResult) => {
-    // Auto-fill form fields from selected book
     form.setValue('title', book.title);
     form.setValue('author', book.authors.join(', '));
 
-    // Map Google Books category to our genre
     if (book.categories && book.categories.length > 0) {
       const mappedGenre = mapCategoryToGenre(book.categories);
       if (mappedGenre) {
@@ -90,15 +65,11 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
       }
     }
 
-    // Set description
     if (book.description) {
-      const cleanDescription = book.description
-        .replace(/<[^>]*>/g, '')
-        .substring(0, 500);
+      const cleanDescription = book.description.replace(/<[^>]*>/g, '').substring(0, 500);
       form.setValue('description', cleanDescription);
     }
 
-    // Set cover image
     if (book.imageUrl) {
       const httpsImageUrl = book.imageUrl.replace('http://', 'https://');
       form.setValue('cover_image_url', httpsImageUrl);
@@ -106,9 +77,6 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
   };
 
   const handleFormSubmit = async (values: BookFormValues) => {
-    setIsSubmitting(true);
-    setSubmitError(null);
-
     try {
       await createBook({
         title: values.title.trim(),
@@ -123,10 +91,9 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
       form.reset();
       onSubmit();
     } catch (error) {
-      console.error('Failed to create book:', error);
-      setSubmitError(error instanceof Error ? error.message : 'Failed to add book. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+      form.setError('root', {
+        message: error instanceof Error ? error.message : 'Failed to add book. Please try again.',
+      });
     }
   };
 
@@ -193,9 +160,9 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {genres.map((g) => (
-                          <SelectItem key={g} value={g}>
-                            {g}
+                        {BOOK_GENRES.map((genre) => (
+                          <SelectItem key={genre} value={genre}>
+                            {genre}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -238,9 +205,9 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {conditions.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c.charAt(0).toUpperCase() + c.slice(1)}
+                        {BOOK_CONDITIONS.map((condition) => (
+                          <SelectItem key={condition} value={condition}>
+                            {condition.charAt(0).toUpperCase() + condition.slice(1)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -257,15 +224,10 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="cursor-pointer">
-                        Available for borrowing
-                      </FormLabel>
+                      <FormLabel className="cursor-pointer">Available for borrowing</FormLabel>
                     </div>
                   </FormItem>
                 )}
@@ -279,11 +241,7 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
                   <FormItem>
                     <FormLabel>Cover Image URL</FormLabel>
                     <FormControl>
-                      <Input
-                        type="url"
-                        placeholder="https://example.com/cover.jpg"
-                        {...field}
-                      />
+                      <Input type="url" placeholder="https://example.com/cover.jpg" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -333,9 +291,9 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
           </div>
 
           {/* Error Message */}
-          {submitError && (
+          {form.formState.errors.root && (
             <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-600 text-sm">{submitError}</p>
+              <p className="text-red-600 text-sm">{form.formState.errors.root.message}</p>
             </div>
           )}
 
