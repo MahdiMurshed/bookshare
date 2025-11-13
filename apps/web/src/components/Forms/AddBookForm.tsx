@@ -18,9 +18,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@repo/ui/components/form';
-import { createBook, mapCategoryToGenre, type BookSearchResult } from '@repo/api-client';
+import { mapCategoryToGenre, type BookSearchResult } from '@repo/api-client';
 import { bookFormSchema, type BookFormValues } from '../../lib/validations/book';
 import { BOOK_GENRES, BOOK_CONDITIONS } from '../../lib/constants/book';
+import { useCreateBook } from '../../hooks/useBooks';
 
 interface AddBookFormProps {
   onSubmit: () => void;
@@ -41,7 +42,7 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
     },
   });
 
-  const { isSubmitting } = form.formState;
+  const createBookMutation = useCreateBook();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -77,8 +78,8 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
   };
 
   const handleFormSubmit = async (values: BookFormValues) => {
-    try {
-      await createBook({
+    createBookMutation.mutate(
+      {
         title: values.title.trim(),
         author: values.author.trim(),
         genre: values.genre || undefined,
@@ -86,15 +87,19 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
         condition: values.condition,
         borrowable: values.borrowable,
         cover_image_url: values.cover_image_url || undefined,
-      });
-
-      form.reset();
-      onSubmit();
-    } catch (error) {
-      form.setError('root', {
-        message: error instanceof Error ? error.message : 'Failed to add book. Please try again.',
-      });
-    }
+      },
+      {
+        onSuccess: () => {
+          form.reset();
+          onSubmit();
+        },
+        onError: (error) => {
+          form.setError('root', {
+            message: error instanceof Error ? error.message : 'Failed to add book. Please try again.',
+          });
+        },
+      }
+    );
   };
 
   return (
@@ -299,11 +304,11 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
 
           {/* Form Actions */}
           <div className="flex gap-3 mt-6 justify-end">
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={createBookMutation.isPending}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
+            <Button type="submit" disabled={createBookMutation.isPending}>
+              {createBookMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Adding...

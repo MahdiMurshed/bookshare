@@ -1,56 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AddBookForm } from '../components/Forms/AddBookForm';
 import { BookPreview } from '../components/BookPreview';
 import { EditBookModal } from '../components/modals/EditBookModal';
 import { DeleteBookModal } from '../components/modals/DeleteBookModal';
 import { BookOpen, Plus, Loader2, AlertCircle } from '@repo/ui/components/icons';
 import { Button } from '@repo/ui/components/button';
-import { getUserBooks, type Book } from '@repo/api-client';
-import { useAuth } from '../contexts/AuthContext';
+import { type Book } from '@repo/api-client';
+import { useBooks } from '../hooks/useBooks';
 
 export default function MyLibrary() {
-  const { user } = useAuth();
-  const [books, setBooks] = useState<Book[]>([]);
+  const { data: books = [], isLoading, error, refetch } = useBooks();
   const [showForm, setShowForm] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [deletingBook, setDeletingBook] = useState<Book | null>(null);
 
-  const fetchBooks = async () => {
-    if (!user) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const userBooks = await getUserBooks(user.id);
-      setBooks(userBooks);
-    } catch (err) {
-      console.error('Failed to fetch books:', err);
-      setError('Failed to load your books. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchBooks();
-  }, [user]);
-
   const handleAddBookSuccess = () => {
     setShowForm(false);
-    fetchBooks();
   };
 
   const handleEditSuccess = () => {
     setEditingBook(null);
-    fetchBooks();
   };
 
   const handleDeleteSuccess = () => {
     setDeletingBook(null);
-    fetchBooks();
   };
 
   return (
@@ -92,8 +65,10 @@ export default function MyLibrary() {
         {error && !isLoading && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-            <p className="text-red-700 mb-4">{error}</p>
-            <Button onClick={fetchBooks} variant="outline">
+            <p className="text-red-700 mb-4">
+              {error instanceof Error ? error.message : 'Failed to load your books. Please try again.'}
+            </p>
+            <Button onClick={() => refetch()} variant="outline">
               Try Again
             </Button>
           </div>

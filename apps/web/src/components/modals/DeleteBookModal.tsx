@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,7 +9,8 @@ import {
   AlertDialogTitle,
 } from '@repo/ui/components/alert-dialog';
 import { Loader2 } from '@repo/ui/components/icons';
-import { deleteBook, type Book } from '@repo/api-client';
+import { type Book } from '@repo/api-client';
+import { useDeleteBook } from '../../hooks/useBooks';
 
 interface DeleteBookModalProps {
   book: Book | null;
@@ -20,25 +20,20 @@ interface DeleteBookModalProps {
 }
 
 export function DeleteBookModal({ book, open, onOpenChange, onSuccess }: DeleteBookModalProps) {
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const deleteBookMutation = useDeleteBook();
 
   const handleDelete = async () => {
     if (!book) return;
 
-    setIsDeleting(true);
-    setError(null);
-
-    try {
-      await deleteBook(book.id);
-      onOpenChange(false);
-      onSuccess();
-    } catch (error) {
-      console.error('Failed to delete book:', error);
-      setError(error instanceof Error ? error.message : 'Failed to delete book. Please try again.');
-    } finally {
-      setIsDeleting(false);
-    }
+    deleteBookMutation.mutate(book.id, {
+      onSuccess: () => {
+        onOpenChange(false);
+        onSuccess();
+      },
+      onError: (error) => {
+        console.error('Failed to delete book:', error);
+      },
+    });
   };
 
   return (
@@ -52,23 +47,27 @@ export function DeleteBookModal({ book, open, onOpenChange, onSuccess }: DeleteB
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        {error && (
+        {deleteBookMutation.error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-red-600 text-sm">{error}</p>
+            <p className="text-red-600 text-sm">
+              {deleteBookMutation.error instanceof Error
+                ? deleteBookMutation.error.message
+                : 'Failed to delete book. Please try again.'}
+            </p>
           </div>
         )}
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={deleteBookMutation.isPending}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={(e: React.MouseEvent) => {
               e.preventDefault();
               handleDelete();
             }}
-            disabled={isDeleting}
+            disabled={deleteBookMutation.isPending}
             className="bg-destructive text-white hover:bg-destructive/90"
           >
-            {isDeleting ? (
+            {deleteBookMutation.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Deleting...
