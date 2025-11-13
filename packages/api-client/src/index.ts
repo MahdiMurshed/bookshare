@@ -19,6 +19,7 @@ export type {
   Database,
   User,
   Book,
+  BookWithOwner,
   BorrowRequest,
   BorrowRequestStatus,
   Review,
@@ -54,6 +55,9 @@ export {
   deleteBook,
   getUserBooks,
   getAvailableBooks,
+  getBooksWithOwners,
+  getAvailableBooksWithOwners,
+  getBookWithOwner,
   uploadBookCover,
 } from './books.js';
 

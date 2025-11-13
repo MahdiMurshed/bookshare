@@ -9,7 +9,7 @@
  */
 
 import { supabase } from './supabaseClient.js';
-import type { Book } from './types.js';
+import type { Book, BookWithOwner } from './types.js';
 
 export interface CreateBookInput {
   title: string;
@@ -176,6 +176,89 @@ export async function getUserBooks(userId: string): Promise<Book[]> {
  */
 export async function getAvailableBooks(filters?: Omit<BookFilters, 'borrowable'>): Promise<Book[]> {
   return getBooks({ ...filters, borrowable: true });
+}
+
+/**
+ * Get books with owner information (for public browsing)
+ */
+export async function getBooksWithOwners(filters?: BookFilters): Promise<BookWithOwner[]> {
+  // Current: Supabase implementation
+  let query = supabase
+    .from('books')
+    .select(`
+      *,
+      owner:users!owner_id (
+        id,
+        name,
+        email,
+        avatar_url
+      )
+    `);
+
+  if (filters?.genre) {
+    query = query.eq('genre', filters.genre);
+  }
+
+  if (filters?.borrowable !== undefined) {
+    query = query.eq('borrowable', filters.borrowable);
+  }
+
+  if (filters?.owner_id) {
+    query = query.eq('owner_id', filters.owner_id);
+  }
+
+  if (filters?.search) {
+    query = query.or(`title.ilike.%${filters.search}%,author.ilike.%${filters.search}%`);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as BookWithOwner[];
+
+  // Future: NestJS implementation
+  // const params = new URLSearchParams({ ...filters, include: 'owner' } as any);
+  // const response = await fetch(`${API_URL}/books?${params}`);
+  // return response.json();
+}
+
+/**
+ * Get available books with owner information (for public browsing)
+ */
+export async function getAvailableBooksWithOwners(filters?: Omit<BookFilters, 'borrowable'>): Promise<BookWithOwner[]> {
+  return getBooksWithOwners({ ...filters, borrowable: true });
+}
+
+/**
+ * Get a single book with owner information
+ */
+export async function getBookWithOwner(id: string): Promise<BookWithOwner | null> {
+  // Current: Supabase implementation
+  const { data, error } = await supabase
+    .from('books')
+    .select(`
+      *,
+      owner:users!owner_id (
+        id,
+        name,
+        email,
+        avatar_url
+      )
+    `)
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null; // Not found
+    throw error;
+  }
+
+  return data as BookWithOwner;
+
+  // Future: NestJS implementation
+  // const response = await fetch(`${API_URL}/books/${id}?include=owner`);
+  // if (response.status === 404) return null;
+  // return response.json();
 }
 
 /**
