@@ -3,9 +3,10 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { Home } from "./pages/Home";
 import { SignIn } from "./pages/SignIn";
 import { SignUp } from "./pages/SignUp";
+import MyLibrary from "./pages/MyLibrary";
+import { Header } from "./components/Header";
 
 import "@repo/ui/styles/globals.css";
-import MyLibrary from "./pages/MyLibrary";
 
 // Protected route wrapper - uncomment when adding protected routes
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -49,6 +50,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <Header />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route

@@ -1,18 +1,26 @@
-import { useState } from 'react';
-import { Card } from '@repo/ui/components/card';
+import { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@repo/ui/components/dialog';
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
 import { Checkbox } from '@repo/ui/components/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/components/select';
 import { Button } from '@repo/ui/components/button';
-import { Upload, X, Loader2 } from '@repo/ui/components/icons';
-import { ImageWithFallback } from '../ImageWithFallback';
-import { createBook, type CreateBookInput } from '@repo/api-client';
+import { Loader2 } from '@repo/ui/components/icons';
+import { updateBook, type Book, type UpdateBookInput } from '@repo/api-client';
 
-interface AddBookFormProps {
-  onSubmit: () => void;
-  onCancel: () => void;
+interface EditBookModalProps {
+  book: Book | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
 }
 
 const genres = [
@@ -37,31 +45,29 @@ const conditions: Array<'excellent' | 'good' | 'fair' | 'poor'> = [
   'poor',
 ];
 
-export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
+export function EditBookModal({ book, open, onOpenChange, onSuccess }: EditBookModalProps) {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [genre, setGenre] = useState('');
   const [description, setDescription] = useState('');
   const [condition, setCondition] = useState<'excellent' | 'good' | 'fair' | 'poor'>('good');
   const [borrowable, setBorrowable] = useState(true);
-  const [coverImage, setCoverImage] = useState('');
+  const [coverImageUrl, setCoverImageUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCoverImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  // Pre-fill form when book changes
+  useEffect(() => {
+    if (book) {
+      setTitle(book.title);
+      setAuthor(book.author);
+      setGenre(book.genre || '');
+      setDescription(book.description || '');
+      setCondition(book.condition);
+      setBorrowable(book.borrowable);
+      setCoverImageUrl(book.cover_image_url || '');
     }
-  };
-
-  const handleImageUrlChange = (url: string) => {
-    setCoverImage(url);
-  };
+  }, [book]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -83,38 +89,29 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validate()) return;
+    if (!book || !validate()) return;
 
     setIsSubmitting(true);
     setErrors({});
 
     try {
-      const bookData: CreateBookInput = {
+      const updateData: UpdateBookInput = {
         title: title.trim(),
         author: author.trim(),
         genre: genre || undefined,
         description: description.trim() || undefined,
         condition,
         borrowable,
-        cover_image_url: coverImage || undefined,
+        cover_image_url: coverImageUrl || undefined,
       };
 
-      await createBook(bookData);
-
-      // Reset form
-      setTitle('');
-      setAuthor('');
-      setGenre('');
-      setDescription('');
-      setCondition('good');
-      setBorrowable(true);
-      setCoverImage('');
-
-      onSubmit();
+      await updateBook(book.id, updateData);
+      onOpenChange(false);
+      onSuccess();
     } catch (error) {
-      console.error('Failed to create book:', error);
+      console.error('Failed to update book:', error);
       setErrors({
-        submit: error instanceof Error ? error.message : 'Failed to add book. Please try again.',
+        submit: error instanceof Error ? error.message : 'Failed to update book. Please try again.',
       });
     } finally {
       setIsSubmitting(false);
@@ -122,23 +119,22 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
   };
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-gray-900">Add New Book</h2>
-        <Button variant="ghost" size="icon" onClick={onCancel}>
-          <X className="w-5 h-5" />
-        </Button>
-      </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Book</DialogTitle>
+          <DialogDescription>
+            Update the details of your book. Click save when you're done.
+          </DialogDescription>
+        </DialogHeader>
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Left Column - Form Fields */}
+        <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             {/* Title */}
             <div>
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="edit-title">Title *</Label>
               <Input
-                id="title"
+                id="edit-title"
                 type="text"
                 placeholder="Enter book title"
                 value={title}
@@ -152,9 +148,9 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
 
             {/* Author */}
             <div>
-              <Label htmlFor="author">Author *</Label>
+              <Label htmlFor="edit-author">Author *</Label>
               <Input
-                id="author"
+                id="edit-author"
                 type="text"
                 placeholder="Enter author name"
                 value={author}
@@ -168,7 +164,7 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
 
             {/* Genre */}
             <div>
-              <Label htmlFor="genre">Genre</Label>
+              <Label htmlFor="edit-genre">Genre</Label>
               <Select value={genre} onValueChange={setGenre}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a genre (optional)" />
@@ -185,9 +181,9 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
 
             {/* Description */}
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="edit-description">Description</Label>
               <Textarea
-                id="description"
+                id="edit-description"
                 placeholder="Enter a brief description of the book"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -197,7 +193,7 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
 
             {/* Condition */}
             <div>
-              <Label htmlFor="condition">Condition *</Label>
+              <Label htmlFor="edit-condition">Condition *</Label>
               <Select value={condition} onValueChange={(value) => setCondition(value as typeof condition)}>
                 <SelectTrigger className={errors.condition ? 'border-red-500' : ''}>
                   <SelectValue placeholder="Select condition" />
@@ -218,12 +214,12 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
             {/* Borrowable */}
             <div className="flex items-center space-x-2">
               <Checkbox
-                id="borrowable"
+                id="edit-borrowable"
                 checked={borrowable}
                 onCheckedChange={(checked: boolean) => setBorrowable(checked === true)}
               />
               <Label
-                htmlFor="borrowable"
+                htmlFor="edit-borrowable"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
                 Available for borrowing
@@ -232,82 +228,46 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
 
             {/* Cover Image URL */}
             <div>
-              <Label htmlFor="imageUrl">Cover Image URL</Label>
+              <Label htmlFor="edit-imageUrl">Cover Image URL</Label>
               <Input
-                id="imageUrl"
+                id="edit-imageUrl"
                 type="url"
                 placeholder="https://example.com/cover.jpg"
-                value={coverImage.startsWith('http') ? coverImage : ''}
-                onChange={(e) => handleImageUrlChange(e.target.value)}
+                value={coverImageUrl}
+                onChange={(e) => setCoverImageUrl(e.target.value)}
               />
             </div>
-
-            {/* File Upload */}
-            <div>
-              <Label>Or Upload Image</Label>
-              <div className="mt-2">
-                <label
-                  htmlFor="file-upload"
-                  className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
-                >
-                  <Upload className="w-4 h-4" />
-                  <span className="text-sm">Choose File</span>
-                </label>
-                <input
-                  id="file-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </div>
-            </div>
           </div>
 
-          {/* Right Column - Image Preview */}
-          <div>
-            <Label>Preview</Label>
-            <div className="mt-2 aspect-[2/3] bg-gray-100 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 flex items-center justify-center">
-              {coverImage ? (
-                <ImageWithFallback
-                  src={coverImage}
-                  alt="Cover preview"
-                  className="w-full h-full object-cover"
-                />
+          {/* Error Message */}
+          {errors.submit && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-600 text-sm">{errors.submit}</p>
+            </div>
+          )}
+
+          <DialogFooter className="mt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
               ) : (
-                <div className="text-center p-6">
-                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500 text-sm">Cover image preview</p>
-                </div>
+                'Save Changes'
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* Error Message */}
-        {errors.submit && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-red-600 text-sm">{errors.submit}</p>
-          </div>
-        )}
-
-        {/* Form Actions */}
-        <div className="flex gap-3 mt-6 justify-end">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Adding...
-              </>
-            ) : (
-              'Add Book'
-            )}
-          </Button>
-        </div>
-      </form>
-    </Card>
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
