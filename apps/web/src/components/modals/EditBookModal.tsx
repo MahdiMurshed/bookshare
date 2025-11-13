@@ -33,9 +33,10 @@ interface EditBookModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  userId?: string;
 }
 
-export function EditBookModal({ book, open, onOpenChange, onSuccess }: EditBookModalProps) {
+export function EditBookModal({ book, open, onOpenChange, onSuccess, userId }: EditBookModalProps) {
   const form = useForm<BookFormValues>({
     resolver: zodResolver(bookFormSchema),
     defaultValues: {
@@ -49,7 +50,7 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess }: EditBookM
     },
   });
 
-  const updateBookMutation = useUpdateBook();
+  const updateBookMutation = useUpdateBook(userId);
 
   // Pre-fill form when book changes
   useEffect(() => {

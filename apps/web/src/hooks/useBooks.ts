@@ -12,7 +12,7 @@ import {
 export const bookKeys = {
   all: ['books'] as const,
   lists: () => [...bookKeys.all, 'list'] as const,
-  list: (filters?: unknown) => [...bookKeys.lists(), filters] as const,
+  list: (userId: string) => [...bookKeys.lists(), userId] as const,
   details: () => [...bookKeys.all, 'detail'] as const,
   detail: (id: string) => [...bookKeys.details(), id] as const,
 };
@@ -20,20 +20,24 @@ export const bookKeys = {
 /**
  * Hook to fetch all books for the current user
  */
-export function useBooks() {
+export function useBooks(userId: string | undefined) {
   return useQuery({
-    queryKey: bookKeys.lists(),
+    queryKey: userId ? bookKeys.list(userId) : ['books', 'list', 'unauthenticated'],
     queryFn: async () => {
-      const books = await getBooks();
+      if (!userId) {
+        throw new Error('User must be authenticated to fetch books');
+      }
+      const books = await getBooks({ owner_id: userId });
       return books;
     },
+    enabled: !!userId,
   });
 }
 
 /**
  * Hook to create a new book
  */
-export function useCreateBook() {
+export function useCreateBook(userId: string | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -41,8 +45,10 @@ export function useCreateBook() {
       return await createBook(input);
     },
     onSuccess: () => {
-      // Invalidate and refetch books list
-      queryClient.invalidateQueries({ queryKey: bookKeys.lists() });
+      // Invalidate and refetch books list for this user
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: bookKeys.list(userId) });
+      }
     },
   });
 }
@@ -50,7 +56,7 @@ export function useCreateBook() {
 /**
  * Hook to update an existing book
  */
-export function useUpdateBook() {
+export function useUpdateBook(userId: string | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -58,9 +64,11 @@ export function useUpdateBook() {
       return await updateBook(id, data);
     },
     onSuccess: (_, variables) => {
-      // Invalidate both the specific book and the list
+      // Invalidate both the specific book and the list for this user
       queryClient.invalidateQueries({ queryKey: bookKeys.detail(variables.id) });
-      queryClient.invalidateQueries({ queryKey: bookKeys.lists() });
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: bookKeys.list(userId) });
+      }
     },
   });
 }
@@ -68,7 +76,7 @@ export function useUpdateBook() {
 /**
  * Hook to delete a book
  */
-export function useDeleteBook() {
+export function useDeleteBook(userId: string | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -77,8 +85,10 @@ export function useDeleteBook() {
       return id;
     },
     onSuccess: (id) => {
-      // Invalidate the list and remove the specific book from cache
-      queryClient.invalidateQueries({ queryKey: bookKeys.lists() });
+      // Invalidate the list for this user and remove the specific book from cache
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: bookKeys.list(userId) });
+      }
       queryClient.removeQueries({ queryKey: bookKeys.detail(id) });
     },
   });
