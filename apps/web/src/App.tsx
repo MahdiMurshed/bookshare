@@ -4,6 +4,8 @@ import { Home } from "./pages/Home";
 import { SignIn } from "./pages/SignIn";
 import { SignUp } from "./pages/SignUp";
 import MyLibrary from "./pages/MyLibrary";
+import Browse from "./pages/Browse";
+import BookDetail from "./pages/BookDetail";
 import { Header } from "./components/Header";
 
 import "@repo/ui/styles/globals.css";
@@ -69,6 +71,8 @@ function App() {
               </PublicRoute>
             }
           />
+          <Route path="/browse" element={<Browse />} />
+          <Route path="/books/:id" element={<BookDetail />} />
           <Route
             path="/my-library"
             element={

@@ -60,6 +60,15 @@ export interface Book {
   updated_at: string;
 }
 
+export interface BookWithOwner extends Book {
+  owner?: {
+    id: string;
+    name: string;
+    email: string;
+    avatar_url: string | null;
+  };
+}
+
 export type BorrowRequestStatus = 'pending' | 'approved' | 'denied' | 'returned';
 
 export interface BorrowRequest {
