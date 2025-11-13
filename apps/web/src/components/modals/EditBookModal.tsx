@@ -23,9 +23,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@repo/ui/components/form';
-import { updateBook, type Book } from '@repo/api-client';
+import { type Book } from '@repo/api-client';
 import { bookFormSchema, type BookFormValues } from '../../lib/validations/book';
 import { BOOK_GENRES, BOOK_CONDITIONS } from '../../lib/constants/book';
+import { useUpdateBook } from '../../hooks/useBooks';
 
 interface EditBookModalProps {
   book: Book | null;
@@ -48,7 +49,7 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess }: EditBookM
     },
   });
 
-  const { isSubmitting } = form.formState;
+  const updateBookMutation = useUpdateBook();
 
   // Pre-fill form when book changes
   useEffect(() => {
@@ -68,25 +69,32 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess }: EditBookM
   const handleFormSubmit = async (values: BookFormValues) => {
     if (!book) return;
 
-    try {
-      await updateBook(book.id, {
-        title: values.title.trim(),
-        author: values.author.trim(),
-        genre: values.genre || undefined,
-        description: values.description || undefined,
-        condition: values.condition,
-        borrowable: values.borrowable,
-        cover_image_url: values.cover_image_url || undefined,
-      });
-
-      onOpenChange(false);
-      onSuccess();
-    } catch (error) {
-      console.error('Failed to update book:', error);
-      form.setError('root', {
-        message: error instanceof Error ? error.message : 'Failed to update book. Please try again.',
-      });
-    }
+    updateBookMutation.mutate(
+      {
+        id: book.id,
+        data: {
+          title: values.title.trim(),
+          author: values.author.trim(),
+          genre: values.genre || undefined,
+          description: values.description || undefined,
+          condition: values.condition,
+          borrowable: values.borrowable,
+          cover_image_url: values.cover_image_url || undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+          onSuccess();
+        },
+        onError: (error) => {
+          console.error('Failed to update book:', error);
+          form.setError('root', {
+            message: error instanceof Error ? error.message : 'Failed to update book. Please try again.',
+          });
+        },
+      }
+    );
   };
 
   return (
@@ -256,12 +264,12 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess }: EditBookM
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
+                disabled={updateBookMutation.isPending}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
+              <Button type="submit" disabled={updateBookMutation.isPending}>
+                {updateBookMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Saving...
