@@ -79,8 +79,8 @@ export function AddBookForm({ onSubmit, onCancel, userId }: AddBookFormProps) {
   };
 
   const handleFormSubmit = async (values: BookFormValues) => {
-    createBookMutation.mutate(
-      {
+    try {
+      await createBookMutation.mutateAsync({
         title: values.title.trim(),
         author: values.author.trim(),
         genre: values.genre || undefined,
@@ -88,19 +88,16 @@ export function AddBookForm({ onSubmit, onCancel, userId }: AddBookFormProps) {
         condition: values.condition,
         borrowable: values.borrowable,
         cover_image_url: values.cover_image_url || undefined,
-      },
-      {
-        onSuccess: () => {
-          form.reset();
-          onSubmit();
-        },
-        onError: (error) => {
-          form.setError('root', {
-            message: error instanceof Error ? error.message : 'Failed to add book. Please try again.',
-          });
-        },
-      }
-    );
+      });
+
+      form.reset();
+      onSubmit();
+    } catch (error) {
+      console.error('Failed to create book:', error);
+      form.setError('root', {
+        message: error instanceof Error ? error.message : 'Failed to add book. Please try again.',
+      });
+    }
   };
 
   return (

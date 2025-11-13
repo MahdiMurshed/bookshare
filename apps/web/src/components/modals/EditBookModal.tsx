@@ -70,8 +70,8 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess, userId }: E
   const handleFormSubmit = async (values: BookFormValues) => {
     if (!book) return;
 
-    updateBookMutation.mutate(
-      {
+    try {
+      await updateBookMutation.mutateAsync({
         id: book.id,
         data: {
           title: values.title.trim(),
@@ -82,20 +82,16 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess, userId }: E
           borrowable: values.borrowable,
           cover_image_url: values.cover_image_url || undefined,
         },
-      },
-      {
-        onSuccess: () => {
-          onOpenChange(false);
-          onSuccess();
-        },
-        onError: (error) => {
-          console.error('Failed to update book:', error);
-          form.setError('root', {
-            message: error instanceof Error ? error.message : 'Failed to update book. Please try again.',
-          });
-        },
-      }
-    );
+      });
+
+      onOpenChange(false);
+      onSuccess();
+    } catch (error) {
+      console.error('Failed to update book:', error);
+      form.setError('root', {
+        message: error instanceof Error ? error.message : 'Failed to update book. Please try again.',
+      });
+    }
   };
 
   return (
