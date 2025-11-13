@@ -57,6 +57,14 @@ export {
   uploadBookCover,
 } from './books.js';
 
+// Export book search functions
+export type { BookSearchResult } from './bookSearch.js';
+export {
+  searchBooks,
+  getBookDetails,
+  mapCategoryToGenre,
+} from './bookSearch.js';
+
 // Export borrow request functions
 export type {
   CreateBorrowRequestInput,

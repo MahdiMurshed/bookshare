@@ -6,9 +6,10 @@ import { Textarea } from '@repo/ui/components/textarea';
 import { Checkbox } from '@repo/ui/components/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/components/select';
 import { Button } from '@repo/ui/components/button';
-import { Upload, X, Loader2 } from '@repo/ui/components/icons';
+import { Upload, X, Loader2, Sparkles } from '@repo/ui/components/icons';
 import { ImageWithFallback } from '../ImageWithFallback';
-import { createBook, type CreateBookInput } from '@repo/api-client';
+import { BookAutocomplete } from './BookAutocomplete';
+import { createBook, mapCategoryToGenre, type CreateBookInput, type BookSearchResult } from '@repo/api-client';
 
 interface AddBookFormProps {
   onSubmit: () => void;
@@ -61,6 +62,38 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
 
   const handleImageUrlChange = (url: string) => {
     setCoverImage(url);
+  };
+
+  const handleBookSelect = (book: BookSearchResult) => {
+    // Auto-fill form fields from selected book
+    setTitle(book.title);
+    setAuthor(book.authors.join(', '));
+
+    // Map Google Books category to our genre
+    if (book.categories && book.categories.length > 0) {
+      const mappedGenre = mapCategoryToGenre(book.categories);
+      if (mappedGenre) {
+        setGenre(mappedGenre);
+      }
+    }
+
+    // Set description
+    if (book.description) {
+      // Remove HTML tags if present and truncate to reasonable length
+      const cleanDescription = book.description
+        .replace(/<[^>]*>/g, '')
+        .substring(0, 500);
+      setDescription(cleanDescription);
+    }
+
+    // Set cover image (convert HTTP to HTTPS for Google Books images)
+    if (book.imageUrl) {
+      const httpsImageUrl = book.imageUrl.replace('http://', 'https://');
+      setCoverImage(httpsImageUrl);
+    }
+
+    // Clear any previous errors
+    setErrors({});
   };
 
   const validate = () => {
@@ -134,20 +167,18 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
         <div className="grid md:grid-cols-2 gap-6">
           {/* Left Column - Form Fields */}
           <div className="space-y-4">
-            {/* Title */}
+            {/* Title with Autocomplete */}
             <div>
-              <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                type="text"
-                placeholder="Enter book title"
+              <BookAutocomplete
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className={errors.title ? 'border-red-500' : ''}
+                onChange={setTitle}
+                onBookSelect={handleBookSelect}
+                error={errors.title}
               />
-              {errors.title && (
-                <p className="text-red-500 text-sm mt-1">{errors.title}</p>
-              )}
+              <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                Start typing to auto-fill book details
+              </p>
             </div>
 
             {/* Author */}
