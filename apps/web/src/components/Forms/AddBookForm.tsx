@@ -26,9 +26,10 @@ import { useCreateBook } from '../../hooks/useBooks';
 interface AddBookFormProps {
   onSubmit: () => void;
   onCancel: () => void;
+  userId?: string;
 }
 
-export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
+export function AddBookForm({ onSubmit, onCancel, userId }: AddBookFormProps) {
   const form = useForm<BookFormValues>({
     resolver: zodResolver(bookFormSchema),
     defaultValues: {
@@ -42,7 +43,7 @@ export function AddBookForm({ onSubmit, onCancel }: AddBookFormProps) {
     },
   });
 
-  const createBookMutation = useCreateBook();
+  const createBookMutation = useCreateBook(userId);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

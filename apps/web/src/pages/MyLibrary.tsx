@@ -7,9 +7,11 @@ import { BookOpen, Plus, Loader2, AlertCircle } from '@repo/ui/components/icons'
 import { Button } from '@repo/ui/components/button';
 import { type Book } from '@repo/api-client';
 import { useBooks } from '../hooks/useBooks';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function MyLibrary() {
-  const { data: books = [], isLoading, error, refetch } = useBooks();
+  const { user } = useAuth();
+  const { data: books = [], isLoading, error, refetch } = useBooks(user?.id);
   const [showForm, setShowForm] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [deletingBook, setDeletingBook] = useState<Book | null>(null);
@@ -49,6 +51,7 @@ export default function MyLibrary() {
             <AddBookForm
               onSubmit={handleAddBookSuccess}
               onCancel={() => setShowForm(false)}
+              userId={user?.id}
             />
           </div>
         )}
@@ -113,6 +116,7 @@ export default function MyLibrary() {
         open={!!editingBook}
         onOpenChange={(open) => !open && setEditingBook(null)}
         onSuccess={handleEditSuccess}
+        userId={user?.id}
       />
 
       {/* Delete Book Modal */}
@@ -121,6 +125,7 @@ export default function MyLibrary() {
         open={!!deletingBook}
         onOpenChange={(open) => !open && setDeletingBook(null)}
         onSuccess={handleDeleteSuccess}
+        userId={user?.id}
       />
     </div>
   );

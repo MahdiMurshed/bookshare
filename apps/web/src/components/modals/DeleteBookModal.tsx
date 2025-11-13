@@ -17,10 +17,11 @@ interface DeleteBookModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  userId?: string;
 }
 
-export function DeleteBookModal({ book, open, onOpenChange, onSuccess }: DeleteBookModalProps) {
-  const deleteBookMutation = useDeleteBook();
+export function DeleteBookModal({ book, open, onOpenChange, onSuccess, userId }: DeleteBookModalProps) {
+  const deleteBookMutation = useDeleteBook(userId);
 
   const handleDelete = async () => {
     if (!book) return;
