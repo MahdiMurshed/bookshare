@@ -1,182 +1,285 @@
 # BookShare
 
-A community-driven book sharing platform that enables users to manage personal book collections, lend and borrow books, and build connections through reading.
+A modern, community-driven book sharing platform that enables users to manage personal book collections, lend and borrow books, and build meaningful connections through reading.
+
+**Status:** ✅ MVP Complete - All core features implemented and functional
 
 ## Overview
 
-BookShare is built as a modern monorepo using Turborepo, designed to scale from a web application to mobile platforms while maintaining shared business logic and UI components. The platform emphasizes trust-based book lending, community building, and seamless user experience across devices.
+BookShare is a full-stack web application built with modern technologies and best practices. The platform emphasizes trust-based book lending, real-time communication, and seamless user experience. Built as a monorepo using Turborepo, the architecture is designed for future scalability to mobile platforms while maintaining a clean separation between frontend and backend.
 
-## Features
+## ✨ Features
 
-- **Personal Library Management** - Catalog and organize your book collection
-- **Book Lending System** - Lend books to trusted community members
-- **Borrow Requests** - Request to borrow books with approval workflow
-- **Reviews & Ratings** - Share feedback on borrowed books
-- **Real-time Notifications** - Stay updated on borrow requests and book availability
-- **Community Discovery** - Find books and connect with readers nearby
+### Core Features (All Implemented ✅)
 
-## Tech Stack
+- **📚 Personal Library Management** - Add, edit, and organize your book collection with rich metadata
+- **🔄 Smart Borrow System** - Complete borrow workflow from request to return with status tracking
+- **✅ Approval Workflow** - Owners can approve or deny borrow requests with real-time notifications
+- **💬 Real-time Chat** - In-app messaging between borrowers and owners for coordination
+- **🔔 Live Notifications** - Real-time updates on requests, approvals, messages, and reviews
+- **📦 Handover Tracking** - Track book exchange status and add delivery/pickup details
+- **⭐ Reviews & Ratings** - Rate and review books after borrowing
+- **👤 User Profiles** - Customizable profiles with avatars, bio, and activity statistics
+- **🔍 Book Discovery** - Browse community books with search and filters
+- **🛡️ Admin Panel** - Comprehensive admin dashboard with user management, analytics, and moderation
 
-- **Frontend:** React 19, TypeScript, Vite, TailwindCSS 4
-- **UI Framework:** shadcn/ui components
-- **Backend:** Supabase (PostgreSQL, Auth, Storage, Realtime)
-- **Build System:** Turborepo 2.6+
-- **Package Manager:** pnpm 10+
-- **Mobile:** React Native with Expo (planned)
+## 🛠️ Tech Stack
 
-## Prerequisites
+### Frontend
+- **React 19** - Latest React with modern hooks and concurrent features
+- **TypeScript** - Full type safety across the application
+- **Vite** - Fast build tool with HMR
+- **TailwindCSS 4** - Utility-first CSS with modern features
+- **shadcn/ui** - High-quality, accessible UI components
+- **TanStack Query** - Powerful data fetching and caching
+- **React Hook Form** + **Zod** - Type-safe form handling and validation
+
+### Backend
+- **Supabase** - Backend-as-a-Service platform
+  - PostgreSQL database with Row Level Security (RLS)
+  - Real-time subscriptions
+  - Authentication (email/password, OAuth ready)
+  - Storage for file uploads
+- **Backend Abstraction Layer** - Migration-ready architecture for future NestJS backend
+
+### Development
+- **Turborepo 2.6+** - High-performance build system
+- **pnpm 10+** - Fast, efficient package manager
+- **ESLint** + **Prettier** - Code quality and formatting
+
+## 🚀 Getting Started
+
+### Prerequisites
 
 - [Node.js](https://nodejs.org/) v20 or higher
 - [pnpm](https://pnpm.io/) v10 or higher
-
-## Getting Started
+- [Supabase](https://supabase.com) account (free tier available)
 
 ### Installation
 
-1. Clone the repository:
+1. **Clone the repository:**
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/MahdiMurshed/bookshare.git
    cd bookshare
    ```
 
-2. Install dependencies:
+2. **Install dependencies:**
 
    ```bash
    pnpm install
    ```
 
-3. Set up environment variables:
+3. **Set up environment variables:**
 
    ```bash
-   # Copy environment template (when available)
-   cp .env.example .env.local
+   # Copy the environment template
+   cp apps/web/.env.example apps/web/.env.local
    ```
 
-4. Start development servers:
+   Edit `apps/web/.env.local` and add your Supabase credentials:
+
+   ```env
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+   You can find these in your [Supabase project settings](https://supabase.com/dashboard) under Settings → API.
+
+4. **Set up the database:**
+
+   Your Supabase database should include the following tables:
+   - `users` (managed by Supabase Auth)
+   - `books`
+   - `borrow_requests`
+   - `messages`
+   - `notifications`
+   - `reviews`
+
+   > **Note:** Database migrations will be added in a future update. For now, tables are created manually via Supabase dashboard.
+
+5. **Start the development server:**
 
    ```bash
    pnpm dev
    ```
 
-   This starts all apps in development mode using Turborepo's task orchestration.
+   The app will be available at `http://localhost:5173`
 
-## Development Commands
-
-```bash
-# Development
-pnpm dev              # Start all apps in dev mode
-pnpm build            # Build all apps and packages
-pnpm lint             # Lint all workspaces
-pnpm format           # Format code with Prettier
-
-# UI Components
-pnpm ui <component>   # Add new shadcn/ui component (e.g., pnpm ui card)
-
-# Workspace-Specific Commands
-pnpm --filter web dev
-pnpm --filter @repo/ui lint
-```
-
-## Project Structure
+## 📦 Project Structure
 
 ```
 bookshare/
 ├── apps/
-│   ├── web/              # Main web application (Vite + React)
-│   └── nextjs/           # Next.js application (alternative/future use)
+│   ├── web/                    # Main web application (Vite + React)
+│   │   ├── src/
+│   │   │   ├── components/     # React components
+│   │   │   ├── pages/          # Route pages
+│   │   │   ├── hooks/          # Custom React hooks
+│   │   │   ├── contexts/       # React context providers
+│   │   │   └── lib/            # Utilities and constants
+│   │   └── ...
+│   └── nextjs/                 # Alternative Next.js setup (unused)
 ├── packages/
-│   ├── ui/               # Shared UI components (shadcn/ui + Tailwind 4)
-│   ├── eslint-config/    # Shared ESLint configuration
-│   └── typescript-config/# Shared TypeScript configuration
-├── docs/                 # Project documentation
-└── CLAUDE.md            # Development guidelines for AI assistance
+│   ├── api-client/             # Backend abstraction layer
+│   │   ├── src/
+│   │   │   ├── auth.ts         # Authentication functions
+│   │   │   ├── books.ts        # Book operations
+│   │   │   ├── borrowRequests.ts
+│   │   │   ├── messages.ts
+│   │   │   ├── notifications.ts
+│   │   │   ├── reviews.ts
+│   │   │   ├── users.ts
+│   │   │   └── admin.ts        # Admin operations
+│   │   └── ...
+│   ├── ui/                     # Shared UI components (shadcn/ui)
+│   ├── eslint-config/          # Shared ESLint configuration
+│   └── typescript-config/      # Shared TypeScript configuration
+├── docs/                       # Product documentation
+│   ├── book_sharing_app_prd.md
+│   ├── book_sharing_technical_plan.md
+│   └── book_sharing_user_stories.md
+├── CLAUDE.md                   # Development guidelines
+├── turbo.json                  # Turborepo configuration
+└── package.json
 ```
 
-### Planned Packages
+## 💻 Development Commands
 
-- `types/` - Shared TypeScript types and interfaces
-- `utils/` - Shared utility functions
-- `api-client/` - Backend abstraction layer (Supabase → future NestJS migration)
-- `config/` - Shared constants and environment variables
+```bash
+# Development
+pnpm dev              # Start all apps in development mode
+pnpm build            # Build all apps and packages for production
+pnpm lint             # Lint all workspaces
+pnpm format           # Format code with Prettier
 
-## Architecture
+# UI Components (shadcn/ui)
+pnpm ui <component>   # Add new shadcn/ui component
+# Example: pnpm ui dialog
 
-### Monorepo Strategy
+# Workspace-Specific Commands
+pnpm --filter web dev           # Start web app only
+pnpm --filter @repo/ui lint     # Lint UI package only
+pnpm --filter @repo/api-client build
+```
 
-This project uses **Turborepo** with **pnpm workspaces** to manage multiple applications and shared packages. The monorepo structure enables:
-
-- Code sharing across web and mobile platforms
-- Consistent tooling and configuration
-- Efficient builds with Turborepo's caching
-- Independent deployment of applications
+## 🏗️ Architecture
 
 ### Backend Abstraction Layer
 
-The architecture implements an abstraction layer between frontend and backend to enable seamless migration from Supabase to a custom NestJS backend in the future:
+The application uses an **abstraction layer** to decouple the frontend from Supabase, enabling a seamless migration to NestJS or any other backend in the future.
 
+**Example:**
 ```typescript
-// packages/api-client/books.ts
-export async function getBooks() {
-  // Current: Supabase implementation
-  const { data, error } = await supabase.from('books').select('*')
-  if (error) throw error
-  return data
+// ✅ Correct - Use api-client abstraction
+import { getBooks, createBook, type Book } from '@repo/api-client';
 
-  // Future: Replace with NestJS API call
-  // const { data } = await api.get('/books')
-  // return data
-}
+const books = await getBooks({ borrowable: true });
+await createBook({ title: 'Book Title', author: 'Author' });
+
+// ❌ Wrong - Never import Supabase directly in apps
+import { supabase } from '@repo/api-client/supabaseClient';
 ```
 
 **Key Principles:**
-- All backend calls go through `packages/api-client/`
-- Never import Supabase client directly in apps
-- Design APIs to be backend-agnostic
+- All backend operations go through `packages/api-client`
+- Apps never import Supabase client directly
+- Function signatures are backend-agnostic
+- When migrating to NestJS, only `api-client` package needs changes
 
-## Documentation
+### Data Flow
 
-- [Product Requirements Document](./docs/book_sharing_app_prd.md)
-- [Technical Plan](./docs/book_sharing_technical_plan.md)
-- [User Stories](./docs/book_sharing_user_stories.md)
-- [Development Guidelines](./CLAUDE.md)
+```
+[React Component]
+    ↓
+[Custom Hook (TanStack Query)]
+    ↓
+[API Client Function]
+    ↓
+[Supabase Client]
+    ↓
+[PostgreSQL Database]
+```
 
-## Development Phases
+## 📚 Documentation
 
-### Phase 1: MVP (Current)
-- ✅ Turborepo monorepo setup
-- ✅ Supabase configuration
-- ✅ Web app: Authentication
-- 🚧 Web app: Book CRUD + Borrow Requests
-- ✅ API abstraction layer
+- **[Product Requirements Document](./docs/book_sharing_app_prd.md)** - Features, requirements, and success metrics
+- **[Technical Plan](./docs/book_sharing_technical_plan.md)** - Architecture and implementation roadmap
+- **[User Stories](./docs/book_sharing_user_stories.md)** - User flows and acceptance criteria
+- **[Development Guidelines](./CLAUDE.md)** - Code standards, naming conventions, and best practices
 
-### Phase 2: Core Expansion
-- Reviews and notifications
-- UI polishing with shadcn/ui
-- Error handling and validations
+## 🔐 Security
 
-### Phase 3: Mobile
-- Expo app setup
-- Reuse shared packages (types, utils, api-client)
+- **Supabase Auth** - Industry-standard authentication
+- **Row Level Security (RLS)** - Database-level access control
+- **Type Validation** - Zod schemas for all user inputs
+- **XSS Protection** - No `dangerouslySetInnerHTML` usage
+- **Environment Variables** - Secrets stored securely, never committed
 
-### Phase 4: Backend Migration
-- Optional NestJS backend replacement
-- Maintain PostgreSQL schema compatibility
+## 🎯 Code Quality
 
-## Contributing
+- ✅ **Full TypeScript** - 100% type coverage, no `any` types
+- ✅ **Backend Abstraction** - Clean separation, migration-ready
+- ✅ **Error Handling** - Standardized error logging throughout
+- ✅ **Component Architecture** - Small, focused components (< 200 lines)
+- ✅ **Query Management** - Proper TanStack Query with key factories
+- ✅ **Race Condition Prevention** - isMounted flags in subscriptions
+- ✅ **Memory Leak Prevention** - Proper cleanup in all effects
+
+## 📈 Current Status
+
+**MVP Complete** - All 9 core features implemented:
+1. ✅ User Authentication
+2. ✅ Book Inventory Management
+3. ✅ Browse Community Books
+4. ✅ Borrow Requests with Tracking
+5. ✅ Real-time Chat
+6. ✅ Notifications
+7. ✅ User Profiles
+8. ✅ Book Reviews
+9. ✅ Admin Panel
+
+**Next Steps for Production:**
+- Add comprehensive test coverage (unit, integration, E2E)
+- Set up deployment pipeline (Vercel/Netlify)
+- Implement database migrations with Supabase CLI
+- Add error tracking (Sentry)
+- Set up monitoring and analytics
+
+## 🤝 Contributing
 
 We welcome contributions! Please follow these guidelines:
 
-1. **Modularity First** - All shared code goes into `packages/`
-2. **Type Safety** - Use TypeScript strictly
-3. **Backend Abstraction** - Never couple frontend directly to Supabase
-4. **Component Reusability** - Use `@repo/ui` for shared components
-5. **Testing** - Write tests for new features (Vitest/Jest + Playwright)
+1. **Code Quality** - Follow the patterns in `CLAUDE.md`
+2. **Type Safety** - Maintain full TypeScript coverage
+3. **Backend Abstraction** - Never import Supabase directly in apps
+4. **Component Size** - Keep components focused and under 200 lines
+5. **Testing** - Add tests for new features
+6. **Documentation** - Update docs for significant changes
 
-## License
+### Development Workflow
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes with clear messages
+4. Push to your fork (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 🐛 Known Issues
+
+See [GitHub Issues](https://github.com/MahdiMurshed/bookshare/issues) for current bugs and feature requests.
+
+## 📄 License
 
 [License Type] - See LICENSE file for details
 
+## 🙏 Acknowledgments
+
+- [Turborepo](https://turbo.build/repo) - Build system
+- [shadcn/ui](https://ui.shadcn.com/) - UI components
+- [Supabase](https://supabase.com) - Backend platform
+- [TanStack Query](https://tanstack.com/query) - Data fetching
+
 ---
 
-Built with ❤️ using [Turborepo](https://turbo.build/repo) and [shadcn/ui](https://ui.shadcn.com/)
+**Built by [MahdiMurshed](https://github.com/MahdiMurshed)** | **Status:** MVP Complete 🎉
