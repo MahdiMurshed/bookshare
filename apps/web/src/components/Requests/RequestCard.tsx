@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import type { BorrowRequestWithDetails } from '@repo/api-client';
 import { Card, CardContent, CardFooter, CardHeader } from '@repo/ui/components/card';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import { ImageWithFallback } from '../ImageWithFallback';
+import { ChatDialog } from './ChatDialog';
 
 export interface RequestCardProps {
   request: BorrowRequestWithDetails;
@@ -26,10 +28,14 @@ export function RequestCard({
   onInitiateReturn,
   onConfirmReturn
 }: RequestCardProps) {
+  const [chatDialogOpen, setChatDialogOpen] = useState(false);
+
   const isPending = request.status === 'pending';
   const isApproved = request.status === 'approved';
   const isBorrowed = request.status === 'borrowed';
   const isReturnInitiated = request.status === 'return_initiated';
+  const isDenied = request.status === 'denied';
+  const isReturned = request.status === 'returned';
   const isIncoming = view === 'incoming';
 
   // For incoming requests, show borrower; for outgoing, show owner
@@ -233,71 +239,94 @@ export function RequestCard({
       </CardContent>
 
       {/* Action Buttons */}
-      <CardFooter className="pt-0 gap-2">
-        {/* Incoming Pending: Approve/Deny */}
-        {isIncoming && isPending && onApprove && onDeny && (
-          <>
+      <CardFooter className="pt-0 gap-2 flex-col">
+        {/* Primary action buttons */}
+        <div className="flex gap-2 w-full">
+          {/* Incoming Pending: Approve/Deny */}
+          {isIncoming && isPending && onApprove && onDeny && (
+            <>
+              <Button
+                variant="default"
+                className="flex-1"
+                onClick={() => onApprove(request.id)}
+              >
+                Approve
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => onDeny(request.id)}
+              >
+                Deny
+              </Button>
+            </>
+          )}
+
+          {/* Incoming Approved: Mark Handover Complete */}
+          {isIncoming && isApproved && onMarkHandoverComplete && (
             <Button
               variant="default"
-              className="flex-1"
-              onClick={() => onApprove(request.id)}
+              className="w-full"
+              onClick={() => onMarkHandoverComplete(request.id)}
             >
-              Approve
+              Mark Handover Complete
             </Button>
+          )}
+
+          {/* Incoming Approved with Ship method: Add Tracking */}
+          {isIncoming && isApproved && request.handover_method === 'ship' && onAddTracking && !request.handover_tracking && (
             <Button
               variant="outline"
-              className="flex-1"
-              onClick={() => onDeny(request.id)}
+              className="w-full"
+              onClick={() => onAddTracking(request.id)}
             >
-              Deny
+              Add Tracking Number
             </Button>
-          </>
-        )}
+          )}
 
-        {/* Incoming Approved: Mark Handover Complete */}
-        {isIncoming && isApproved && onMarkHandoverComplete && (
-          <Button
-            variant="default"
-            className="w-full"
-            onClick={() => onMarkHandoverComplete(request.id)}
-          >
-            Mark Handover Complete
-          </Button>
-        )}
+          {/* Outgoing Borrowed: Initiate Return */}
+          {!isIncoming && isBorrowed && onInitiateReturn && (
+            <Button
+              variant="default"
+              className="w-full"
+              onClick={() => onInitiateReturn(request.id)}
+            >
+              Initiate Return
+            </Button>
+          )}
 
-        {/* Incoming Approved with Ship method: Add Tracking */}
-        {isIncoming && isApproved && request.handover_method === 'ship' && onAddTracking && !request.handover_tracking && (
+          {/* Incoming Return Initiated: Confirm Return Received */}
+          {isIncoming && isReturnInitiated && onConfirmReturn && (
+            <Button
+              variant="default"
+              className="w-full"
+              onClick={() => onConfirmReturn(request.id)}
+            >
+              Confirm Return Received
+            </Button>
+          )}
+        </div>
+
+        {/* Chat button (show for all active requests) */}
+        {!isDenied && !isReturned && (
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => onAddTracking(request.id)}
+            onClick={() => setChatDialogOpen(true)}
           >
-            Add Tracking Number
-          </Button>
-        )}
-
-        {/* Outgoing Borrowed: Initiate Return */}
-        {!isIncoming && isBorrowed && onInitiateReturn && (
-          <Button
-            variant="default"
-            className="w-full"
-            onClick={() => onInitiateReturn(request.id)}
-          >
-            Initiate Return
-          </Button>
-        )}
-
-        {/* Incoming Return Initiated: Confirm Return Received */}
-        {isIncoming && isReturnInitiated && onConfirmReturn && (
-          <Button
-            variant="default"
-            className="w-full"
-            onClick={() => onConfirmReturn(request.id)}
-          >
-            Confirm Return Received
+            💬 Chat with {otherUser?.name || otherUser?.email || 'user'}
           </Button>
         )}
       </CardFooter>
+
+      {/* Chat Dialog */}
+      <ChatDialog
+        open={chatDialogOpen}
+        onOpenChange={setChatDialogOpen}
+        requestId={request.id}
+        bookTitle={request.book?.title}
+        otherUserName={otherUser?.name || otherUser?.email}
+      />
     </Card>
   );
 }

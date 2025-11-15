@@ -158,6 +158,24 @@ export interface Notification {
   updated_at: string;
 }
 
+export interface Message {
+  id: string;
+  borrow_request_id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MessageWithSender extends Message {
+  sender?: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatar_url: string | null;
+  };
+}
+
 // Auth types
 export interface AuthUser {
   id: string;
