@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import type { Notification, NotificationType } from '@repo/api-client';
 import { formatDistanceToNow } from 'date-fns';
+import { logError } from '../lib/utils/errors';
 
 type FilterType = 'all' | 'unread' | 'read';
 
@@ -59,7 +60,7 @@ export default function Notifications() {
     try {
       await markAllAsReadMutation.mutateAsync();
     } catch (error) {
-      console.error('Failed to mark all as read:', error);
+      logError(error, 'marking all notifications as read');
     }
   };
 
@@ -71,7 +72,7 @@ export default function Notifications() {
     try {
       await deleteNotificationMutation.mutateAsync(notificationId);
     } catch (error) {
-      console.error('Failed to delete notification:', error);
+      logError(error, 'deleting notification');
     }
   };
 

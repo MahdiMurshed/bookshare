@@ -18,6 +18,7 @@ import {
   type ReturnDetails,
 } from '@repo/api-client';
 import { bookKeys } from './useBooks';
+import { logError } from '../lib/utils/errors';
 
 // Query keys
 export const borrowRequestKeys = {
@@ -82,7 +83,7 @@ export function useCreateBorrowRequest() {
           request.book_id
         );
       } catch (error) {
-        console.error('Failed to send borrow request notification:', error);
+        logError(error, 'sending borrow request notification');
       }
     },
   });
@@ -126,7 +127,7 @@ export function useApproveBorrowRequest() {
           request.book_id
         );
       } catch (error) {
-        console.error('Failed to send approval notification:', error);
+        logError(error, 'sending approval notification');
       }
     },
   });
@@ -156,7 +157,7 @@ export function useDenyBorrowRequest() {
           request.book_id
         );
       } catch (error) {
-        console.error('Failed to send denial notification:', error);
+        logError(error, 'sending denial notification');
       }
     },
   });

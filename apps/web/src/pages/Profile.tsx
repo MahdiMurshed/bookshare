@@ -39,6 +39,7 @@ import {
   X,
   AlertTriangle,
 } from 'lucide-react';
+import { logError } from '../lib/utils/errors';
 
 export default function Profile() {
   const { user, signOut } = useAuth();
@@ -81,7 +82,7 @@ export default function Profile() {
       });
       setIsEditing(false);
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      logError(error, 'updating profile');
     }
   };
 
@@ -109,7 +110,7 @@ export default function Profile() {
       await uploadAvatarMutation(file);
       setUploadError(null);
     } catch (error) {
-      console.error('Failed to upload avatar:', error);
+      logError(error, 'uploading avatar');
       setUploadError('Failed to upload avatar. Please try again.');
     }
   };
@@ -121,7 +122,7 @@ export default function Profile() {
       await deleteAccountMutation();
       navigate('/');
     } catch (error) {
-      console.error('Failed to delete account:', error);
+      logError(error, 'deleting account');
       setDeleteError('Failed to delete account. Please try again.');
     }
   };
@@ -132,7 +133,7 @@ export default function Profile() {
       await signOut();
       navigate('/');
     } catch (error) {
-      console.error('Failed to sign out:', error);
+      logError(error, 'signing out');
     }
   };
 

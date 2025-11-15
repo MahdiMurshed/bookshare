@@ -15,6 +15,7 @@ import {
 import { mapCategoryToGenre, type BookSearchResult } from '@repo/api-client';
 import { bookFormSchema, type BookFormValues } from '../../lib/validations/book';
 import { useCreateBook } from '../../hooks/useBooks';
+import { logError } from '../../lib/utils/errors';
 
 interface AddBookFormProps {
   onSubmit: () => void;
@@ -75,7 +76,7 @@ export function AddBookForm({ onSubmit, onCancel, userId }: AddBookFormProps) {
       form.reset();
       onSubmit();
     } catch (error) {
-      console.error('Failed to create book:', error);
+      logError(error, 'creating book');
       form.setError('root', {
         message: error instanceof Error ? error.message : 'Failed to add book. Please try again.',
       });
