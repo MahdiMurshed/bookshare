@@ -10,10 +10,26 @@ export interface RequestCardProps {
   view: 'incoming' | 'outgoing';
   onApprove?: (requestId: string) => void;
   onDeny?: (requestId: string) => void;
+  onMarkHandoverComplete?: (requestId: string) => void;
+  onAddTracking?: (requestId: string) => void;
+  onInitiateReturn?: (requestId: string) => void;
+  onConfirmReturn?: (requestId: string) => void;
 }
 
-export function RequestCard({ request, view, onApprove, onDeny }: RequestCardProps) {
+export function RequestCard({
+  request,
+  view,
+  onApprove,
+  onDeny,
+  onMarkHandoverComplete,
+  onAddTracking,
+  onInitiateReturn,
+  onConfirmReturn
+}: RequestCardProps) {
   const isPending = request.status === 'pending';
+  const isApproved = request.status === 'approved';
+  const isBorrowed = request.status === 'borrowed';
+  const isReturnInitiated = request.status === 'return_initiated';
   const isIncoming = view === 'incoming';
 
   // For incoming requests, show borrower; for outgoing, show owner
@@ -101,8 +117,100 @@ export function RequestCard({ request, view, onApprove, onDeny }: RequestCardPro
           </div>
         )}
 
+        {/* Handover Details */}
+        {request.handover_method && (isApproved || isBorrowed || request.status === 'return_initiated' || request.status === 'returned') && (
+          <div className="bg-blue-50 dark:bg-blue-950/20 rounded-md p-3 mt-2">
+            <p className="text-sm font-medium mb-2">Handover Details:</p>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <span>
+                  {request.handover_method === 'ship' && '📦 Ship'}
+                  {request.handover_method === 'meetup' && '🤝 Meet Up'}
+                  {request.handover_method === 'pickup' && '📍 Pickup'}
+                </span>
+              </div>
+              {request.handover_address && (
+                <div>
+                  <span className="font-medium">
+                    {request.handover_method === 'ship' ? 'Shipping Address:' :
+                     request.handover_method === 'meetup' ? 'Meeting Location:' :
+                     'Pickup Location:'}
+                  </span>
+                  <p className="text-muted-foreground">{request.handover_address}</p>
+                </div>
+              )}
+              {request.handover_datetime && (
+                <div>
+                  <span className="font-medium">Time:</span>
+                  <span className="text-muted-foreground ml-1">
+                    {new Date(request.handover_datetime).toLocaleString()}
+                  </span>
+                </div>
+              )}
+              {request.handover_instructions && (
+                <div>
+                  <span className="font-medium">Instructions:</span>
+                  <p className="text-muted-foreground">{request.handover_instructions}</p>
+                </div>
+              )}
+              {request.handover_tracking && (
+                <div>
+                  <span className="font-medium">Tracking:</span>
+                  <span className="text-muted-foreground ml-1">{request.handover_tracking}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Return Details */}
+        {request.return_method && (request.status === 'return_initiated' || request.status === 'returned') && (
+          <div className="bg-orange-50 dark:bg-orange-950/20 rounded-md p-3 mt-2">
+            <p className="text-sm font-medium mb-2">Return Details:</p>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <span>
+                  {request.return_method === 'ship' && '📦 Ship'}
+                  {request.return_method === 'meetup' && '🤝 Meet Up'}
+                  {request.return_method === 'dropoff' && '📍 Drop Off'}
+                </span>
+              </div>
+              {request.return_address && (
+                <div>
+                  <span className="font-medium">
+                    {request.return_method === 'ship' ? 'Return Address:' :
+                     request.return_method === 'meetup' ? 'Meeting Location:' :
+                     'Drop Off Location:'}
+                  </span>
+                  <p className="text-muted-foreground">{request.return_address}</p>
+                </div>
+              )}
+              {request.return_datetime && (
+                <div>
+                  <span className="font-medium">Time:</span>
+                  <span className="text-muted-foreground ml-1">
+                    {new Date(request.return_datetime).toLocaleString()}
+                  </span>
+                </div>
+              )}
+              {request.return_instructions && (
+                <div>
+                  <span className="font-medium">Instructions:</span>
+                  <p className="text-muted-foreground">{request.return_instructions}</p>
+                </div>
+              )}
+              {request.return_tracking && (
+                <div>
+                  <span className="font-medium">Tracking:</span>
+                  <span className="text-muted-foreground ml-1">{request.return_tracking}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Due Date for Approved Requests */}
-        {request.status === 'approved' && request.due_date && (
+        {request.due_date && (isApproved || isBorrowed || request.status === 'return_initiated') && (
           <div className="mt-3 flex items-center gap-2 text-sm">
             <span className="font-medium">Due Date:</span>
             <span className="text-muted-foreground">
@@ -124,25 +232,72 @@ export function RequestCard({ request, view, onApprove, onDeny }: RequestCardPro
         )}
       </CardContent>
 
-      {/* Action Buttons (only for incoming pending requests) */}
-      {isIncoming && isPending && onApprove && onDeny && (
-        <CardFooter className="pt-0 gap-2">
+      {/* Action Buttons */}
+      <CardFooter className="pt-0 gap-2">
+        {/* Incoming Pending: Approve/Deny */}
+        {isIncoming && isPending && onApprove && onDeny && (
+          <>
+            <Button
+              variant="default"
+              className="flex-1"
+              onClick={() => onApprove(request.id)}
+            >
+              Approve
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => onDeny(request.id)}
+            >
+              Deny
+            </Button>
+          </>
+        )}
+
+        {/* Incoming Approved: Mark Handover Complete */}
+        {isIncoming && isApproved && onMarkHandoverComplete && (
           <Button
             variant="default"
-            className="flex-1"
-            onClick={() => onApprove(request.id)}
+            className="w-full"
+            onClick={() => onMarkHandoverComplete(request.id)}
           >
-            Approve
+            Mark Handover Complete
           </Button>
+        )}
+
+        {/* Incoming Approved with Ship method: Add Tracking */}
+        {isIncoming && isApproved && request.handover_method === 'ship' && onAddTracking && !request.handover_tracking && (
           <Button
             variant="outline"
-            className="flex-1"
-            onClick={() => onDeny(request.id)}
+            className="w-full"
+            onClick={() => onAddTracking(request.id)}
           >
-            Deny
+            Add Tracking Number
           </Button>
-        </CardFooter>
-      )}
+        )}
+
+        {/* Outgoing Borrowed: Initiate Return */}
+        {!isIncoming && isBorrowed && onInitiateReturn && (
+          <Button
+            variant="default"
+            className="w-full"
+            onClick={() => onInitiateReturn(request.id)}
+          >
+            Initiate Return
+          </Button>
+        )}
+
+        {/* Incoming Return Initiated: Confirm Return Received */}
+        {isIncoming && isReturnInitiated && onConfirmReturn && (
+          <Button
+            variant="default"
+            className="w-full"
+            onClick={() => onConfirmReturn(request.id)}
+          >
+            Confirm Return Received
+          </Button>
+        )}
+      </CardFooter>
     </Card>
   );
 }
