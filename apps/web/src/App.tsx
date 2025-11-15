@@ -8,6 +8,7 @@ import Browse from "./pages/Browse";
 import BookDetail from "./pages/BookDetail";
 import Requests from "./pages/Requests";
 import Chats from "./pages/Chats";
+import Admin from "./pages/Admin";
 import { Header } from "./components/Header";
 
 import "@repo/ui/styles/globals.css";
@@ -96,6 +97,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <MyLibrary />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <Admin />
               </ProtectedRoute>
             }
           />
