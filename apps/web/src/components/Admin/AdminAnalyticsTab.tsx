@@ -37,8 +37,8 @@ import {
 function GrowthIndicator({ value }: { value: number }) {
   const isPositive = value >= 0;
   const Icon = isPositive ? TrendingUp : TrendingDown;
-  const colorClass = isPositive ? 'text-emerald-600' : 'text-red-600';
-  const bgClass = isPositive ? 'bg-emerald-50' : 'bg-red-50';
+  const colorClass = isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400';
+  const bgClass = isPositive ? 'bg-emerald-50 dark:bg-emerald-950/30' : 'bg-red-50 dark:bg-red-950/30';
 
   return (
     <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${bgClass}`}>
@@ -252,11 +252,11 @@ function MostActiveUsersSection() {
   const getRankBgClass = (rank: number) => {
     switch (rank) {
       case 1:
-        return 'bg-amber-50 border-amber-200';
+        return 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50';
       case 2:
-        return 'bg-zinc-50 border-zinc-200';
+        return 'bg-zinc-50 dark:bg-zinc-900/30 border-zinc-200 dark:border-zinc-700/50';
       case 3:
-        return 'bg-orange-50 border-orange-200';
+        return 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800/50';
       default:
         return 'bg-background border-border';
     }
