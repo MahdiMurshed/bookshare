@@ -2,9 +2,10 @@
 
 ## Product: Book Sharing App
 
-**Version:** 1.0\
+**Version:** 1.0 (MVP Complete)\
 **Owner:** Mahdi Murshed\
-**Date:** 11/08/2025
+**Date:** 11/08/2025\
+**Status:** ✅ Core features implemented and functional
 
 ---
 
@@ -33,15 +34,17 @@ A platform that allows users to create and manage their personal book collection
 
 ## 4. Core Features & Requirements
 
-| # | Feature                       | Description                                                                       | Priority | Acceptance Criteria                                           |
-| - | ----------------------------- | --------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------- |
-| 1 | **User Authentication**       | Email/password and Google/GitHub OAuth                                            | High     | Users can sign up, log in, and stay logged in securely.       |
-| 2 | **Book Inventory Management** | Add/edit/delete books (title, author, ISBN, etc.)                                 | High     | User sees their own books; only the owner can modify them.    |
-| 3 | **Browse Community Books**    | Explore and filter books by title, genre, owner, or availability                  | High     | Users can search and view other users’ books.                 |
-| 4 | **Borrow Requests**           | Borrower requests to borrow a book → owner gets notification → approves or denies | High     | Borrow status updates correctly and notifies both users.      |
-| 5 | **Notifications**             | Real-time updates on borrow requests and reviews                                  | Medium   | Users are notified of borrow requests, approvals, or denials. |
-| 6 | **Book Reviews**              | Borrowers can rate and review books                                               | Medium   | Reviews appear on book detail and owner’s dashboard.          |
-| 7 | **Admin Panel**               | Manage users, books, and flagged reviews                                          | Low      | Admin can view and moderate data.                             |
+| # | Feature                       | Description                                                                       | Priority | Status | Acceptance Criteria                                           |
+| - | ----------------------------- | --------------------------------------------------------------------------------- | -------- | ------ | ------------------------------------------------------------- |
+| 1 | **User Authentication**       | Email/password sign up and login                                            | High     | ✅ Implemented | Users can sign up, log in, and stay logged in securely.       |
+| 2 | **Book Inventory Management** | Add/edit/delete books (title, author, genre, cover, condition)                                 | High     | ✅ Implemented | User sees their own books; only the owner can modify them.    |
+| 3 | **Browse Community Books**    | Explore and filter books by title, author, genre, or availability                  | High     | ✅ Implemented | Users can search and view other users' books.                 |
+| 4 | **Borrow Requests**           | Borrower requests to borrow → owner approves/denies → handover tracking → return | High     | ✅ Implemented | Borrow status updates correctly and notifies both users.      |
+| 5 | **Real-time Chat**             | In-app messaging between borrower and owner for each request                                  | High   | ✅ Implemented | Users can chat about book exchange details. |
+| 6 | **Notifications**             | Real-time updates on borrow requests, approvals, and messages                                  | Medium   | ✅ Implemented | Users are notified of borrow requests, approvals, denials, and messages. |
+| 7 | **User Profile**              | View and edit profile (avatar, name, bio), view statistics                                               | Medium   | ✅ Implemented | Users can manage their profile and see activity stats.          |
+| 8 | **Book Reviews**              | Borrowers can rate and review books after return                                               | Medium   | ✅ Implemented | Reviews appear on book detail page.          |
+| 9 | **Admin Panel**               | Manage users, books, requests, and view analytics                                          | Low      | ✅ Implemented | Admin can view and moderate data, see platform stats.                             |
 
 ---
 
@@ -59,20 +62,22 @@ A platform that allows users to create and manage their personal book collection
 
 ## 6. Non-Functional Requirements
 
-- **Performance:** API response under 300ms for most requests.
-- **Scalability:** Support 10k+ users initially.
-- **Security:** JWT-based auth, role-based access (user/admin).
-- **Availability:** 99% uptime target.
-- **Compatibility:** Web-first (React + NestJS), mobile-friendly.
+- **Performance:** API response under 300ms for most requests (Supabase optimized).
+- **Scalability:** Support 10k+ users initially (Supabase managed infrastructure).
+- **Security:** Supabase Auth with Row Level Security (RLS), role-based access (user/admin).
+- **Availability:** 99% uptime target (Supabase SLA).
+- **Compatibility:** Web-first responsive design, mobile app planned (React Native/Expo).
 
 ---
 
 ## 7. Tech Stack
 
-- **Frontend:** React (TypeScript), TailwindCSS
-- **Backend:** NestJS (TypeScript), PostgreSQL or Firebase
-- **Auth:** JWT + OAuth (Google/GitHub)
-- **Notifications:** WebSocket or Firebase Cloud Messaging (FCM)
+- **Frontend:** React (TypeScript), Vite, TailwindCSS 4, shadcn/ui
+- **Backend:** Supabase (PostgreSQL, Auth, Storage, Realtime)
+- **Auth:** Supabase Auth (Email/Password, OAuth planned)
+- **State Management:** TanStack Query (React Query)
+- **Build System:** Turborepo monorepo
+- **Future:** NestJS backend migration planned (backend abstraction layer in place)
 
 ---
 
