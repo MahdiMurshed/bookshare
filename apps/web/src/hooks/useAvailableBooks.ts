@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getAvailableBooksWithOwners } from '@repo/api-client';
+import { bookKeys } from './useBooks';
 
 interface UseAvailableBooksParams {
   genre?: string;
@@ -8,7 +9,7 @@ interface UseAvailableBooksParams {
 
 export function useAvailableBooks({ genre, search }: UseAvailableBooksParams = {}) {
   return useQuery({
-    queryKey: ['books', 'browse', genre, search],
+    queryKey: [...bookKeys.all, 'browse', genre, search],
     queryFn: async () => {
       const filters: { genre?: string; search?: string } = {};
 

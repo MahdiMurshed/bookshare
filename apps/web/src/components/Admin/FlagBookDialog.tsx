@@ -47,6 +47,7 @@ export function FlagBookDialog({
   const [selectedQuickReason, setSelectedQuickReason] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
 
   const handleQuickReasonClick = (quickReason: string) => {
     if (selectedQuickReason === quickReason) {
@@ -97,6 +98,7 @@ export function FlagBookDialog({
       setReason('');
       setSelectedQuickReason(null);
       setError(null);
+      setImageError(false);
       onClose();
     }
   };
@@ -121,26 +123,18 @@ export function FlagBookDialog({
           {/* Book Preview */}
           <div className="rounded-lg border-2 border-border bg-muted/30 p-4">
             <div className="flex items-start gap-4">
-              {book?.cover_image_url ? (
-                <div className="w-16 h-24 rounded-md border-2 border-border bg-muted overflow-hidden flex-shrink-0">
+              <div className="w-16 h-24 rounded-md border-2 border-border bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {book?.cover_image_url && !imageError ? (
                   <img
                     src={book.cover_image_url}
                     alt={book.title}
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const parent = e.currentTarget.parentElement;
-                      if (parent) {
-                        parent.innerHTML =
-                          '<div class="w-full h-full flex items-center justify-center bg-muted"><svg class="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg></div>';
-                      }
-                    }}
+                    onError={() => setImageError(true)}
                   />
-                </div>
-              ) : (
-                <div className="w-16 h-24 rounded-md border-2 border-border bg-muted flex items-center justify-center flex-shrink-0">
+                ) : (
                   <BookOpen className="w-6 h-6 text-muted-foreground" />
-                </div>
-              )}
+                )}
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-foreground truncate">{book?.title}</p>
                 <p className="text-sm text-muted-foreground truncate">
