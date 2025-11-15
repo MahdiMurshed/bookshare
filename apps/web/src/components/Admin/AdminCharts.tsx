@@ -1,8 +1,8 @@
 /**
  * AdminCharts Component
  *
- * Beautiful data visualizations for the admin dashboard
- * Uses recharts with custom styling matching the warm amber/orange theme
+ * Clean data visualizations for the admin dashboard
+ * Uses recharts with neutral color palette matching the monochrome theme
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -29,27 +29,27 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-// Custom colors matching the warm amber/orange theme
+// Neutral color palette - grays and primary only
 const CHART_COLORS = {
-  primary: '#f97316', // orange-500
-  secondary: '#f59e0b', // amber-500
-  tertiary: '#eab308', // yellow-500
-  accent1: '#ef4444', // red-500
-  accent2: '#10b981', // emerald-500
-  accent3: '#3b82f6', // blue-500
-  accent4: '#8b5cf6', // violet-500
-  accent5: '#ec4899', // pink-500
+  primary: 'hsl(var(--primary))', // primary color
+  secondary: 'hsl(var(--muted-foreground))', // muted gray
+  gray1: '#71717a', // zinc-500
+  gray2: '#52525b', // zinc-600
+  gray3: '#3f3f46', // zinc-700
+  gray4: '#27272a', // zinc-800
+  gray5: '#a1a1aa', // zinc-400
+  gray6: '#d4d4d8', // zinc-300
 };
 
 const PIE_COLORS = [
   CHART_COLORS.primary,
+  CHART_COLORS.gray1,
+  CHART_COLORS.gray2,
+  CHART_COLORS.gray3,
+  CHART_COLORS.gray4,
+  CHART_COLORS.gray5,
+  CHART_COLORS.gray6,
   CHART_COLORS.secondary,
-  CHART_COLORS.tertiary,
-  CHART_COLORS.accent1,
-  CHART_COLORS.accent2,
-  CHART_COLORS.accent3,
-  CHART_COLORS.accent4,
-  CHART_COLORS.accent5,
 ];
 
 function ChartSkeleton() {
@@ -69,8 +69,8 @@ function GenreDistributionChart() {
 
   if (error) {
     return (
-      <Card className="p-6">
-        <h3 className="text-lg font-serif font-semibold mb-4">Genre Distribution</h3>
+      <Card className="p-6 border-2">
+        <h3 className="text-lg font-semibold mb-4">Genre Distribution</h3>
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
           <p className="text-sm text-destructive">Failed to load chart</p>
         </div>
@@ -83,9 +83,9 @@ function GenreDistributionChart() {
   }
 
   return (
-    <Card className="p-6 hover:shadow-lg transition-shadow duration-300">
+    <Card className="p-6 border-2 hover:border-primary/50 hover:shadow-lg transition-all duration-300">
       <div className="mb-6">
-        <h3 className="text-lg font-serif font-semibold text-foreground">Genre Distribution</h3>
+        <h3 className="text-lg font-semibold text-foreground">Genre Distribution</h3>
         <p className="text-sm text-muted-foreground mt-1">Books by genre category</p>
       </div>
       <ResponsiveContainer width="100%" height={300}>
@@ -131,8 +131,8 @@ function BorrowActivityChart() {
 
   if (error) {
     return (
-      <Card className="p-6">
-        <h3 className="text-lg font-serif font-semibold mb-4">Borrow Activity</h3>
+      <Card className="p-6 border-2">
+        <h3 className="text-lg font-semibold mb-4">Borrow Activity</h3>
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
           <p className="text-sm text-destructive">Failed to load chart</p>
         </div>
@@ -145,9 +145,9 @@ function BorrowActivityChart() {
   }
 
   return (
-    <Card className="p-6 hover:shadow-lg transition-shadow duration-300">
+    <Card className="p-6 border-2 hover:border-primary/50 hover:shadow-lg transition-all duration-300">
       <div className="mb-6">
-        <h3 className="text-lg font-serif font-semibold text-foreground">Borrow Activity</h3>
+        <h3 className="text-lg font-semibold text-foreground">Borrow Activity</h3>
         <p className="text-sm text-muted-foreground mt-1">Last 30 days</p>
       </div>
       <ResponsiveContainer width="100%" height={300}>
@@ -176,8 +176,8 @@ function BorrowActivityChart() {
           />
           <Legend wrapperStyle={{ fontSize: '14px' }} />
           <Bar dataKey="requests" fill={CHART_COLORS.primary} name="Requests" />
-          <Bar dataKey="approvals" fill={CHART_COLORS.accent2} name="Approvals" />
-          <Bar dataKey="returns" fill={CHART_COLORS.accent3} name="Returns" />
+          <Bar dataKey="approvals" fill={CHART_COLORS.gray1} name="Approvals" />
+          <Bar dataKey="returns" fill={CHART_COLORS.gray2} name="Returns" />
         </BarChart>
       </ResponsiveContainer>
     </Card>
@@ -192,8 +192,8 @@ function UserGrowthChart() {
 
   if (error) {
     return (
-      <Card className="p-6">
-        <h3 className="text-lg font-serif font-semibold mb-4">User Growth</h3>
+      <Card className="p-6 border-2">
+        <h3 className="text-lg font-semibold mb-4">User Growth</h3>
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
           <p className="text-sm text-destructive">Failed to load chart</p>
         </div>
@@ -206,9 +206,9 @@ function UserGrowthChart() {
   }
 
   return (
-    <Card className="p-6 hover:shadow-lg transition-shadow duration-300">
+    <Card className="p-6 border-2 hover:border-primary/50 hover:shadow-lg transition-all duration-300">
       <div className="mb-6">
-        <h3 className="text-lg font-serif font-semibold text-foreground">User Growth</h3>
+        <h3 className="text-lg font-semibold text-foreground">User Growth</h3>
         <p className="text-sm text-muted-foreground mt-1">Last 30 days</p>
       </div>
       <ResponsiveContainer width="100%" height={300}>
@@ -248,7 +248,7 @@ function UserGrowthChart() {
           <Line
             type="monotone"
             dataKey="newUsers"
-            stroke={CHART_COLORS.accent2}
+            stroke={CHART_COLORS.gray1}
             strokeWidth={2}
             strokeDasharray="5 5"
             name="New Users"

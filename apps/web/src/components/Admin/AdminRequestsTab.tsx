@@ -66,7 +66,7 @@ export function AdminRequestsTab() {
                 onClick={() => setSelectedStatus(option.value)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   selectedStatus === option.value
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
+                    ? 'bg-primary text-primary-foreground shadow-md'
                     : 'border border-border hover:bg-accent'
                 }`}
               >
@@ -144,14 +144,14 @@ export function AdminRequestsTab() {
                           className="w-10 h-14 rounded object-cover border border-border group-hover:border-primary/50 transition-colors shadow-sm"
                         />
                       ) : (
-                        <div className="w-10 h-14 rounded bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center border border-border group-hover:border-primary/50 transition-colors shadow-sm">
-                          <span className="text-white text-xs font-semibold">
+                        <div className="w-10 h-14 rounded bg-primary/10 flex items-center justify-center border-2 border-border group-hover:border-primary transition-colors">
+                          <span className="text-primary text-xs font-semibold">
                             {request.book?.title?.charAt(0).toUpperCase()}
                           </span>
                         </div>
                       )}
                       <div>
-                        <p className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                        <p className="font-medium text-foreground line-clamp-1">
                           {request.book?.title}
                         </p>
                         <p className="text-sm text-muted-foreground line-clamp-1">
@@ -169,8 +169,8 @@ export function AdminRequestsTab() {
                           className="w-8 h-8 rounded-full object-cover border border-border"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                          <span className="text-white font-semibold text-xs">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 border-2 border-border flex items-center justify-center">
+                          <span className="text-primary font-semibold text-xs">
                             {request.borrower?.name?.charAt(0).toUpperCase() || 'B'}
                           </span>
                         </div>
@@ -189,8 +189,8 @@ export function AdminRequestsTab() {
                           className="w-8 h-8 rounded-full object-cover border border-border"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                          <span className="text-white font-semibold text-xs">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 border-2 border-border flex items-center justify-center">
+                          <span className="text-primary font-semibold text-xs">
                             {request.owner?.name?.charAt(0).toUpperCase() || 'O'}
                           </span>
                         </div>

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
 import { PageContainer } from '@repo/ui/components/page-container';
+import { Badge } from '@repo/ui/components/badge';
 import { Inbox, Send } from '@repo/ui/components/icons';
 import {
   useIncomingBorrowRequests,
@@ -12,7 +13,6 @@ import {
   useInitiateReturn,
   useConfirmReturn,
 } from '../hooks/useBorrowRequests';
-import { RequestsHero } from '../components/Requests/RequestsHero';
 import { FilterControls } from '../components/Requests/FilterControls';
 import { RequestList } from '../components/Requests/RequestList';
 import { ApproveRequestDialog } from '../components/Requests/ApproveRequestDialog';
@@ -239,10 +239,39 @@ export default function Requests() {
     (r) => r.status === 'approved' || r.status === 'borrowed'
   ).length;
 
+  // Calculate stats for header
+  const approvedIncoming = incomingRequests.filter((r) => r.status === 'approved').length;
+  const borrowed = myRequests.filter((r) => r.status === 'borrowed').length;
+
   return (
     <PageContainer maxWidth="2xl">
-      {/* Hero Section */}
-      <RequestsHero incomingRequests={incomingRequests} myRequests={myRequests} />
+      {/* Page Header */}
+      <div className="mb-8 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Requests</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your book lending requests
+            </p>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="flex gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Pending:</span>
+            <span className="font-semibold">{pendingIncomingCount}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Approved:</span>
+            <span className="font-semibold">{approvedIncoming}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Borrowed:</span>
+            <span className="font-semibold">{borrowed}</span>
+          </div>
+        </div>
+      </div>
 
       {/* Tabs Section */}
       <Tabs
@@ -250,45 +279,39 @@ export default function Requests() {
         onValueChange={(value) => setActiveTab(value as 'incoming' | 'outgoing')}
         className="space-y-6"
       >
-        {/* Enhanced Tabs List */}
-        <div className="sticky top-0 z-10 pb-4 backdrop-blur-xl bg-background/80 -mx-4 px-4 border-b border-border/50">
-          <TabsList className="inline-flex h-14 items-center justify-center rounded-2xl bg-gradient-to-br from-muted/80 to-muted/50 p-1.5 backdrop-blur-xl border border-border/60 shadow-lg animate-in fade-in slide-in-from-top-2 duration-500">
-            <TabsTrigger
-              value="incoming"
-              className="group relative inline-flex items-center justify-center whitespace-nowrap rounded-xl px-8 py-3 text-sm font-semibold ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-gradient-to-br data-[state=active]:from-background data-[state=active]:to-background/95 data-[state=active]:text-foreground data-[state=active]:shadow-xl gap-3 hover:scale-[1.02]"
-            >
-              <Inbox className="h-5 w-5 group-data-[state=active]:text-amber-600 dark:group-data-[state=active]:text-amber-400 transition-colors duration-300" />
-              <span>Incoming</span>
-              {pendingIncomingCount > 0 && (
-                <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-bold text-white bg-gradient-to-br from-amber-500 to-orange-600 rounded-full shadow-lg shadow-amber-500/50 animate-in fade-in zoom-in duration-300 group-data-[state=active]:animate-pulse">
-                  {pendingIncomingCount}
-                </span>
-              )}
-              {/* Active indicator */}
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-1 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full transition-all duration-300 group-data-[state=active]:w-3/4 shadow-lg shadow-amber-500/50" />
-            </TabsTrigger>
+        {/* Clean Tabs List */}
+        <TabsList className="inline-flex h-auto items-center justify-start rounded-none bg-transparent p-0 border-b border-border w-full">
+          <TabsTrigger
+            value="incoming"
+            className="group relative inline-flex items-center justify-center gap-2 rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+          >
+            <Inbox className="h-4 w-4" />
+            <span>Incoming</span>
+            {pendingIncomingCount > 0 && (
+              <Badge variant="secondary" className="ml-1 bg-primary/10 text-primary border-0">
+                {pendingIncomingCount}
+              </Badge>
+            )}
+          </TabsTrigger>
 
-            <TabsTrigger
-              value="outgoing"
-              className="group relative inline-flex items-center justify-center whitespace-nowrap rounded-xl px-8 py-3 text-sm font-semibold ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-gradient-to-br data-[state=active]:from-background data-[state=active]:to-background/95 data-[state=active]:text-foreground data-[state=active]:shadow-xl gap-3 hover:scale-[1.02]"
-            >
-              <Send className="h-5 w-5 group-data-[state=active]:text-blue-600 dark:group-data-[state=active]:text-blue-400 transition-colors duration-300" />
-              <span>My Requests</span>
-              {activeMyRequestsCount > 0 && (
-                <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-semibold text-muted-foreground bg-muted/80 rounded-full border border-border/50 group-data-[state=active]:border-blue-500/30 group-data-[state=active]:bg-gradient-to-br group-data-[state=active]:from-blue-50 group-data-[state=active]:to-indigo-50 dark:group-data-[state=active]:from-blue-950/50 dark:group-data-[state=active]:to-indigo-950/50 group-data-[state=active]:text-blue-700 dark:group-data-[state=active]:text-blue-300 transition-all duration-300">
-                  {activeMyRequestsCount}
-                </span>
-              )}
-              {/* Active indicator */}
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-300 group-data-[state=active]:w-3/4 shadow-lg shadow-blue-500/50" />
-            </TabsTrigger>
-          </TabsList>
-        </div>
+          <TabsTrigger
+            value="outgoing"
+            className="group relative inline-flex items-center justify-center gap-2 rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+          >
+            <Send className="h-4 w-4" />
+            <span>My Requests</span>
+            {activeMyRequestsCount > 0 && (
+              <Badge variant="secondary" className="ml-1 bg-muted text-muted-foreground border-0">
+                {activeMyRequestsCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
         {/* Incoming Tab Content */}
         <TabsContent
           value="incoming"
-          className="mt-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          className="mt-0 space-y-6"
         >
           <FilterControls
             view="incoming"
@@ -319,7 +342,7 @@ export default function Requests() {
         {/* Outgoing Tab Content */}
         <TabsContent
           value="outgoing"
-          className="mt-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          className="mt-0 space-y-6"
         >
           <FilterControls
             view="outgoing"
