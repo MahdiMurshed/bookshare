@@ -38,6 +38,12 @@ export function Header() {
             {user ? (
               <>
                 <Link
+                  to="/requests"
+                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
+                >
+                  Requests
+                </Link>
+                <Link
                   to="/my-library"
                   className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
                 >

@@ -87,6 +87,28 @@ export interface BorrowRequest {
   updated_at: string;
 }
 
+export interface BorrowRequestWithDetails extends BorrowRequest {
+  book?: {
+    id: string;
+    title: string;
+    author: string;
+    cover_image_url: string | null;
+    genre: string | null;
+  };
+  borrower?: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatar_url: string | null;
+  };
+  owner?: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatar_url: string | null;
+  };
+}
+
 export interface Review {
   id: string;
   book_id: string;

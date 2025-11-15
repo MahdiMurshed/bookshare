@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Card } from '@repo/ui/components/card';
 import { Button } from '@repo/ui/components/button';
+import { Badge } from '@repo/ui/components/badge';
 import { ArrowLeft, Loader2, AlertCircle, CheckCircle } from '@repo/ui/components/icons';
 import { useBookDetail } from '../hooks/useBookDetail';
 import { useBorrowRequest } from '../hooks/useBorrowRequest';
+import { useMyBorrowRequests } from '../hooks/useBorrowRequests';
 import { BookInfo } from '../components/BookDetail/BookInfo';
 import { OwnerInfo } from '../components/BookDetail/OwnerInfo';
 import { BorrowRequestSection } from '../components/BookDetail/BorrowRequestSection';
@@ -18,6 +20,13 @@ export default function BookDetail() {
   const [requestSuccess, setRequestSuccess] = useState(false);
 
   const { data: book, isLoading, error } = useBookDetail(id);
+  const { data: myRequests = [] } = useMyBorrowRequests();
+
+  // Find existing request for this book
+  const existingRequest = useMemo(() => {
+    if (!id) return null;
+    return myRequests.find((req) => req.book_id === id);
+  }, [myRequests, id]);
 
   const borrowRequestMutation = useBorrowRequest({
     bookId: id || '',
@@ -113,7 +122,7 @@ export default function BookDetail() {
               {book.owner && <OwnerInfo owner={book.owner} />}
 
               {/* Borrow Request Section */}
-              {!requestSuccess && (
+              {!requestSuccess && !existingRequest && (
                 <BorrowRequestSection
                   isAuthenticated={!!user}
                   isOwnBook={!!isOwnBook}
@@ -125,6 +134,67 @@ export default function BookDetail() {
                   onSubmit={handleRequestBorrow}
                   onCancel={handleCancelForm}
                 />
+              )}
+
+              {/* Existing Request Status */}
+              {existingRequest && !requestSuccess && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-3">Borrow Request Status</h3>
+                  <div className="bg-muted rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-medium">Your request:</span>
+                      <Badge
+                        variant={
+                          existingRequest.status === 'approved'
+                            ? 'default'
+                            : existingRequest.status === 'denied'
+                            ? 'destructive'
+                            : 'default'
+                        }
+                        className={
+                          existingRequest.status === 'pending'
+                            ? 'bg-yellow-500'
+                            : existingRequest.status === 'approved'
+                            ? 'bg-green-500'
+                            : existingRequest.status === 'denied'
+                            ? 'bg-red-500'
+                            : 'bg-gray-500'
+                        }
+                      >
+                        {existingRequest.status}
+                      </Badge>
+                    </div>
+
+                    {existingRequest.request_message && (
+                      <div className="mb-3">
+                        <p className="text-xs text-muted-foreground mb-1">Your message:</p>
+                        <p className="text-sm">{existingRequest.request_message}</p>
+                      </div>
+                    )}
+
+                    {existingRequest.response_message && (
+                      <div className="mb-3">
+                        <p className="text-xs text-muted-foreground mb-1">Owner's response:</p>
+                        <p className="text-sm">{existingRequest.response_message}</p>
+                      </div>
+                    )}
+
+                    {existingRequest.status === 'approved' && existingRequest.due_date && (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Due date:</p>
+                        <p className="text-sm font-medium">
+                          {new Date(existingRequest.due_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    )}
+
+                    {existingRequest.status === 'pending' && (
+                      <p className="text-xs text-muted-foreground mt-3">
+                        The owner will review your request soon.
+                      </p>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>

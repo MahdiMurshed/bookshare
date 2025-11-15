@@ -6,6 +6,7 @@ import { SignUp } from "./pages/SignUp";
 import MyLibrary from "./pages/MyLibrary";
 import Browse from "./pages/Browse";
 import BookDetail from "./pages/BookDetail";
+import Requests from "./pages/Requests";
 import { Header } from "./components/Header";
 
 import "@repo/ui/styles/globals.css";
@@ -73,6 +74,14 @@ function App() {
           />
           <Route path="/browse" element={<Browse />} />
           <Route path="/books/:id" element={<BookDetail />} />
+          <Route
+            path="/requests"
+            element={
+              <ProtectedRoute>
+                <Requests />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/my-library"
             element={
