@@ -32,7 +32,7 @@ export function RequestCard({
   // Defensive null checks - if critical data is missing, show error state
   if (!request.book) {
     return (
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-destructive/20 bg-destructive/5">
         <CardContent className="p-6">
           <p className="text-sm text-destructive">Error: Book data not found for this request.</p>
         </CardContent>
@@ -41,10 +41,10 @@ export function RequestCard({
   }
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="group overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 h-full flex flex-col">
       <RequestCardHeader request={request} view={view} />
 
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 flex-1">
         <RequestCardDetails request={request} />
       </CardContent>
 

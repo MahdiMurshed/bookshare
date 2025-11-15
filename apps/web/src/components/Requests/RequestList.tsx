@@ -1,4 +1,8 @@
 import type { BorrowRequestWithDetails } from '@repo/api-client';
+import { EmptyState } from '@repo/ui/components/empty-state';
+import { Skeleton } from '@repo/ui/components/skeleton';
+import { Card, CardContent, CardFooter, CardHeader } from '@repo/ui/components/card';
+import { Inbox, Send } from '@repo/ui/components/icons';
 import { RequestCard } from './RequestCard';
 
 export interface RequestListProps {
@@ -12,6 +16,41 @@ export interface RequestListProps {
   onInitiateReturn?: (requestId: string) => void;
   onConfirmReturn?: (requestId: string) => void;
   emptyMessage?: string;
+}
+
+/**
+ * Skeleton loader for request cards
+ */
+function RequestCardSkeleton() {
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-4">
+        <div className="flex items-start gap-4">
+          <Skeleton className="h-24 w-16 rounded flex-shrink-0" />
+          <div className="flex-1 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-3 w-1/3" />
+              </div>
+              <Skeleton className="h-6 w-20" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-3 w-1/2" />
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0 space-y-2">
+        <Skeleton className="h-20 w-full rounded-md" />
+      </CardContent>
+      <CardFooter className="pt-0">
+        <Skeleton className="h-10 w-full" />
+      </CardFooter>
+    </Card>
+  );
 }
 
 export function RequestList({
@@ -28,60 +67,54 @@ export function RequestList({
 }: RequestListProps) {
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-          <p className="mt-4 text-sm text-muted-foreground">Loading requests...</p>
-        </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+        {[...Array(4)].map((_, i) => (
+          <div
+            key={i}
+            className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+            style={{ animationDelay: `${i * 100}ms` }}
+          >
+            <RequestCardSkeleton />
+          </div>
+        ))}
       </div>
     );
   }
 
   if (requests.length === 0) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center max-w-md">
-          <svg
-            className="mx-auto h-12 w-12 text-muted-foreground"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <h3 className="mt-4 text-sm font-medium">
-            {emptyMessage || 'No requests found'}
-          </h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {view === 'incoming'
-              ? 'When someone requests to borrow your books, they will appear here.'
-              : 'Books you have requested to borrow will appear here.'}
-          </p>
-        </div>
-      </div>
+      <EmptyState
+        icon={view === 'incoming' ? Inbox : Send}
+        title={emptyMessage || 'No requests found'}
+        description={
+          view === 'incoming'
+            ? 'When someone requests to borrow your books, they will appear here. Share your library to start receiving requests!'
+            : 'Books you request to borrow will appear here. Browse available books to get started.'
+        }
+        className="my-8"
+      />
     );
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {requests.map((request) => (
-        <RequestCard
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+      {requests.map((request, index) => (
+        <div
           key={request.id}
-          request={request}
-          view={view}
-          onApprove={onApprove}
-          onDeny={onDeny}
-          onMarkHandoverComplete={onMarkHandoverComplete}
-          onAddTracking={onAddTracking}
-          onInitiateReturn={onInitiateReturn}
-          onConfirmReturn={onConfirmReturn}
-        />
+          className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: `${index * 50}ms` }}
+        >
+          <RequestCard
+            request={request}
+            view={view}
+            onApprove={onApprove}
+            onDeny={onDeny}
+            onMarkHandoverComplete={onMarkHandoverComplete}
+            onAddTracking={onAddTracking}
+            onInitiateReturn={onInitiateReturn}
+            onConfirmReturn={onConfirmReturn}
+          />
+        </div>
       ))}
     </div>
   );

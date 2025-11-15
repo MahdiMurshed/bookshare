@@ -28,29 +28,32 @@ export function RequestCardHeader({ request, view }: RequestCardHeaderProps) {
   }
 
   return (
-    <CardHeader className="pb-4">
-      <div className="flex items-start gap-4">
+    <CardHeader className="pb-4 bg-gradient-to-b from-muted/30 to-transparent">
+      <div className="flex items-start gap-5">
         {/* Book Cover */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 relative group/cover">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-orange-600/10 rounded-lg blur-sm group-hover/cover:blur-md transition-all duration-300" />
           <ImageWithFallback
             src={request.book.cover_image_url || ''}
             alt={request.book.title || 'Book cover'}
-            className="h-24 w-16 rounded object-cover"
+            className="relative h-28 w-20 rounded-lg object-cover shadow-md ring-1 ring-border/50 group-hover:ring-primary/30 transition-all duration-300"
           />
         </div>
 
         {/* Book and User Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-lg truncate">
+              <h3 className="font-serif font-bold text-xl tracking-tight truncate text-foreground leading-tight mb-1">
                 {request.book.title || 'Unknown Book'}
               </h3>
-              <p className="text-sm text-muted-foreground truncate">
+              <p className="text-sm text-muted-foreground/80 truncate font-medium">
                 by {request.book.author || 'Unknown Author'}
               </p>
               {request.book.genre && (
-                <p className="text-xs text-muted-foreground mt-1">{request.book.genre}</p>
+                <span className="inline-block mt-2 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-md">
+                  {request.book.genre}
+                </span>
               )}
             </div>
             <StatusBadge
@@ -59,14 +62,17 @@ export function RequestCardHeader({ request, view }: RequestCardHeaderProps) {
             />
           </div>
 
-          <div className="mt-3 text-sm">
-            <p className="text-muted-foreground">
-              {isIncoming ? 'Requested by' : 'Owner'}:{' '}
-              <span className="font-medium text-foreground">
+          <div className="mt-4 space-y-1.5 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground/70">
+                {isIncoming ? 'Requested by' : 'Owner'}:
+              </span>
+              <span className="font-semibold text-foreground">
                 {otherUser?.name || otherUser?.email || 'Unknown User'}
               </span>
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            </div>
+            <p className="text-xs text-muted-foreground/60 flex items-center gap-1.5">
+              <span className="inline-block w-1 h-1 rounded-full bg-muted-foreground/40" />
               {formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}
             </p>
           </div>

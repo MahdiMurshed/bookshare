@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { useActiveChats } from '../hooks/useActiveChats';
 import { ChatListItem } from '../components/Chats/ChatListItem';
 import { ChatDialog } from '../components/Requests/ChatDialog';
+import { PageContainer } from '@repo/ui/components/page-container';
+import { PageHeader } from '@repo/ui/components/page-header';
+import { Card } from '@repo/ui/components/card';
+import { MessageCircle, MessagesSquare, Loader2 } from '@repo/ui/components/icons';
 import type { ChatSummary } from '@repo/api-client';
 
 export default function Chats() {
@@ -23,65 +27,93 @@ export default function Chats() {
 
   if (isLoading) {
     return (
-      <div className="container max-w-4xl mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-8">Chats</h1>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-            <p className="mt-4 text-sm text-muted-foreground">Loading chats...</p>
+      <PageContainer maxWidth="lg">
+        <PageHeader
+          title="Messages"
+          description="Your conversations about borrowed books"
+          icon={MessagesSquare}
+        />
+
+        {/* Loading State */}
+        <div className="flex items-center justify-center py-24">
+          <div className="text-center space-y-4">
+            <div className="relative inline-flex">
+              <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse" />
+              <Loader2 className="relative h-10 w-10 animate-spin text-primary" />
+            </div>
+            <p className="text-sm font-medium text-muted-foreground">Loading your conversations...</p>
           </div>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   if (chats.length === 0) {
     return (
-      <div className="container max-w-4xl mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-8">Chats</h1>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center max-w-md">
-            <svg
-              className="mx-auto h-12 w-12 text-muted-foreground"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
-            <h3 className="mt-4 text-sm font-medium">No active chats</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Start a conversation by requesting a book! Once you send or receive a message about a borrow request, it will appear here.
-            </p>
+      <PageContainer maxWidth="lg">
+        <PageHeader
+          title="Messages"
+          description="Your conversations about borrowed books"
+          icon={MessagesSquare}
+        />
+
+        {/* Empty State */}
+        <Card className="border-border/50 bg-gradient-to-br from-card/50 to-card/30 backdrop-blur-sm overflow-hidden">
+          <div className="relative">
+            {/* Decorative background */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(251,191,36,0.08),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(249,115,22,0.08),transparent_50%)]" />
+
+            <div className="relative flex flex-col items-center justify-center py-20 px-6 text-center">
+              {/* Icon with ambient glow */}
+              <div className="relative mb-6">
+                <div className="absolute inset-0 bg-primary/10 blur-3xl rounded-full" />
+                <div className="relative bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-2xl p-6 border border-border/50">
+                  <MessageCircle className="h-14 w-14 text-amber-600 dark:text-amber-400" strokeWidth={1.5} />
+                </div>
+              </div>
+
+              {/* Text Content */}
+              <div className="space-y-3 mb-6 max-w-md">
+                <h3 className="text-2xl font-semibold text-foreground tracking-tight">
+                  No conversations yet
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Your message inbox is empty. When you request a book or someone requests one of yours,
+                  you'll be able to chat with them here to coordinate the exchange.
+                </p>
+              </div>
+
+              {/* Decorative element */}
+              <div className="flex items-center gap-2 text-xs text-muted-foreground/60 mt-4">
+                <div className="h-px w-8 bg-border/50" />
+                <span>Start sharing books to begin chatting</span>
+                <div className="h-px w-8 bg-border/50" />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </Card>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Chats</h1>
-        <p className="text-muted-foreground mt-2">
-          {chats.length} active conversation{chats.length !== 1 ? 's' : ''}
-        </p>
-      </div>
+    <PageContainer maxWidth="lg">
+      <PageHeader
+        title="Messages"
+        description={`${chats.length} active conversation${chats.length !== 1 ? 's' : ''}`}
+        icon={MessagesSquare}
+      />
 
       {/* Chat List */}
-      <div className="space-y-3">
-        {chats.map((chat) => (
-          <ChatListItem
+      <div className="space-y-2">
+        {chats.map((chat, index) => (
+          <div
             key={chat.request.id}
-            chat={chat}
-            onClick={() => handleChatClick(chat)}
-          />
+            style={{ animationDelay: `${index * 50}ms` }}
+            className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards"
+          >
+            <ChatListItem chat={chat} onClick={() => handleChatClick(chat)} />
+          </div>
         ))}
       </div>
 
@@ -99,6 +131,6 @@ export default function Chats() {
           }
         />
       )}
-    </div>
+    </PageContainer>
   );
 }
