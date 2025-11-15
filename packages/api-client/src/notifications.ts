@@ -141,18 +141,26 @@ export async function markAllAsRead(): Promise<void> {
  * Create a notification (typically called by backend triggers)
  */
 export async function createNotification(input: CreateNotificationInput): Promise<Notification> {
-  // Current: Supabase implementation
-  const { data, error } = await supabase
-    .from('notifications')
-    .insert({
-      ...input,
-      read: false,
-    })
-    .select()
-    .single();
+  // Current: Supabase implementation using secure function to bypass RLS
+  const { data, error } = await supabase.rpc('create_notification_secure', {
+    p_user_id: input.user_id,
+    p_type: input.type,
+    p_title: input.title,
+    p_message: input.message,
+    p_payload: input.payload || null,
+  });
 
   if (error) throw error;
-  return data as Notification;
+
+  // Fetch the created notification
+  const { data: notification, error: fetchError } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('id', data)
+    .single();
+
+  if (fetchError) throw fetchError;
+  return notification as Notification;
 
   // Future: NestJS implementation
   // const response = await fetch(`${API_URL}/notifications`, {
