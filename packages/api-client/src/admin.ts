@@ -5,7 +5,9 @@
  * Currently implemented with Supabase.
  *
  * IMPORTANT: These functions should only be called by admin users.
- * The backend enforces admin-only access via RLS policies.
+ * Authorization is enforced at the application level by checking the
+ * is_admin flag on the user. Always use the useIsAdmin() hook to
+ * verify admin status before calling these functions.
  */
 
 import { supabase } from './supabaseClient.js';
@@ -519,8 +521,11 @@ export async function getUserGrowthData(): Promise<UserGrowthData[]> {
  * Check if the current user is an admin
  */
 export async function checkIsAdmin(): Promise<boolean> {
-  const { data, error } = await supabase.rpc('is_admin', {
-    user_id: (await supabase.auth.getUser()).data.user?.id,
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data, error } = await supabase.rpc('is_user_admin', {
+    user_id: user.id,
   });
 
   if (error) throw error;
