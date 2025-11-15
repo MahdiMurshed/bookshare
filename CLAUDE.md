@@ -32,6 +32,7 @@ pnpm --filter @repo/ui lint
 ### Claude Code Commands
 ```bash
 /design-polish    # Invoke frontend-design skill to polish UI components with high-quality design
+/e2e-test         # Write end-to-end tests using Playwright for features, pages, or user flows
 ```
 
 ## Architecture
