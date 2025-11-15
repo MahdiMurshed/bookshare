@@ -13,6 +13,7 @@ import {
   FormMessage,
 } from "@repo/ui/components/form";
 import { Input } from "@repo/ui/components/input";
+import { User, Mail, Lock, AlertCircle, Loader2 } from "lucide-react";
 
 // Zod validation schema
 const signUpSchema = z
@@ -78,91 +79,156 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+        {/* Error Alert */}
         {error && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
-            {error}
+          <div className="group relative overflow-hidden rounded-lg border-2 border-red-200 dark:border-red-900/50 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/40 dark:to-rose-950/40 p-4 animate-shake">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <div className="rounded-full bg-red-100 dark:bg-red-900/40 p-1">
+                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-red-900 dark:text-red-100">
+                  {error}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
+        {/* Name Field */}
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Full Name</FormLabel>
+            <FormItem className="space-y-2">
+              <FormLabel className="text-sm font-semibold text-foreground">
+                Full Name
+              </FormLabel>
               <FormControl>
-                <Input
-                  type="text"
-                  placeholder="John Doe"
-                  disabled={isLoading}
-                  {...field}
-                />
+                <div className="relative group">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <User className="w-4 h-4 text-muted-foreground group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors duration-200" />
+                  </div>
+                  <Input
+                    type="text"
+                    placeholder="John Doe"
+                    disabled={isLoading}
+                    className="pl-10 h-11 border-2 focus-visible:ring-amber-500/20 focus-visible:border-amber-500 dark:focus-visible:border-amber-400 transition-all duration-200 bg-background/50"
+                    {...field}
+                  />
+                </div>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
 
+        {/* Email Field */}
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
+            <FormItem className="space-y-2">
+              <FormLabel className="text-sm font-semibold text-foreground">
+                Email Address
+              </FormLabel>
               <FormControl>
-                <Input
-                  type="email"
-                  placeholder="you@example.com"
-                  disabled={isLoading}
-                  {...field}
-                />
+                <div className="relative group">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <Mail className="w-4 h-4 text-muted-foreground group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors duration-200" />
+                  </div>
+                  <Input
+                    type="email"
+                    placeholder="you@example.com"
+                    disabled={isLoading}
+                    className="pl-10 h-11 border-2 focus-visible:ring-amber-500/20 focus-visible:border-amber-500 dark:focus-visible:border-amber-400 transition-all duration-200 bg-background/50"
+                    {...field}
+                  />
+                </div>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
 
+        {/* Password Field */}
         <FormField
           control={form.control}
           name="password"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
+            <FormItem className="space-y-2">
+              <FormLabel className="text-sm font-semibold text-foreground">
+                Password
+              </FormLabel>
               <FormControl>
-                <Input
-                  type="password"
-                  placeholder="••••••••"
-                  disabled={isLoading}
-                  {...field}
-                />
+                <div className="relative group">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <Lock className="w-4 h-4 text-muted-foreground group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors duration-200" />
+                  </div>
+                  <Input
+                    type="password"
+                    placeholder="Create a strong password"
+                    disabled={isLoading}
+                    className="pl-10 h-11 border-2 focus-visible:ring-amber-500/20 focus-visible:border-amber-500 dark:focus-visible:border-amber-400 transition-all duration-200 bg-background/50"
+                    {...field}
+                  />
+                </div>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
+              {!form.formState.errors.password && (
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  At least 8 characters with uppercase, lowercase, and number
+                </p>
+              )}
             </FormItem>
           )}
         />
 
+        {/* Confirm Password Field */}
         <FormField
           control={form.control}
           name="confirmPassword"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
+            <FormItem className="space-y-2">
+              <FormLabel className="text-sm font-semibold text-foreground">
+                Confirm Password
+              </FormLabel>
               <FormControl>
-                <Input
-                  type="password"
-                  placeholder="••••••••"
-                  disabled={isLoading}
-                  {...field}
-                />
+                <div className="relative group">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <Lock className="w-4 h-4 text-muted-foreground group-focus-within:text-amber-600 dark:group-focus-within:text-amber-400 transition-colors duration-200" />
+                  </div>
+                  <Input
+                    type="password"
+                    placeholder="Re-enter your password"
+                    disabled={isLoading}
+                    className="pl-10 h-11 border-2 focus-visible:ring-amber-500/20 focus-visible:border-amber-500 dark:focus-visible:border-amber-400 transition-all duration-200 bg-background/50"
+                    {...field}
+                  />
+                </div>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Creating account..." : "Create Account"}
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="relative w-full h-11 mt-6 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 dark:from-amber-500 dark:to-orange-500 dark:hover:from-amber-600 dark:hover:to-orange-600 text-white font-semibold shadow-lg shadow-amber-500/30 dark:shadow-amber-900/30 hover:shadow-xl hover:shadow-amber-500/40 dark:hover:shadow-amber-900/40 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+        >
+          {isLoading ? (
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Creating your account...
+            </span>
+          ) : (
+            <span>Create Account</span>
+          )}
         </Button>
       </form>
     </Form>

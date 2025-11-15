@@ -1,10 +1,11 @@
 import { formatDistanceToNow } from 'date-fns';
 import type { ChatSummary } from '@repo/api-client';
-import { Card, CardContent } from '@repo/ui/components/card';
+import { Card } from '@repo/ui/components/card';
 import { Badge } from '@repo/ui/components/badge';
 import { ImageWithFallback } from '../ImageWithFallback';
 import { cn } from '@repo/ui/lib/utils';
 import { useAuth } from '../../contexts/AuthContext';
+import { Clock, User } from '@repo/ui/components/icons';
 
 export interface ChatListItemProps {
   chat: ChatSummary;
@@ -28,60 +29,111 @@ export function ChatListItem({ chat, onClick }: ChatListItemProps) {
   return (
     <Card
       className={cn(
-        'cursor-pointer transition-colors hover:bg-accent',
-        hasUnread && 'border-l-4 border-l-primary bg-accent/50'
+        'group relative cursor-pointer overflow-hidden border transition-all duration-300',
+        'hover:shadow-lg hover:-translate-y-0.5 hover:border-border',
+        hasUnread
+          ? 'border-l-4 border-l-amber-500 dark:border-l-amber-400 bg-gradient-to-br from-amber-50/80 to-background dark:from-amber-950/20 dark:to-background shadow-md'
+          : 'border-border/50 bg-card/50 hover:bg-card'
       )}
       onClick={onClick}
     >
-      <CardContent className="p-4">
-        <div className="flex gap-4">
-          {/* Book Cover */}
+      {/* Subtle gradient overlay on hover */}
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 via-transparent to-orange-500/0 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-300" />
+
+      <div className="relative p-5">
+        <div className="flex gap-5">
+          {/* Book Cover - Larger and more prominent */}
           <div className="flex-shrink-0">
-            <ImageWithFallback
-              src={request.book?.cover_image_url || ''}
-              alt={request.book?.title || 'Book'}
-              className="w-16 h-20 object-cover rounded"
-            />
+            <div className={cn(
+              'relative rounded-lg overflow-hidden shadow-md transition-all duration-300',
+              'group-hover:shadow-xl group-hover:scale-[1.02]',
+              hasUnread && 'ring-2 ring-amber-500/20 dark:ring-amber-400/20'
+            )}>
+              <ImageWithFallback
+                src={request.book?.cover_image_url || ''}
+                alt={request.book?.title || 'Book'}
+                className="w-20 h-28 sm:w-24 sm:h-32 object-cover"
+              />
+              {/* Subtle overlay on hover */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </div>
           </div>
 
           {/* Chat Info */}
-          <div className="flex-1 min-w-0">
-            {/* Book Title */}
-            <h3 className={cn('font-semibold text-sm truncate', hasUnread && 'font-bold')}>
-              {request.book?.title || 'Untitled Book'}
-            </h3>
+          <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+            <div className="space-y-1.5">
+              {/* Book Title - Elegant serif font */}
+              <h3 className={cn(
+                'font-serif text-base sm:text-lg leading-tight line-clamp-2 transition-colors duration-200',
+                hasUnread
+                  ? 'font-bold text-foreground'
+                  : 'font-semibold text-foreground/90 group-hover:text-foreground'
+              )}>
+                {request.book?.title || 'Untitled Book'}
+              </h3>
 
-            {/* Other User */}
-            <p className="text-xs text-muted-foreground mb-1">with {otherUserName}</p>
+              {/* Other User */}
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <User className="h-3.5 w-3.5" strokeWidth={2} />
+                <span className="font-medium">{otherUserName}</span>
+              </div>
+            </div>
 
             {/* Last Message Preview */}
             {lastMessage && (
-              <p
-                className={cn(
-                  'text-sm text-muted-foreground line-clamp-2',
-                  hasUnread && 'font-medium text-foreground'
-                )}
-              >
-                {lastMessage.content}
-              </p>
-            )}
+              <div className="mt-2.5 space-y-1.5">
+                <p
+                  className={cn(
+                    'text-sm leading-relaxed line-clamp-2 transition-colors duration-200',
+                    hasUnread
+                      ? 'font-medium text-foreground/90'
+                      : 'text-muted-foreground group-hover:text-foreground/80'
+                  )}
+                >
+                  {lastMessage.content}
+                </p>
 
-            {/* Timestamp */}
-            {timestamp && (
-              <p className="text-xs text-muted-foreground mt-1">{timestamp}</p>
+                {/* Timestamp */}
+                {timestamp && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground/80">
+                    <Clock className="h-3 w-3" strokeWidth={2} />
+                    <span>{timestamp}</span>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
-          {/* Unread Badge */}
+          {/* Unread Badge - More prominent and elegant */}
           {hasUnread && (
             <div className="flex-shrink-0 self-start">
-              <Badge variant="default" className="rounded-full h-6 w-6 flex items-center justify-center p-0">
-                {unreadCount}
-              </Badge>
+              <div className="relative">
+                {/* Ambient glow */}
+                <div className="absolute inset-0 bg-amber-500/30 dark:bg-amber-400/30 blur-md rounded-full" />
+                <Badge
+                  variant="default"
+                  className={cn(
+                    'relative min-w-[1.75rem] h-7 rounded-full px-2',
+                    'bg-gradient-to-br from-amber-500 to-orange-600',
+                    'dark:from-amber-400 dark:to-orange-500',
+                    'text-white dark:text-gray-900 font-bold text-xs',
+                    'shadow-lg shadow-amber-500/25 dark:shadow-amber-400/25',
+                    'border-2 border-amber-200/50 dark:border-amber-300/30'
+                  )}
+                >
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </Badge>
+              </div>
             </div>
           )}
         </div>
-      </CardContent>
+      </div>
+
+      {/* Bottom border accent on hover */}
+      <div className={cn(
+        'absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500/0 via-amber-500/50 to-amber-500/0',
+        'opacity-0 group-hover:opacity-100 transition-opacity duration-300'
+      )} />
     </Card>
   );
 }
