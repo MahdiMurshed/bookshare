@@ -157,6 +157,17 @@ export type {
   UserActivityLog,
   UpdateUserInput,
   UpdateBookInput as AdminUpdateBookInput,
+  // System Notifications types
+  UserGroup,
+  BroadcastNotificationInput,
+  GroupNotificationInput,
+  UserNotificationInput,
+  // Advanced Analytics types
+  ActiveUser,
+  PopularBook,
+  BorrowDurationMetrics,
+  UserRetentionMetrics,
+  PlatformKPIs,
 } from './admin.js';
 export {
   getAdminStats,
@@ -187,6 +198,16 @@ export {
   adminDenyRequest,
   adminCancelRequest,
   adminMarkAsReturned,
+  // System Notifications functions
+  sendBroadcastNotification,
+  sendGroupNotification,
+  sendUserNotification,
+  // Advanced Analytics functions
+  getMostActiveUsers,
+  getMostBorrowedBooks,
+  getAverageBorrowDuration,
+  getUserRetentionMetrics,
+  getPlatformKPIs,
 } from './admin.js';
 
 // Export user profile functions

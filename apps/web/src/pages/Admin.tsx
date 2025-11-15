@@ -5,7 +5,7 @@
  * Features stats, charts, activity feed, and data management tabs
  */
 
-import { Shield, Users, BookOpen, RefreshCw } from 'lucide-react';
+import { Shield, Users, BookOpen, RefreshCw, Bell, BarChart3 } from 'lucide-react';
 import { PageContainer } from '@repo/ui/components/page-container';
 import { PageHeader } from '@repo/ui/components/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
@@ -15,6 +15,8 @@ import { AdminCharts } from '../components/Admin/AdminCharts';
 import { AdminUsersTab } from '../components/Admin/AdminUsersTab';
 import { AdminBooksTab } from '../components/Admin/AdminBooksTab';
 import { AdminRequestsTab } from '../components/Admin/AdminRequestsTab';
+import { AdminNotificationsTab } from '../components/Admin/AdminNotificationsTab';
+import { AdminAnalyticsTab } from '../components/Admin/AdminAnalyticsTab';
 import { useIsAdmin } from '../hooks/useAdminUser';
 import { Navigate } from 'react-router-dom';
 import { LoadingSpinner } from '@repo/ui/components/loading-spinner';
@@ -68,8 +70,15 @@ export default function Admin() {
         </div>
 
         {/* Data Management Tabs */}
-        <Tabs defaultValue="users" className="space-y-6">
+        <Tabs defaultValue="analytics" className="space-y-6">
           <TabsList className="inline-flex w-auto gap-1 bg-transparent border-b border-border p-0 h-auto rounded-none">
+            <TabsTrigger
+              value="analytics"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent pb-3 pt-3"
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Analytics
+            </TabsTrigger>
             <TabsTrigger
               value="users"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent pb-3 pt-3"
@@ -91,7 +100,18 @@ export default function Admin() {
               <RefreshCw className="w-4 h-4 mr-2" />
               Requests
             </TabsTrigger>
+            <TabsTrigger
+              value="notifications"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent pb-3 pt-3"
+            >
+              <Bell className="w-4 h-4 mr-2" />
+              Notifications
+            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="analytics" className="space-y-4">
+            <AdminAnalyticsTab />
+          </TabsContent>
 
           <TabsContent value="users" className="space-y-4">
             <AdminUsersTab />
@@ -103,6 +123,10 @@ export default function Admin() {
 
           <TabsContent value="requests" className="space-y-4">
             <AdminRequestsTab />
+          </TabsContent>
+
+          <TabsContent value="notifications" className="space-y-4">
+            <AdminNotificationsTab />
           </TabsContent>
         </Tabs>
       </PageContainer>
