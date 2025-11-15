@@ -22,13 +22,17 @@ export function RequestCard({ request, view, onApprove, onDeny }: RequestCardPro
   const statusVariant = {
     pending: 'default' as const,
     approved: 'default' as const,
+    borrowed: 'default' as const,
+    return_initiated: 'default' as const,
     denied: 'destructive' as const,
     returned: 'secondary' as const,
   }[request.status];
 
   const statusColor = {
     pending: 'bg-yellow-500',
-    approved: 'bg-green-500',
+    approved: 'bg-blue-500',
+    borrowed: 'bg-green-500',
+    return_initiated: 'bg-orange-500',
     denied: 'bg-red-500',
     returned: 'bg-gray-500',
   }[request.status];

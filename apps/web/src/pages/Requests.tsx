@@ -38,13 +38,24 @@ export default function Requests() {
     }
   };
 
-  const handleApprove = async (dueDate: string, message?: string) => {
+  const handleApprove = async (
+    dueDate: string,
+    handoverMethod: 'ship' | 'meetup' | 'pickup',
+    handoverDetails: { address?: string; datetime?: string; instructions?: string },
+    message?: string
+  ) => {
     if (!selectedRequest) return;
 
     try {
       await approveMutation.mutateAsync({
         id: selectedRequest.id,
         dueDate,
+        handoverDetails: {
+          method: handoverMethod,
+          address: handoverDetails.address,
+          datetime: handoverDetails.datetime,
+          instructions: handoverDetails.instructions,
+        },
         message,
       });
       setApproveDialogOpen(false);
