@@ -167,6 +167,16 @@ export {
   checkIsAdmin,
 } from './admin.js';
 
+// Export user profile functions
+export type { UpdateProfileInput } from './users.js';
+export {
+  getUserProfile,
+  updateProfile,
+  uploadAvatar,
+  deleteAccount,
+  getUserStats,
+} from './users.js';
+
 // Export Supabase client for advanced use cases (use sparingly)
 // Note: Direct use of supabase client should be avoided in apps
 export { supabase } from './supabaseClient.js';
