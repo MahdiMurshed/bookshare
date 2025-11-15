@@ -222,6 +222,6 @@ export {
   getUserStats,
 } from './users.js';
 
-// Export Supabase client for advanced use cases (use sparingly)
-// Note: Direct use of supabase client should be avoided in apps
-export { supabase } from './supabaseClient.js';
+// Note: Supabase client is intentionally NOT exported to enforce backend abstraction.
+// All database operations should go through the functions above.
+// When migrating to NestJS, only this package needs changes - apps stay unchanged.
