@@ -29,6 +29,11 @@ pnpm --filter web dev
 pnpm --filter @repo/ui lint
 ```
 
+### Claude Code Commands
+```bash
+/design-polish    # Invoke frontend-design skill to polish UI components with high-quality design
+```
+
 ## Architecture
 
 ### Monorepo Structure
@@ -184,9 +189,6 @@ const handleSubmit = async (data) => {
 **Form Management**
 - Use react-hook-form + Zod schemas + shadcn Form components for all forms.
 - Define Zod schemas in separate files for reusability and type inference.
-
-**UI Development**
-- Always use the `frontend-design` skill for UI/component tasks to ensure consistent, high-quality design.
 
 **Code Reusability (DRY)**
 - Never duplicate code. Extract shared logic to custom hooks in `hooks/`.
