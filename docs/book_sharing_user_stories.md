@@ -47,27 +47,48 @@ Registered User (with optional Admin role for management)
    - Owner approves or denies → updates status (approved/denied).
    - Borrower receives **notification** of decision.
 
-8. **Leave a Review**
+8. **Chat About Book Exchange**
+   - Borrower and owner can message each other about pickup/return details.
+   - Real-time chat updates via Supabase Realtime.
+   - Unread message indicators keep users informed.
+
+9. **Track Handover and Return**
+   - Owner can mark book as handed over and add tracking details.
+   - Borrower can initiate return process.
+   - Both parties track the book's status through the request lifecycle.
+
+10. **Leave a Review**
    - After borrowing, user can rate and review the book.
    - Reviews are visible on the book details page and user dashboard.
 
-9. **Notifications**
+11. **Manage Profile**
+   - User can update their profile (name, bio, avatar).
+   - View personal statistics (books owned, shared, borrowed, total exchanges).
+   - Manage account settings.
+
+12. **Notifications**
    - User receives **real-time notifications** for:
      - Incoming borrow requests
      - Approvals/denials of requests
+     - New messages in chats
      - Reviews on their books
 
-10. **Optional Admin Actions**
-    - Admin can manage all users and books, moderate content, and view analytics.
+13. **Admin Actions** (Admin Role)
+    - View platform statistics and analytics.
+    - Manage all users, books, and borrow requests.
+    - Moderate content and handle reported issues.
 
 ## Acceptance Criteria
-- Users can **sign up/login** securely (JWT + optional OAuth).
-- Users can **add/edit/delete** only their own books.
-- Users can **browse all available books** in the system.
+- Users can **sign up/login** securely using Supabase Auth.
+- Users can **add/edit/delete** only their own books (enforced by RLS policies).
+- Users can **browse all available books** with search and filters.
 - Users can **request to borrow books**, and owners can approve/deny requests.
-- Notifications are sent for requests and approvals/denials.
+- Users can **chat in real-time** about book exchanges.
+- Notifications are sent for requests, approvals/denials, and messages.
+- Users can **track handover and return** processes.
 - Users can **review books** after borrowing.
-- All actions are type-safe and validated using TypeScript + NestJS DTOs / React forms.
+- Users can **manage their profile** and view activity statistics.
+- All actions are type-safe and validated using TypeScript + Zod schemas + React Hook Form.
 
 ## Optional Enhancements
 - Search by **location** for physical sharing.
