@@ -154,6 +154,9 @@ export type {
   GenreDistribution,
   BorrowActivityData,
   UserGrowthData,
+  UserActivityLog,
+  UpdateUserInput,
+  UpdateBookInput as AdminUpdateBookInput,
 } from './admin.js';
 export {
   getAdminStats,
@@ -165,6 +168,25 @@ export {
   getBorrowActivityData,
   getUserGrowthData,
   checkIsAdmin,
+  // User management functions
+  updateUserAdminStatus,
+  suspendUser,
+  unsuspendUser,
+  updateUserProfile,
+  getUserActivityHistory,
+  deleteUser,
+  // Content moderation functions
+  deleteBook as adminDeleteBook,
+  updateBook as adminUpdateBook,
+  flagBook,
+  unflagBook,
+  getAllReviews,
+  deleteReview as adminDeleteReview,
+  // Request override functions
+  adminApproveRequest,
+  adminDenyRequest,
+  adminCancelRequest,
+  adminMarkAsReturned,
 } from './admin.js';
 
 // Export user profile functions
