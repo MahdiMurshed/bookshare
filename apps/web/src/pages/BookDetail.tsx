@@ -12,6 +12,7 @@ import { useMyBorrowRequests } from '../hooks/useBorrowRequests';
 import { BookInfo } from '../components/BookDetail/BookInfo';
 import { OwnerInfo } from '../components/BookDetail/OwnerInfo';
 import { BorrowRequestSection } from '../components/BookDetail/BorrowRequestSection';
+import { logError } from '../lib/utils/errors';
 
 export default function BookDetail() {
   const { id } = useParams<{ id: string }>();
@@ -46,7 +47,7 @@ export default function BookDetail() {
     try {
       await borrowRequestMutation.mutateAsync(message);
     } catch (error) {
-      console.error('Failed to create borrow request:', error);
+      logError(error, 'creating borrow request');
     }
   };
 
