@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
 import { PageContainer } from '@repo/ui/components/page-container';
-import { PageHeader } from '@repo/ui/components/page-header';
 import { Inbox, Send } from '@repo/ui/components/icons';
 import {
   useIncomingBorrowRequests,
@@ -13,6 +12,8 @@ import {
   useInitiateReturn,
   useConfirmReturn,
 } from '../hooks/useBorrowRequests';
+import { RequestsHero } from '../components/Requests/RequestsHero';
+import { FilterControls } from '../components/Requests/FilterControls';
 import { RequestList } from '../components/Requests/RequestList';
 import { ApproveRequestDialog } from '../components/Requests/ApproveRequestDialog';
 import { DenyRequestDialog } from '../components/Requests/DenyRequestDialog';
@@ -22,6 +23,10 @@ import type { BorrowRequestWithDetails, ReturnMethod } from '@repo/api-client';
 
 export default function Requests() {
   const [activeTab, setActiveTab] = useState<'incoming' | 'outgoing'>('incoming');
+  const [incomingStatusFilter, setIncomingStatusFilter] = useState<string>('all');
+  const [outgoingStatusFilter, setOutgoingStatusFilter] = useState<string>('all');
+  const [incomingSortBy, setIncomingSortBy] = useState<'newest' | 'oldest' | 'title'>('newest');
+  const [outgoingSortBy, setOutgoingSortBy] = useState<'newest' | 'oldest' | 'title'>('newest');
 
   // Selected request for dialogs
   const [selectedRequest, setSelectedRequest] = useState<BorrowRequestWithDetails | null>(null);
@@ -41,6 +46,58 @@ export default function Requests() {
   const updateTrackingMutation = useUpdateHandoverTracking();
   const initiateReturnMutation = useInitiateReturn();
   const confirmReturnMutation = useConfirmReturn();
+
+  // Filter and sort incoming requests
+  const filteredIncomingRequests = useMemo(() => {
+    let filtered = incomingRequests;
+
+    // Apply status filter
+    if (incomingStatusFilter !== 'all') {
+      filtered = filtered.filter((r) => r.status === incomingStatusFilter);
+    }
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      if (incomingSortBy === 'newest') {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      } else if (incomingSortBy === 'oldest') {
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      } else {
+        // Sort by book title
+        const titleA = a.book?.title || '';
+        const titleB = b.book?.title || '';
+        return titleA.localeCompare(titleB);
+      }
+    });
+
+    return sorted;
+  }, [incomingRequests, incomingStatusFilter, incomingSortBy]);
+
+  // Filter and sort outgoing requests
+  const filteredMyRequests = useMemo(() => {
+    let filtered = myRequests;
+
+    // Apply status filter
+    if (outgoingStatusFilter !== 'all') {
+      filtered = filtered.filter((r) => r.status === outgoingStatusFilter);
+    }
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      if (outgoingSortBy === 'newest') {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      } else if (outgoingSortBy === 'oldest') {
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      } else {
+        // Sort by book title
+        const titleA = a.book?.title || '';
+        const titleB = b.book?.title || '';
+        return titleA.localeCompare(titleB);
+      }
+    });
+
+    return sorted;
+  }, [myRequests, outgoingStatusFilter, outgoingSortBy]);
 
   const handleApproveClick = (requestId: string) => {
     const request = incomingRequests.find((r) => r.id === requestId);
@@ -183,51 +240,67 @@ export default function Requests() {
   ).length;
 
   return (
-    <PageContainer maxWidth="xl">
-      <PageHeader
-        title="Borrow Requests"
-        description="Manage incoming requests and track your active borrows"
-        icon={Inbox}
-      />
+    <PageContainer maxWidth="2xl">
+      {/* Hero Section */}
+      <RequestsHero incomingRequests={incomingRequests} myRequests={myRequests} />
 
+      {/* Tabs Section */}
       <Tabs
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as 'incoming' | 'outgoing')}
         className="space-y-6"
       >
-        <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-muted/50 p-1 backdrop-blur-sm border border-border/50">
-          <TabsTrigger
-            value="incoming"
-            className="relative inline-flex items-center justify-center whitespace-nowrap rounded-lg px-6 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2"
-          >
-            <Inbox className="h-4 w-4" />
-            Incoming
-            {pendingIncomingCount > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold text-white bg-gradient-to-br from-amber-500 to-orange-600 rounded-full shadow-sm animate-in fade-in zoom-in duration-200">
-                {pendingIncomingCount}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger
-            value="outgoing"
-            className="relative inline-flex items-center justify-center whitespace-nowrap rounded-lg px-6 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2"
-          >
-            <Send className="h-4 w-4" />
-            My Requests
-            {activeMyRequestsCount > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-muted-foreground bg-muted rounded-full">
-                {activeMyRequestsCount}
-              </span>
-            )}
-          </TabsTrigger>
-        </TabsList>
+        {/* Enhanced Tabs List */}
+        <div className="sticky top-0 z-10 pb-4 backdrop-blur-xl bg-background/80 -mx-4 px-4 border-b border-border/50">
+          <TabsList className="inline-flex h-14 items-center justify-center rounded-2xl bg-gradient-to-br from-muted/80 to-muted/50 p-1.5 backdrop-blur-xl border border-border/60 shadow-lg animate-in fade-in slide-in-from-top-2 duration-500">
+            <TabsTrigger
+              value="incoming"
+              className="group relative inline-flex items-center justify-center whitespace-nowrap rounded-xl px-8 py-3 text-sm font-semibold ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-gradient-to-br data-[state=active]:from-background data-[state=active]:to-background/95 data-[state=active]:text-foreground data-[state=active]:shadow-xl gap-3 hover:scale-[1.02]"
+            >
+              <Inbox className="h-5 w-5 group-data-[state=active]:text-amber-600 dark:group-data-[state=active]:text-amber-400 transition-colors duration-300" />
+              <span>Incoming</span>
+              {pendingIncomingCount > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-bold text-white bg-gradient-to-br from-amber-500 to-orange-600 rounded-full shadow-lg shadow-amber-500/50 animate-in fade-in zoom-in duration-300 group-data-[state=active]:animate-pulse">
+                  {pendingIncomingCount}
+                </span>
+              )}
+              {/* Active indicator */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-1 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full transition-all duration-300 group-data-[state=active]:w-3/4 shadow-lg shadow-amber-500/50" />
+            </TabsTrigger>
 
+            <TabsTrigger
+              value="outgoing"
+              className="group relative inline-flex items-center justify-center whitespace-nowrap rounded-xl px-8 py-3 text-sm font-semibold ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-gradient-to-br data-[state=active]:from-background data-[state=active]:to-background/95 data-[state=active]:text-foreground data-[state=active]:shadow-xl gap-3 hover:scale-[1.02]"
+            >
+              <Send className="h-5 w-5 group-data-[state=active]:text-blue-600 dark:group-data-[state=active]:text-blue-400 transition-colors duration-300" />
+              <span>My Requests</span>
+              {activeMyRequestsCount > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-semibold text-muted-foreground bg-muted/80 rounded-full border border-border/50 group-data-[state=active]:border-blue-500/30 group-data-[state=active]:bg-gradient-to-br group-data-[state=active]:from-blue-50 group-data-[state=active]:to-indigo-50 dark:group-data-[state=active]:from-blue-950/50 dark:group-data-[state=active]:to-indigo-950/50 group-data-[state=active]:text-blue-700 dark:group-data-[state=active]:text-blue-300 transition-all duration-300">
+                  {activeMyRequestsCount}
+                </span>
+              )}
+              {/* Active indicator */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-300 group-data-[state=active]:w-3/4 shadow-lg shadow-blue-500/50" />
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        {/* Incoming Tab Content */}
         <TabsContent
           value="incoming"
-          className="mt-0 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
+          className="mt-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
         >
-          <RequestList
+          <FilterControls
+            view="incoming"
             requests={incomingRequests}
+            selectedStatus={incomingStatusFilter}
+            onStatusChange={setIncomingStatusFilter}
+            sortBy={incomingSortBy}
+            onSortChange={setIncomingSortBy}
+          />
+
+          <RequestList
+            requests={filteredIncomingRequests}
             view="incoming"
             isLoading={incomingLoading}
             onApprove={handleApproveClick}
@@ -235,20 +308,38 @@ export default function Requests() {
             onMarkHandoverComplete={handleMarkHandoverComplete}
             onAddTracking={handleAddTracking}
             onConfirmReturn={handleConfirmReturn}
-            emptyMessage="No incoming requests"
+            emptyMessage={
+              incomingStatusFilter === 'all'
+                ? 'No incoming requests'
+                : `No ${incomingStatusFilter} requests`
+            }
           />
         </TabsContent>
 
+        {/* Outgoing Tab Content */}
         <TabsContent
           value="outgoing"
-          className="mt-0 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
+          className="mt-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
         >
-          <RequestList
+          <FilterControls
+            view="outgoing"
             requests={myRequests}
+            selectedStatus={outgoingStatusFilter}
+            onStatusChange={setOutgoingStatusFilter}
+            sortBy={outgoingSortBy}
+            onSortChange={setOutgoingSortBy}
+          />
+
+          <RequestList
+            requests={filteredMyRequests}
             view="outgoing"
             isLoading={myRequestsLoading}
             onInitiateReturn={handleInitiateReturn}
-            emptyMessage="No borrow requests"
+            emptyMessage={
+              outgoingStatusFilter === 'all'
+                ? 'No borrow requests'
+                : `No ${outgoingStatusFilter} requests`
+            }
           />
         </TabsContent>
       </Tabs>
