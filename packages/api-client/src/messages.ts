@@ -10,6 +10,8 @@
 
 import { supabase } from './supabaseClient.js';
 import type { Message, MessageWithSender } from './types.js';
+import { getBorrowRequest } from './borrowRequests.js';
+import { createNotification } from './notifications.js';
 
 /**
  * Get all messages for a borrow request
@@ -48,6 +50,29 @@ export async function sendMessage(requestId: string, content: string): Promise<M
     throw new Error('User must be authenticated to send messages');
   }
 
+  // Get borrow request to determine recipient
+  const request = await getBorrowRequest(requestId);
+  if (!request) {
+    throw new Error('Borrow request not found');
+  }
+  const recipientId = request.owner_id === user.id ? request.borrower_id : request.owner_id;
+
+  // Get sender and book info for notification
+  const { data: senderData } = await supabase
+    .from('users')
+    .select('name, email')
+    .eq('id', user.id)
+    .single();
+
+  const { data: bookData } = await supabase
+    .from('books')
+    .select('title')
+    .eq('id', request.book_id)
+    .single();
+
+  const senderName = senderData?.name || senderData?.email || 'Someone';
+  const bookTitle = bookData?.title || 'a book';
+
   // Current: Supabase implementation
   const { data, error } = await supabase
     .from('messages')
@@ -60,6 +85,25 @@ export async function sendMessage(requestId: string, content: string): Promise<M
     .single();
 
   if (error) throw error;
+
+  // Create notification for recipient
+  try {
+    await createNotification({
+      user_id: recipientId,
+      type: 'new_message',
+      title: 'New Message',
+      message: `${senderName} sent you a message about "${bookTitle}"`,
+      payload: {
+        request_id: requestId,
+        book_id: request.book_id,
+        message_preview: content.trim().substring(0, 50),
+      },
+    });
+  } catch (notifError) {
+    // Don't fail the message send if notification fails
+    console.error('Failed to create notification:', notifError);
+  }
+
   return data as Message;
 
   // Future: NestJS implementation
@@ -123,4 +167,109 @@ export function subscribeToMessages(
   //   callback(message);
   // };
   // return () => ws.close();
+}
+
+/**
+ * Mark all messages in a chat as read for the current user
+ */
+export async function markMessagesAsRead(requestId: string): Promise<void> {
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('User must be authenticated');
+  }
+
+  // Get borrow request to determine if user is owner or borrower
+  const request = await getBorrowRequest(requestId);
+  if (!request) {
+    throw new Error('Borrow request not found');
+  }
+  const isOwner = request.owner_id === user.id;
+
+  // Update read status for all unread messages
+  const { error } = await supabase
+    .from('messages')
+    .update(isOwner ? { read_by_owner: true } : { read_by_borrower: true })
+    .eq('borrow_request_id', requestId)
+    .neq('sender_id', user.id); // Don't mark own messages as read
+
+  if (error) throw error;
+
+  // Future: NestJS implementation
+  // await fetch(`${API_URL}/messages/${requestId}/read`, { method: 'PUT' });
+}
+
+/**
+ * Get unread message count for a specific borrow request
+ */
+export async function getUnreadMessageCount(requestId: string): Promise<number> {
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return 0;
+  }
+
+  // Get borrow request to determine if user is owner or borrower
+  const request = await getBorrowRequest(requestId);
+  if (!request) {
+    return 0; // Return 0 if request not found
+  }
+  const isOwner = request.owner_id === user.id;
+
+  // Count unread messages
+  const { count, error } = await supabase
+    .from('messages')
+    .select('*', { count: 'exact', head: true })
+    .eq('borrow_request_id', requestId)
+    .eq(isOwner ? 'read_by_owner' : 'read_by_borrower', false)
+    .neq('sender_id', user.id); // Don't count own messages
+
+  if (error) throw error;
+  return count || 0;
+
+  // Future: NestJS implementation
+  // const response = await fetch(`${API_URL}/messages/${requestId}/unread-count`);
+  // return response.json();
+}
+
+/**
+ * Get total unread message count across all chats
+ */
+export async function getTotalUnreadCount(): Promise<number> {
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return 0;
+  }
+
+  // Get all borrow requests where user is involved
+  const { data: requests, error: requestsError } = await supabase
+    .from('borrow_requests')
+    .select('id, owner_id, borrower_id')
+    .or(`owner_id.eq.${user.id},borrower_id.eq.${user.id}`);
+
+  if (requestsError) throw requestsError;
+  if (!requests || requests.length === 0) return 0;
+
+  // Count unread messages across all requests
+  let totalUnread = 0;
+
+  for (const request of requests) {
+    const isOwner = request.owner_id === user.id;
+
+    const { count } = await supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('borrow_request_id', request.id)
+      .eq(isOwner ? 'read_by_owner' : 'read_by_borrower', false)
+      .neq('sender_id', user.id);
+
+    totalUnread += count || 0;
+  }
+
+  return totalUnread;
+
+  // Future: NestJS implementation
+  // const response = await fetch(`${API_URL}/messages/unread-count`);
+  // return response.json();
 }

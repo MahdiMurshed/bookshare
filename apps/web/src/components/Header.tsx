@@ -1,12 +1,15 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@repo/ui/components/button';
+import { Badge } from '@repo/ui/components/badge';
 import { BookOpen, LogOut, User } from '@repo/ui/components/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '@repo/api-client';
+import { useTotalUnreadCount } from '../hooks/useUnreadMessages';
 
 export function Header() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { data: unreadCount = 0 } = useTotalUnreadCount();
 
   const handleSignOut = async () => {
     try {
@@ -42,6 +45,17 @@ export function Header() {
                   className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
                 >
                   Requests
+                </Link>
+                <Link
+                  to="/chats"
+                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors relative inline-flex items-center gap-2"
+                >
+                  Chats
+                  {unreadCount > 0 && (
+                    <Badge variant="destructive" className="rounded-full h-5 px-2 text-xs">
+                      {unreadCount}
+                    </Badge>
+                  )}
                 </Link>
                 <Link
                   to="/my-library"

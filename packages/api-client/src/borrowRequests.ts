@@ -405,6 +405,46 @@ export async function getIncomingBorrowRequestsWithDetails(
 }
 
 /**
+ * Get active chats (borrow requests with messages) for current user
+ * Returns requests ordered by most recent message
+ */
+export async function getActiveChats(): Promise<BorrowRequestWithDetails[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User must be authenticated');
+
+  const { data, error } = await supabase
+    .from('borrow_requests')
+    .select(`
+      *,
+      book:books!book_id (
+        id,
+        title,
+        author,
+        cover_image_url,
+        genre
+      ),
+      borrower:users!borrower_id (
+        id,
+        name,
+        email,
+        avatar_url
+      ),
+      owner:users!owner_id (
+        id,
+        name,
+        email,
+        avatar_url
+      )
+    `)
+    .or(`owner_id.eq.${user.id},borrower_id.eq.${user.id}`)
+    .not('last_message_at', 'is', null) // Only requests with messages
+    .order('last_message_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as BorrowRequestWithDetails[];
+}
+
+/**
  * Mark handover as complete (owner confirms borrower received the book)
  */
 export async function markHandoverComplete(id: string): Promise<BorrowRequest> {

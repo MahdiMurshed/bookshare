@@ -9,6 +9,7 @@ import {
 import { Button } from '@repo/ui/components/button';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useMessages, useSendMessage, useMessageSubscription } from '../../hooks/useMessages';
+import { useMarkChatAsRead } from '../../hooks/useUnreadMessages';
 import { MessageBubble } from './MessageBubble';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -37,8 +38,18 @@ export function ChatDialog({
   // Send message mutation
   const sendMessageMutation = useSendMessage(requestId);
 
+  // Mark as read mutation
+  const markAsReadMutation = useMarkChatAsRead();
+
   // Subscribe to real-time messages
   useMessageSubscription(open ? requestId : undefined);
+
+  // Mark messages as read when dialog opens
+  useEffect(() => {
+    if (open && requestId) {
+      markAsReadMutation.mutate(requestId);
+    }
+  }, [open, requestId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {

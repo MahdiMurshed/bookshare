@@ -102,6 +102,10 @@ export interface BorrowRequest {
   return_tracking: string | null;
   return_initiated_at: string | null;
 
+  // Last message info (for chat list)
+  last_message_at: string | null;
+  last_message_content: string | null;
+
   created_at: string;
   updated_at: string;
 }
@@ -144,7 +148,8 @@ export type NotificationType =
   | 'request_denied'
   | 'book_returned'
   | 'due_soon'
-  | 'overdue';
+  | 'overdue'
+  | 'new_message';
 
 export interface Notification {
   id: string;
@@ -163,6 +168,8 @@ export interface Message {
   borrow_request_id: string;
   sender_id: string;
   content: string;
+  read_by_owner: boolean;
+  read_by_borrower: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -174,6 +181,16 @@ export interface MessageWithSender extends Message {
     email: string;
     avatar_url: string | null;
   };
+}
+
+export interface ChatSummary {
+  request: BorrowRequestWithDetails;
+  unreadCount: number;
+  lastMessage: {
+    content: string;
+    timestamp: string;
+    senderId: string;
+  } | null;
 }
 
 // Auth types
