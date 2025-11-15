@@ -15,14 +15,14 @@ interface BookPreviewProps {
 export function BookPreview({ book, onEdit, onDelete }: BookPreviewProps) {
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="aspect-[2/3] overflow-hidden bg-gray-100 relative group">
+      <div className="aspect-[2/3] overflow-hidden bg-muted relative group">
         <ImageWithFallback
           src={book.cover_image_url || ''}
           alt={book.title}
           className="w-full h-full object-cover"
         />
         {(onEdit || onDelete) && (
-          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+          <div className="absolute inset-0 bg-black/50 dark:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             {onEdit && (
               <Button
                 size="icon"
@@ -59,10 +59,10 @@ export function BookPreview({ book, onEdit, onDelete }: BookPreviewProps) {
             </Badge>
           )}
         </div>
-        <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">{book.title}</h3>
-        <p className="text-sm text-gray-600">{book.author}</p>
+        <h3 className="font-semibold text-foreground mb-1 line-clamp-2">{book.title}</h3>
+        <p className="text-sm text-muted-foreground">{book.author}</p>
         {book.condition && (
-          <p className="text-xs text-gray-500 mt-2 capitalize">
+          <p className="text-xs text-muted-foreground/80 mt-2 capitalize">
             Condition: {book.condition}
           </p>
         )}

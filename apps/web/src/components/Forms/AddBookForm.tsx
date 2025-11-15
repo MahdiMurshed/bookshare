@@ -86,7 +86,7 @@ export function AddBookForm({ onSubmit, onCancel, userId }: AddBookFormProps) {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold text-gray-900">Add New Book</h2>
+        <h2 className="text-2xl font-semibold text-foreground">Add New Book</h2>
         <Button variant="ghost" size="icon" onClick={onCancel}>
           <X className="w-5 h-5" />
         </Button>
