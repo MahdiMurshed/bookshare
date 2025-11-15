@@ -80,7 +80,31 @@ USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1
 - `/apps/web/src/hooks/useProfile.ts` - React hooks for profile management
 
 ### Components
-- `/apps/web/src/pages/Profile.tsx` - Profile page component
+
+#### Page (Orchestration)
+- `/apps/web/src/pages/Profile.tsx` - Profile page component (107 lines)
+  - Handles data fetching and state management
+  - Orchestrates child components
+  - Manages navigation and routing
+
+#### Feature Components
+- `/apps/web/src/components/Profile/ProfileHeader.tsx` (~250 lines)
+  - Avatar upload with file validation (type, size limits)
+  - User info display (name, email, bio)
+  - Inline editing mode for name and bio
+  - Error handling for upload failures
+
+- `/apps/web/src/components/Profile/ProfileStats.tsx` (~80 lines)
+  - Activity statistics display
+  - Books owned, shared, borrowed counts
+  - Total exchanges metric
+  - Responsive grid layout
+
+- `/apps/web/src/components/Profile/ProfileSettings.tsx` (~165 lines)
+  - Account settings section
+  - Sign out functionality
+  - Delete account with confirmation dialog
+  - Inline error display for delete failures
 
 ### Routes
 - Updated `/apps/web/src/App.tsx` - Added `/profile` route
@@ -153,6 +177,55 @@ To test the Profile page:
 5. View your activity stats
 6. Test account settings options
 
+## Component Architecture
+
+### Refactoring Benefits
+
+The Profile page was refactored from a monolithic 495-line component into a modular structure:
+
+**Before:**
+- Single file with 495 lines
+- All logic, state, and UI mixed together
+- Difficult to test and maintain
+
+**After:**
+- Main page: 107 lines (78% reduction)
+- Three focused feature components
+- Clear separation of concerns
+
+### Component Responsibilities
+
+1. **Profile.tsx (Page)**
+   - Data fetching with React Query hooks
+   - State orchestration
+   - Navigation and routing
+   - Passing props to child components
+
+2. **ProfileHeader.tsx (Feature)**
+   - Avatar management (upload, display, validation)
+   - User information display
+   - Inline editing functionality
+   - Local state for edit mode and errors
+
+3. **ProfileStats.tsx (Feature)**
+   - Statistics display only
+   - No local state (receives data via props)
+   - Purely presentational
+
+4. **ProfileSettings.tsx (Feature)**
+   - Account settings UI
+   - Sign out functionality
+   - Delete account with confirmation
+   - Local state for dialog and errors
+
+### Benefits
+
+✅ **Testability**: Each component can be tested independently
+✅ **Reusability**: Components can be used in different contexts
+✅ **Maintainability**: Smaller files are easier to understand and modify
+✅ **Performance**: Better code splitting opportunities
+✅ **Developer Experience**: Easier to navigate and locate code
+
 ## Notes
 
 - Avatar uploads are limited to 5MB
@@ -160,3 +233,4 @@ To test the Profile page:
 - The delete account function currently only signs the user out
 - Profile changes immediately invalidate React Query cache
 - Member since date is formatted as "Month Year"
+- Component extraction follows best practices outlined in CODE_QUALITY_IMPROVEMENTS.md
