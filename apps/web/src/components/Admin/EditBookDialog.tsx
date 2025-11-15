@@ -150,7 +150,7 @@ export function EditBookDialog({
       });
       setImageError(false);
     }
-  }, [book, form]);
+  }, [book]);
 
   const handleSubmit = async (data: EditBookFormValues) => {
     try {

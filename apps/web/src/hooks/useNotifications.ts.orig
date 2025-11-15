@@ -97,19 +97,12 @@ export function useNotificationSubscription() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Track if component is still mounted
-    let isMounted = true;
-
     const unsubscribe = subscribeToNotifications(() => {
-      // Only update cache if component is still mounted
-      if (!isMounted) return;
-
       // Invalidate queries to refetch notifications
       queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     });
 
     return () => {
-      isMounted = false;
       unsubscribe();
     };
   }, [queryClient]);
