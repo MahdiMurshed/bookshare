@@ -11,6 +11,7 @@ import {
   type CreateBorrowRequestInput,
   type BorrowRequest,
 } from '@repo/api-client';
+import { bookKeys } from './useBooks';
 
 // Query keys
 export const borrowRequestKeys = {
@@ -104,6 +105,10 @@ export function useApproveBorrowRequest() {
       // Invalidate incoming requests and detail
       queryClient.invalidateQueries({ queryKey: borrowRequestKeys.incoming() });
       queryClient.invalidateQueries({ queryKey: borrowRequestKeys.detail(request.id) });
+
+      // Invalidate book queries so the book's availability status updates
+      queryClient.invalidateQueries({ queryKey: bookKeys.all });
+      queryClient.invalidateQueries({ queryKey: bookKeys.detail(request.book_id) });
 
       // Send notification to borrower
       try {
