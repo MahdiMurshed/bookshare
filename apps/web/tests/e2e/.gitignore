@@ -1,0 +1,15 @@
+# Playwright test artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Test environment variables
+.env.test
+
+# Test screenshots and videos
+*.png
+*.webm
+*.mp4
+
+# Trace files
+trace.zip
