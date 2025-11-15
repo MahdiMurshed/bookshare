@@ -35,6 +35,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '@repo/api-client';
 import { useTotalUnreadCount } from '../hooks/useUnreadMessages';
+import { useUnreadNotificationCount } from '../hooks/useNotifications';
 import { useIsAdmin } from '../hooks/useAdminUser';
 import { cn } from '@repo/ui/lib/utils';
 
@@ -51,6 +52,7 @@ export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: unreadCount = 0 } = useTotalUnreadCount();
+  const { data: unreadNotificationCount = 0 } = useUnreadNotificationCount();
   const { isAdmin } = useIsAdmin();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -153,6 +155,20 @@ export function Header() {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-3">
+            {/* Notifications Bell */}
+            {user && (
+              <Link to="/notifications" className="relative">
+                <Button variant="ghost" size="sm" className="relative">
+                  <Bell className="w-5 h-5" />
+                  {unreadNotificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-primary-foreground bg-primary rounded-full">
+                      {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+            )}
+
             {/* Admin Button */}
             {user && isAdmin && (
               <Link to="/admin" className="hidden md:block">
@@ -184,18 +200,9 @@ export function Header() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="cursor-pointer">
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/profile')}>
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
-                    <Bell className="mr-2 h-4 w-4" />
-                    <span>Notifications</span>
-                    {unreadCount > 0 && (
-                      <span className="ml-auto flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-primary-foreground bg-primary rounded-full">
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                      </span>
-                    )}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -266,6 +273,45 @@ export function Header() {
                         </Link>
                       );
                     })}
+
+                    {/* Mobile Notifications Link */}
+                    {user && (
+                      <Link
+                        to="/notifications"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={cn(
+                          'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors mt-2',
+                          isActiveRoute('/notifications')
+                            ? 'text-primary font-semibold bg-muted'
+                            : 'text-muted-foreground hover:text-primary hover:bg-muted'
+                        )}
+                      >
+                        <Bell className="w-5 h-5" />
+                        <span>Notifications</span>
+                        {unreadNotificationCount > 0 && (
+                          <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold text-primary-foreground bg-primary rounded-full">
+                            {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                          </span>
+                        )}
+                      </Link>
+                    )}
+
+                    {/* Mobile Profile Link */}
+                    {user && (
+                      <Link
+                        to="/profile"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={cn(
+                          'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors mt-2',
+                          isActiveRoute('/profile')
+                            ? 'text-primary font-semibold bg-muted'
+                            : 'text-muted-foreground hover:text-primary hover:bg-muted'
+                        )}
+                      >
+                        <User className="w-5 h-5" />
+                        <span>Profile</span>
+                      </Link>
+                    )}
 
                     {/* Mobile Admin Link */}
                     {user && isAdmin && (

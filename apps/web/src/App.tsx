@@ -8,7 +8,9 @@ import Browse from "./pages/Browse";
 import BookDetail from "./pages/BookDetail";
 import Requests from "./pages/Requests";
 import Chats from "./pages/Chats";
+import Notifications from "./pages/Notifications";
 import Admin from "./pages/Admin";
+import Profile from "./pages/Profile";
 import { Header } from "./components/Header";
 
 import "@repo/ui/styles/globals.css";
@@ -105,6 +107,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <Admin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <Notifications />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />
