@@ -102,6 +102,83 @@ export interface UpdateBookInput {
   borrowable?: boolean;
 }
 
+// System Notifications types
+export type UserGroup = 'all' | 'admins' | 'borrowers' | 'lenders' | 'suspended';
+
+export interface BroadcastNotificationInput {
+  title: string;
+  message: string;
+  type?: 'announcement' | 'alert' | 'info';
+}
+
+export interface GroupNotificationInput {
+  group: UserGroup;
+  title: string;
+  message: string;
+  type?: 'announcement' | 'alert' | 'info';
+}
+
+export interface UserNotificationInput {
+  userId: string;
+  title: string;
+  message: string;
+  type?: 'announcement' | 'alert' | 'info';
+}
+
+// Advanced Analytics types
+export interface ActiveUser {
+  id: string;
+  name: string;
+  email: string;
+  avatar_url: string | null;
+  totalBorrows: number;
+  totalLends: number;
+  activeRequests: number;
+}
+
+export interface PopularBook {
+  id: string;
+  title: string;
+  author: string;
+  cover_image_url: string | null;
+  genre: string | null;
+  owner_id: string;
+  ownerName: string;
+  totalBorrows: number;
+  averageRating: number | null;
+}
+
+export interface BorrowDurationMetrics {
+  averageDays: number;
+  medianDays: number;
+  minDays: number;
+  maxDays: number;
+  totalCompletedBorrows: number;
+}
+
+export interface UserRetentionMetrics {
+  totalUsers: number;
+  activeUsersLast7Days: number;
+  activeUsersLast30Days: number;
+  retentionRate7Days: number;
+  retentionRate30Days: number;
+  newUsersLast7Days: number;
+  newUsersLast30Days: number;
+}
+
+export interface PlatformKPIs {
+  totalUsers: number;
+  totalBooks: number;
+  totalBorrows: number;
+  activeBorrows: number;
+  completedBorrows: number;
+  averageBooksPerUser: number;
+  averageBorrowsPerBook: number;
+  userGrowthRate30Days: number;
+  bookGrowthRate30Days: number;
+  borrowGrowthRate30Days: number;
+}
+
 /**
  * Get admin dashboard statistics
  */
@@ -918,4 +995,448 @@ export async function adminMarkAsReturned(
   }
 
   return request;
+}
+
+// ==========================
+// SYSTEM NOTIFICATIONS FUNCTIONS
+// ==========================
+
+/**
+ * Send a broadcast notification to all users
+ */
+export async function sendBroadcastNotification(
+  input: BroadcastNotificationInput
+): Promise<void> {
+  // Get all user IDs
+  const { data: users, error: usersError } = await supabase
+    .from('users')
+    .select('id');
+
+  if (usersError) throw usersError;
+
+  if (!users || users.length === 0) return;
+
+  // Create notifications for all users
+  const notifications = users.map((user) => ({
+    user_id: user.id,
+    type: 'new_message',
+    title: input.title,
+    message: input.message,
+    payload: { type: input.type ?? 'announcement' },
+  }));
+
+  const { error } = await supabase
+    .from('notifications')
+    .insert(notifications);
+
+  if (error) throw error;
+}
+
+/**
+ * Send a notification to a specific user group
+ */
+export async function sendGroupNotification(
+  input: GroupNotificationInput
+): Promise<void> {
+  let query = supabase.from('users').select('id');
+
+  // Filter by group
+  switch (input.group) {
+    case 'all':
+      // No filter needed
+      break;
+    case 'admins':
+      query = query.eq('is_admin', true);
+      break;
+    case 'suspended':
+      query = query.eq('suspended', true);
+      break;
+    case 'borrowers':
+      // Users who have made borrow requests
+      const { data: borrowerIds } = await supabase
+        .from('borrow_requests')
+        .select('borrower_id')
+        .not('borrower_id', 'is', null);
+
+      if (borrowerIds && borrowerIds.length > 0) {
+        const uniqueBorrowerIds = [...new Set(borrowerIds.map(b => b.borrower_id))];
+        query = query.in('id', uniqueBorrowerIds);
+      } else {
+        return; // No borrowers found
+      }
+      break;
+    case 'lenders':
+      // Users who own books
+      const { data: lenderIds } = await supabase
+        .from('books')
+        .select('owner_id')
+        .not('owner_id', 'is', null);
+
+      if (lenderIds && lenderIds.length > 0) {
+        const uniqueLenderIds = [...new Set(lenderIds.map(l => l.owner_id))];
+        query = query.in('id', uniqueLenderIds);
+      } else {
+        return; // No lenders found
+      }
+      break;
+  }
+
+  const { data: users, error: usersError } = await query;
+
+  if (usersError) throw usersError;
+
+  if (!users || users.length === 0) return;
+
+  // Create notifications for all users in the group
+  const notifications = users.map((user) => ({
+    user_id: user.id,
+    type: 'new_message',
+    title: input.title,
+    message: input.message,
+    payload: { type: input.type ?? 'announcement', group: input.group },
+  }));
+
+  const { error } = await supabase
+    .from('notifications')
+    .insert(notifications);
+
+  if (error) throw error;
+}
+
+/**
+ * Send a notification to an individual user
+ */
+export async function sendUserNotification(
+  input: UserNotificationInput
+): Promise<void> {
+  const { error } = await supabase
+    .from('notifications')
+    .insert({
+      user_id: input.userId,
+      type: 'new_message',
+      title: input.title,
+      message: input.message,
+      payload: { type: input.type ?? 'announcement' },
+    });
+
+  if (error) throw error;
+}
+
+// ==========================
+// ADVANCED ANALYTICS FUNCTIONS
+// ==========================
+
+/**
+ * Get most active users (leaderboard)
+ */
+export async function getMostActiveUsers(limit: number = 10): Promise<ActiveUser[]> {
+  // Get all users
+  const { data: users, error: usersError } = await supabase
+    .from('users')
+    .select('id, name, email, avatar_url');
+
+  if (usersError) throw usersError;
+
+  if (!users || users.length === 0) return [];
+
+  // Get borrow counts for each user
+  const userStats = await Promise.all(
+    users.map(async (user) => {
+      // Count total borrows (as borrower)
+      const { count: totalBorrows } = await supabase
+        .from('borrow_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('borrower_id', user.id);
+
+      // Count total lends (as owner)
+      const { count: totalLends } = await supabase
+        .from('borrow_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', user.id);
+
+      // Count active requests
+      const { count: activeRequests } = await supabase
+        .from('borrow_requests')
+        .select('*', { count: 'exact', head: true })
+        .or(`borrower_id.eq.${user.id},owner_id.eq.${user.id}`)
+        .in('status', ['pending', 'approved', 'borrowed']);
+
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatar_url: user.avatar_url,
+        totalBorrows: totalBorrows ?? 0,
+        totalLends: totalLends ?? 0,
+        activeRequests: activeRequests ?? 0,
+      };
+    })
+  );
+
+  // Sort by total activity (borrows + lends) and limit
+  return userStats
+    .sort((a, b) => (b.totalBorrows + b.totalLends) - (a.totalBorrows + a.totalLends))
+    .slice(0, limit);
+}
+
+/**
+ * Get most borrowed books (popular books)
+ */
+export async function getMostBorrowedBooks(limit: number = 10): Promise<PopularBook[]> {
+  // Get all books with owner info
+  const { data: books, error: booksError } = await supabase
+    .from('books')
+    .select(`
+      id,
+      title,
+      author,
+      cover_image_url,
+      genre,
+      owner_id,
+      owner:users!owner_id (
+        name
+      )
+    `);
+
+  if (booksError) throw booksError;
+
+  if (!books || books.length === 0) return [];
+
+  // Get borrow counts and ratings for each book
+  const bookStats = await Promise.all(
+    books.map(async (book: any) => {
+      const ownerData = Array.isArray(book.owner) ? book.owner[0] : book.owner;
+
+      // Count total borrows
+      const { count: totalBorrows } = await supabase
+        .from('borrow_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('book_id', book.id);
+
+      // Get average rating
+      const { data: reviews } = await supabase
+        .from('reviews')
+        .select('rating')
+        .eq('book_id', book.id);
+
+      const averageRating = reviews && reviews.length > 0
+        ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+        : null;
+
+      return {
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        cover_image_url: book.cover_image_url,
+        genre: book.genre,
+        owner_id: book.owner_id,
+        ownerName: ownerData?.name ?? 'Unknown',
+        totalBorrows: totalBorrows ?? 0,
+        averageRating,
+      };
+    })
+  );
+
+  // Sort by total borrows and limit
+  return bookStats
+    .sort((a, b) => b.totalBorrows - a.totalBorrows)
+    .slice(0, limit);
+}
+
+/**
+ * Get average borrow duration metrics
+ */
+export async function getAverageBorrowDuration(): Promise<BorrowDurationMetrics> {
+  // Get all completed borrows with due date and return date
+  const { data: completedBorrows, error } = await supabase
+    .from('borrow_requests')
+    .select('approved_at, returned_at')
+    .eq('status', 'returned')
+    .not('approved_at', 'is', null)
+    .not('returned_at', 'is', null);
+
+  if (error) throw error;
+
+  if (!completedBorrows || completedBorrows.length === 0) {
+    return {
+      averageDays: 0,
+      medianDays: 0,
+      minDays: 0,
+      maxDays: 0,
+      totalCompletedBorrows: 0,
+    };
+  }
+
+  // Calculate duration in days for each borrow
+  const durations = completedBorrows.map((borrow) => {
+    const approvedDate = new Date(borrow.approved_at!);
+    const returnedDate = new Date(borrow.returned_at!);
+    return Math.ceil((returnedDate.getTime() - approvedDate.getTime()) / (1000 * 60 * 60 * 24));
+  });
+
+  // Sort for median calculation
+  const sortedDurations = [...durations].sort((a, b) => a - b);
+
+  // Calculate statistics
+  const averageDays = durations.reduce((sum, d) => sum + d, 0) / durations.length;
+  const medianDays = sortedDurations.length % 2 === 0
+    ? (sortedDurations[sortedDurations.length / 2 - 1] + sortedDurations[sortedDurations.length / 2]) / 2
+    : sortedDurations[Math.floor(sortedDurations.length / 2)];
+  const minDays = Math.min(...durations);
+  const maxDays = Math.max(...durations);
+
+  return {
+    averageDays: Math.round(averageDays * 10) / 10, // Round to 1 decimal
+    medianDays: Math.round(medianDays * 10) / 10,
+    minDays,
+    maxDays,
+    totalCompletedBorrows: completedBorrows.length,
+  };
+}
+
+/**
+ * Get user retention metrics
+ */
+export async function getUserRetentionMetrics(): Promise<UserRetentionMetrics> {
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  // Get total users
+  const { count: totalUsers } = await supabase
+    .from('users')
+    .select('*', { count: 'exact', head: true });
+
+  // Get new users in last 7 days
+  const { count: newUsersLast7Days } = await supabase
+    .from('users')
+    .select('*', { count: 'exact', head: true })
+    .gte('created_at', sevenDaysAgo.toISOString());
+
+  // Get new users in last 30 days
+  const { count: newUsersLast30Days } = await supabase
+    .from('users')
+    .select('*', { count: 'exact', head: true })
+    .gte('created_at', thirtyDaysAgo.toISOString());
+
+  // Get active users (who have activity in last 7 days)
+  const { data: activeUsers7Days } = await supabase
+    .from('user_activity_logs')
+    .select('user_id')
+    .gte('created_at', sevenDaysAgo.toISOString());
+
+  const uniqueActiveUsers7Days = activeUsers7Days
+    ? new Set(activeUsers7Days.map(a => a.user_id)).size
+    : 0;
+
+  // Get active users (who have activity in last 30 days)
+  const { data: activeUsers30Days } = await supabase
+    .from('user_activity_logs')
+    .select('user_id')
+    .gte('created_at', thirtyDaysAgo.toISOString());
+
+  const uniqueActiveUsers30Days = activeUsers30Days
+    ? new Set(activeUsers30Days.map(a => a.user_id)).size
+    : 0;
+
+  // Calculate retention rates
+  const retentionRate7Days = totalUsers && totalUsers > 0
+    ? (uniqueActiveUsers7Days / totalUsers) * 100
+    : 0;
+
+  const retentionRate30Days = totalUsers && totalUsers > 0
+    ? (uniqueActiveUsers30Days / totalUsers) * 100
+    : 0;
+
+  return {
+    totalUsers: totalUsers ?? 0,
+    activeUsersLast7Days: uniqueActiveUsers7Days,
+    activeUsersLast30Days: uniqueActiveUsers30Days,
+    retentionRate7Days: Math.round(retentionRate7Days * 10) / 10,
+    retentionRate30Days: Math.round(retentionRate30Days * 10) / 10,
+    newUsersLast7Days: newUsersLast7Days ?? 0,
+    newUsersLast30Days: newUsersLast30Days ?? 0,
+  };
+}
+
+/**
+ * Get platform KPIs (Key Performance Indicators)
+ */
+export async function getPlatformKPIs(): Promise<PlatformKPIs> {
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  // Get current totals
+  const { count: totalUsers } = await supabase
+    .from('users')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: totalBooks } = await supabase
+    .from('books')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: totalBorrows } = await supabase
+    .from('borrow_requests')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: activeBorrows } = await supabase
+    .from('borrow_requests')
+    .select('*', { count: 'exact', head: true })
+    .in('status', ['approved', 'borrowed']);
+
+  const { count: completedBorrows } = await supabase
+    .from('borrow_requests')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'returned');
+
+  // Get counts from 30 days ago for growth rate calculation
+  const { count: usersThirtyDaysAgo } = await supabase
+    .from('users')
+    .select('*', { count: 'exact', head: true })
+    .lt('created_at', thirtyDaysAgo.toISOString());
+
+  const { count: booksThirtyDaysAgo } = await supabase
+    .from('books')
+    .select('*', { count: 'exact', head: true })
+    .lt('created_at', thirtyDaysAgo.toISOString());
+
+  const { count: borrowsThirtyDaysAgo } = await supabase
+    .from('borrow_requests')
+    .select('*', { count: 'exact', head: true })
+    .lt('requested_at', thirtyDaysAgo.toISOString());
+
+  // Calculate growth rates
+  const userGrowthRate30Days = usersThirtyDaysAgo && usersThirtyDaysAgo > 0
+    ? (((totalUsers ?? 0) - usersThirtyDaysAgo) / usersThirtyDaysAgo) * 100
+    : 0;
+
+  const bookGrowthRate30Days = booksThirtyDaysAgo && booksThirtyDaysAgo > 0
+    ? (((totalBooks ?? 0) - booksThirtyDaysAgo) / booksThirtyDaysAgo) * 100
+    : 0;
+
+  const borrowGrowthRate30Days = borrowsThirtyDaysAgo && borrowsThirtyDaysAgo > 0
+    ? (((totalBorrows ?? 0) - borrowsThirtyDaysAgo) / borrowsThirtyDaysAgo) * 100
+    : 0;
+
+  // Calculate averages
+  const averageBooksPerUser = totalUsers && totalUsers > 0
+    ? (totalBooks ?? 0) / totalUsers
+    : 0;
+
+  const averageBorrowsPerBook = totalBooks && totalBooks > 0
+    ? (totalBorrows ?? 0) / totalBooks
+    : 0;
+
+  return {
+    totalUsers: totalUsers ?? 0,
+    totalBooks: totalBooks ?? 0,
+    totalBorrows: totalBorrows ?? 0,
+    activeBorrows: activeBorrows ?? 0,
+    completedBorrows: completedBorrows ?? 0,
+    averageBooksPerUser: Math.round(averageBooksPerUser * 10) / 10,
+    averageBorrowsPerBook: Math.round(averageBorrowsPerBook * 10) / 10,
+    userGrowthRate30Days: Math.round(userGrowthRate30Days * 10) / 10,
+    bookGrowthRate30Days: Math.round(bookGrowthRate30Days * 10) / 10,
+    borrowGrowthRate30Days: Math.round(borrowGrowthRate30Days * 10) / 10,
+  };
 }
