@@ -6,7 +6,9 @@ import {
   approveBorrowRequest,
   denyBorrowRequest,
   markHandoverComplete,
+  updateHandoverTracking,
   initiateReturn,
+  markBookReturned,
   notifyBorrowRequest,
   notifyRequestApproved,
   notifyRequestDenied,
@@ -180,6 +182,25 @@ export function useMarkHandoverComplete() {
 }
 
 /**
+ * Hook to update handover tracking number
+ */
+export function useUpdateHandoverTracking() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, tracking }: { id: string; tracking: string }) => {
+      const request = await updateHandoverTracking(id, tracking);
+      return request;
+    },
+    onSuccess: (request: BorrowRequest) => {
+      // Invalidate incoming requests
+      queryClient.invalidateQueries({ queryKey: borrowRequestKeys.incoming() });
+      queryClient.invalidateQueries({ queryKey: borrowRequestKeys.detail(request.id) });
+    },
+  });
+}
+
+/**
  * Hook to initiate return
  */
 export function useInitiateReturn() {
@@ -200,6 +221,29 @@ export function useInitiateReturn() {
       // Invalidate my borrow requests
       queryClient.invalidateQueries({ queryKey: borrowRequestKeys.myRequests() });
       queryClient.invalidateQueries({ queryKey: borrowRequestKeys.detail(request.id) });
+    },
+  });
+}
+
+/**
+ * Hook to confirm return received (mark book as returned)
+ */
+export function useConfirmReturn() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const request = await markBookReturned(id);
+      return request;
+    },
+    onSuccess: (request: BorrowRequest) => {
+      // Invalidate incoming requests
+      queryClient.invalidateQueries({ queryKey: borrowRequestKeys.incoming() });
+      queryClient.invalidateQueries({ queryKey: borrowRequestKeys.detail(request.id) });
+
+      // Invalidate book queries so the book's availability status updates
+      queryClient.invalidateQueries({ queryKey: bookKeys.all });
+      queryClient.invalidateQueries({ queryKey: bookKeys.detail(request.book_id) });
     },
   });
 }

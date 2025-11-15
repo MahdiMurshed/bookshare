@@ -7,6 +7,10 @@ export interface RequestListProps {
   isLoading?: boolean;
   onApprove?: (requestId: string) => void;
   onDeny?: (requestId: string) => void;
+  onMarkHandoverComplete?: (requestId: string) => void;
+  onAddTracking?: (requestId: string) => void;
+  onInitiateReturn?: (requestId: string) => void;
+  onConfirmReturn?: (requestId: string) => void;
   emptyMessage?: string;
 }
 
@@ -16,6 +20,10 @@ export function RequestList({
   isLoading,
   onApprove,
   onDeny,
+  onMarkHandoverComplete,
+  onAddTracking,
+  onInitiateReturn,
+  onConfirmReturn,
   emptyMessage,
 }: RequestListProps) {
   if (isLoading) {
@@ -69,6 +77,10 @@ export function RequestList({
           view={view}
           onApprove={onApprove}
           onDeny={onDeny}
+          onMarkHandoverComplete={onMarkHandoverComplete}
+          onAddTracking={onAddTracking}
+          onInitiateReturn={onInitiateReturn}
+          onConfirmReturn={onConfirmReturn}
         />
       ))}
     </div>
