@@ -27,8 +27,23 @@ This directory contains SQL migration files for the BookShare database.
 
 ---
 
+### `013_add_type_constraints.sql`
+**Purpose**: Adds database-level type constraints for data integrity
+
+**What it does**:
+- Updates notification types to include admin notification types (announcement, alert, info)
+- Adds CHECK constraint for review ratings to enforce 1-5 range at database level
+- Updates the secure notification function to support new types
+
+**When to run**: After deploying code that uses admin notifications or reviews
+
+**Status**: ✅ **RECOMMENDED** - Improves data integrity and type safety
+
+---
+
 ## Migration History
 
 | Migration | Date Applied | Applied By | Notes |
 |-----------|-------------|------------|-------|
 | 001_add_user_profile_trigger.sql | _pending_ | - | Fixes RLS violation on signup |
+| 013_add_type_constraints.sql | _pending_ | - | Adds type constraints for notifications and reviews |
