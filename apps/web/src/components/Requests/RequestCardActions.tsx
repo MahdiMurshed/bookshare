@@ -39,7 +39,7 @@ export function RequestCardActions({
 
   return (
     <>
-      <CardFooter className="pt-0 gap-2 flex-col">
+      <CardFooter className="pt-4 gap-3 flex-col bg-gradient-to-t from-muted/20 to-transparent border-t border-border/30">
         {/* Primary action buttons */}
         <div className="flex gap-2 w-full">
           {/* Incoming Pending: Approve/Deny */}
@@ -47,14 +47,14 @@ export function RequestCardActions({
             <>
               <Button
                 variant="default"
-                className="flex-1"
+                className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-sm hover:shadow-md transition-all duration-200"
                 onClick={() => onApprove(request.id)}
               >
                 Approve
               </Button>
               <Button
                 variant="outline"
-                className="flex-1"
+                className="flex-1 border-border/60 hover:border-destructive/50 hover:bg-destructive/5 hover:text-destructive transition-all duration-200"
                 onClick={() => onDeny(request.id)}
               >
                 Deny
@@ -66,7 +66,7 @@ export function RequestCardActions({
           {isIncoming && isApproved && onMarkHandoverComplete && (
             <Button
               variant="default"
-              className="w-full"
+              className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-sm hover:shadow-md transition-all duration-200"
               onClick={() => onMarkHandoverComplete(request.id)}
             >
               Mark Handover Complete
@@ -77,7 +77,7 @@ export function RequestCardActions({
           {isIncoming && isApproved && request.handover_method === 'ship' && onAddTracking && !request.handover_tracking && (
             <Button
               variant="outline"
-              className="w-full"
+              className="w-full border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-200"
               onClick={() => onAddTracking(request.id)}
             >
               Add Tracking Number
@@ -88,7 +88,7 @@ export function RequestCardActions({
           {!isIncoming && isBorrowed && onInitiateReturn && (
             <Button
               variant="default"
-              className="w-full"
+              className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 shadow-sm hover:shadow-md transition-all duration-200"
               onClick={() => onInitiateReturn(request.id)}
             >
               Initiate Return
@@ -99,7 +99,7 @@ export function RequestCardActions({
           {isIncoming && isReturnInitiated && onConfirmReturn && (
             <Button
               variant="default"
-              className="w-full"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-sm hover:shadow-md transition-all duration-200"
               onClick={() => onConfirmReturn(request.id)}
             >
               Confirm Return Received
@@ -111,10 +111,11 @@ export function RequestCardActions({
         {!isDenied && !isReturned && (
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full border-border/60 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200 group"
             onClick={() => setChatDialogOpen(true)}
           >
-            💬 Chat with {otherUser?.name || otherUser?.email || 'user'}
+            <span className="group-hover:scale-110 transition-transform duration-200">💬</span>
+            <span className="ml-2">Chat with {otherUser?.name || otherUser?.email || 'user'}</span>
           </Button>
         )}
       </CardFooter>

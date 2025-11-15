@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { BookWithOwner } from '@repo/api-client';
 import { Button } from '@repo/ui/components/button';
-import { BookOpen, Loader2, AlertCircle } from '@repo/ui/components/icons';
+import { Card } from '@repo/ui/components/card';
+import { BookOpen, AlertCircle } from '@repo/ui/components/icons';
 import { useAvailableBooks } from '../hooks/useAvailableBooks';
 import { BookFilters } from '../components/Browse/BookFilters';
 import { BookGrid } from '../components/Browse/BookGrid';
@@ -29,64 +30,84 @@ export default function Browse() {
 
   const hasFilters = !!searchQuery || genreFilter !== 'all';
 
+  const resultsTitle = hasFilters
+    ? `Search Results`
+    : 'Available Books';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <BookOpen className="w-8 h-8 text-indigo-600" />
-          <h1 className="text-3xl font-bold text-indigo-900">Browse Books</h1>
-        </div>
-
-        {/* Filters */}
-        <div className="mb-8">
-          <BookFilters
-            searchQuery={searchQuery}
-            genreFilter={genreFilter}
-            onSearchChange={setSearchQuery}
-            onGenreChange={setGenreFilter}
-            onClearFilters={handleClearFilters}
-          />
-        </div>
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="flex justify-center items-center py-16">
-            <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-            <span className="ml-3 text-gray-600">Loading books...</span>
+    <div className="min-h-screen bg-background">
+      {/* Page Container with max width */}
+      <div className="mx-auto" style={{ maxWidth: 'var(--container-page)' }}>
+        {/* Header Section */}
+        <header className="px-6 py-8 md:py-12 border-b border-border/40">
+          <div className="space-y-4">
+            {/* Icon & Title */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10">
+                <BookOpen className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
+                  Discover Books
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Explore our community library and find your next great read
+                </p>
+              </div>
+            </div>
           </div>
-        )}
+        </header>
 
-        {/* Error State */}
-        {error && !isLoading && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-            <p className="text-red-700 mb-4">
-              {error instanceof Error ? error.message : 'Failed to load books. Please try again.'}
-            </p>
-            <Button onClick={() => refetch()} variant="outline">
-              Try Again
-            </Button>
+        {/* Main Content */}
+        <main className="px-6 py-8">
+          {/* Filters Section */}
+          <div className="mb-8">
+            <BookFilters
+              searchQuery={searchQuery}
+              genreFilter={genreFilter}
+              onSearchChange={setSearchQuery}
+              onGenreChange={setGenreFilter}
+              onClearFilters={handleClearFilters}
+            />
           </div>
-        )}
 
-        {/* Books Grid */}
-        {!isLoading && !error && books.length > 0 && (
-          <BookGrid
-            books={books}
-            onBookClick={handleBookClick}
-            title={
-              hasFilters
-                ? `Found ${books.length} book${books.length !== 1 ? 's' : ''}`
-                : `All Available Books (${books.length})`
-            }
-          />
-        )}
+          {/* Error State */}
+          {error && !isLoading && (
+            <Card className="border-destructive/50 bg-destructive/5">
+              <div className="p-8 text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10 mb-4">
+                  <AlertCircle className="h-8 w-8 text-destructive" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Failed to load books
+                </h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  {error instanceof Error
+                    ? error.message
+                    : 'Something went wrong while fetching the books. Please try again.'}
+                </p>
+                <Button onClick={() => refetch()} variant="outline" size="sm">
+                  Try Again
+                </Button>
+              </div>
+            </Card>
+          )}
 
-        {/* Empty State */}
-        {!isLoading && !error && books.length === 0 && (
-          <EmptyState hasFilters={hasFilters} onClearFilters={handleClearFilters} />
-        )}
+          {/* Books Grid with Loading State */}
+          {!error && (
+            <BookGrid
+              books={books}
+              onBookClick={handleBookClick}
+              title={resultsTitle}
+              isLoading={isLoading}
+            />
+          )}
+
+          {/* Empty State */}
+          {!isLoading && !error && books.length === 0 && (
+            <EmptyState hasFilters={hasFilters} onClearFilters={handleClearFilters} />
+          )}
+        </main>
       </div>
     </div>
   );

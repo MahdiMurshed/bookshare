@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
+import { PageContainer } from '@repo/ui/components/page-container';
+import { PageHeader } from '@repo/ui/components/page-header';
+import { Inbox, Send } from '@repo/ui/components/icons';
 import {
   useIncomingBorrowRequests,
   useMyBorrowRequests,
@@ -173,29 +176,56 @@ export default function Requests() {
     }
   };
 
-  return (
-    <div className="container max-w-6xl mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Borrow Requests</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage incoming requests and track your borrow requests
-        </p>
-      </div>
+  // Count pending requests for badge
+  const pendingIncomingCount = incomingRequests.filter((r) => r.status === 'pending').length;
+  const activeMyRequestsCount = myRequests.filter(
+    (r) => r.status === 'approved' || r.status === 'borrowed'
+  ).length;
 
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'incoming' | 'outgoing')}>
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="incoming">
-            Incoming Requests
-            {incomingRequests.filter((r) => r.status === 'pending').length > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-semibold text-white bg-red-500 rounded-full">
-                {incomingRequests.filter((r) => r.status === 'pending').length}
+  return (
+    <PageContainer maxWidth="xl">
+      <PageHeader
+        title="Borrow Requests"
+        description="Manage incoming requests and track your active borrows"
+        icon={Inbox}
+      />
+
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as 'incoming' | 'outgoing')}
+        className="space-y-6"
+      >
+        <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-muted/50 p-1 backdrop-blur-sm border border-border/50">
+          <TabsTrigger
+            value="incoming"
+            className="relative inline-flex items-center justify-center whitespace-nowrap rounded-lg px-6 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2"
+          >
+            <Inbox className="h-4 w-4" />
+            Incoming
+            {pendingIncomingCount > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold text-white bg-gradient-to-br from-amber-500 to-orange-600 rounded-full shadow-sm animate-in fade-in zoom-in duration-200">
+                {pendingIncomingCount}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="outgoing">My Requests</TabsTrigger>
+          <TabsTrigger
+            value="outgoing"
+            className="relative inline-flex items-center justify-center whitespace-nowrap rounded-lg px-6 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-2"
+          >
+            <Send className="h-4 w-4" />
+            My Requests
+            {activeMyRequestsCount > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-muted-foreground bg-muted rounded-full">
+                {activeMyRequestsCount}
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="incoming" className="mt-6">
+        <TabsContent
+          value="incoming"
+          className="mt-0 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
+        >
           <RequestList
             requests={incomingRequests}
             view="incoming"
@@ -209,7 +239,10 @@ export default function Requests() {
           />
         </TabsContent>
 
-        <TabsContent value="outgoing" className="mt-6">
+        <TabsContent
+          value="outgoing"
+          className="mt-0 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
+        >
           <RequestList
             requests={myRequests}
             view="outgoing"
@@ -259,6 +292,6 @@ export default function Requests() {
         bookTitle={selectedRequest?.book?.title}
         ownerName={selectedRequest?.owner?.name || selectedRequest?.owner?.email}
       />
-    </div>
+    </PageContainer>
   );
 }
