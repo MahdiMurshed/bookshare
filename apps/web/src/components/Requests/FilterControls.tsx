@@ -26,65 +26,25 @@ interface FilterChipProps {
   variant: 'all' | 'pending' | 'approved' | 'borrowed' | 'returned' | 'denied';
 }
 
-function FilterChip({ label, count, isActive, onClick, variant }: FilterChipProps) {
-  const variantStyles = {
-    all: {
-      base: 'border-border/60 hover:border-primary/50 hover:bg-primary/5',
-      active: 'border-amber-500/50 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50 shadow-md ring-2 ring-amber-500/20',
-      badge: 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-sm',
-    },
-    pending: {
-      base: 'border-border/60 hover:border-amber-500/50 hover:bg-amber-50/50 dark:hover:bg-amber-950/30',
-      active: 'border-amber-500/50 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50 shadow-md ring-2 ring-amber-500/20',
-      badge: 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-sm',
-    },
-    approved: {
-      base: 'border-border/60 hover:border-emerald-500/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30',
-      active: 'border-emerald-500/50 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/50 dark:to-green-950/50 shadow-md ring-2 ring-emerald-500/20',
-      badge: 'bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-sm',
-    },
-    borrowed: {
-      base: 'border-border/60 hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/30',
-      active: 'border-blue-500/50 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 shadow-md ring-2 ring-blue-500/20',
-      badge: 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-sm',
-    },
-    returned: {
-      base: 'border-border/60 hover:border-muted-foreground/50 hover:bg-muted/50',
-      active: 'border-muted-foreground/50 bg-muted shadow-md ring-2 ring-muted-foreground/20',
-      badge: 'bg-muted-foreground text-white shadow-sm',
-    },
-    denied: {
-      base: 'border-border/60 hover:border-destructive/50 hover:bg-destructive/5',
-      active: 'border-destructive/50 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/50 dark:to-rose-950/50 shadow-md ring-2 ring-destructive/20',
-      badge: 'bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-sm',
-    },
-  };
-
-  const styles = variantStyles[variant];
-
+function FilterChip({ label, count, isActive, onClick }: FilterChipProps) {
   return (
     <button
       onClick={onClick}
-      className={`group relative inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl border transition-all duration-300 ${
-        isActive ? styles.active : styles.base
+      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md border transition-all ${
+        isActive
+          ? 'border-primary bg-primary/5 text-foreground'
+          : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground'
       }`}
     >
-      <span className={`font-medium text-sm ${isActive ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>
-        {label}
-      </span>
+      <span className="font-medium text-sm">{label}</span>
       <Badge
         variant="secondary"
-        className={`min-w-[24px] h-6 px-2 font-semibold transition-all duration-300 ${
-          isActive ? styles.badge : 'bg-muted text-muted-foreground'
+        className={`min-w-[20px] h-5 px-1.5 text-xs font-semibold ${
+          isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
         }`}
       >
         {count}
       </Badge>
-
-      {/* Glow effect on active */}
-      {isActive && (
-        <div className="absolute inset-0 rounded-xl opacity-50 blur-md bg-gradient-to-br from-amber-400/20 to-orange-500/20 -z-10" />
-      )}
     </button>
   );
 }
@@ -127,9 +87,9 @@ export function FilterControls({
   const filters = view === 'incoming' ? incomingFilters : outgoingFilters;
 
   return (
-    <div className="mb-6 space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">
+    <div className="mb-6 space-y-4">
       {/* Filter chips */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Filter className="w-4 h-4" />
           <span className="font-medium">Filter:</span>
@@ -155,7 +115,7 @@ export function FilterControls({
           <span className="font-medium">Sort by:</span>
         </div>
         <Select value={sortBy} onValueChange={(value) => onSortChange(value as 'newest' | 'oldest' | 'title')}>
-          <SelectTrigger className="w-[200px] border-border/60 hover:border-primary/50 transition-colors duration-200">
+          <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Select sort order" />
           </SelectTrigger>
           <SelectContent>

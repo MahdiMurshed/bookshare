@@ -15,15 +15,6 @@ export interface RequestCardProps {
   onConfirmReturn?: (requestId: string) => void;
 }
 
-const STATUS_GLOW: Record<string, string> = {
-  pending: 'group-hover:shadow-amber-500/10',
-  approved: 'group-hover:shadow-emerald-500/10',
-  borrowed: 'group-hover:shadow-blue-500/10',
-  return_initiated: 'group-hover:shadow-amber-500/10',
-  denied: 'group-hover:shadow-red-500/10',
-  returned: 'group-hover:shadow-gray-500/10',
-};
-
 /**
  * RequestCard component - displays borrow request details and actions
  * Refactored into smaller sub-components for better maintainability
@@ -41,7 +32,7 @@ export function RequestCard({
   // Defensive null checks - if critical data is missing, show error state
   if (!request.book) {
     return (
-      <Card className="overflow-hidden border-destructive/30 bg-destructive/5 backdrop-blur-sm">
+      <Card className="overflow-hidden border-2 border-destructive bg-destructive/5">
         <CardContent className="p-6">
           <p className="text-sm text-destructive font-medium">Error: Book data not found for this request.</p>
         </CardContent>
@@ -49,28 +40,9 @@ export function RequestCard({
     );
   }
 
-  const statusGlow = STATUS_GLOW[request.status] || STATUS_GLOW.pending;
-
   return (
-    <Card className={`group relative overflow-hidden border-border/60 bg-card/80 backdrop-blur-sm hover:bg-card transition-all duration-500 h-full flex flex-col shadow-md hover:shadow-2xl ${statusGlow} hover:border-border hover:-translate-y-1 hover:scale-[1.01]`}>
-      {/* Subtle animated gradient background */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] via-transparent to-primary/[0.02]" />
-      </div>
-
-      {/* Glow effect on edges */}
-      <div className="absolute -inset-[1px] rounded-lg bg-gradient-to-br from-border/0 via-border/20 to-border/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-sm" />
-
-      {/* Corner decorative accents */}
-      <div className="absolute top-0 right-0 w-32 h-32 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-700">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full blur-3xl" />
-      </div>
-      <div className="absolute bottom-0 left-0 w-32 h-32 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-700 delay-100">
-        <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500 to-green-600 rounded-full blur-3xl" />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 flex flex-col h-full">
+    <Card className="group overflow-hidden border-2 hover:border-primary hover:shadow-lg transition-all h-full flex flex-col">
+      <div className="flex flex-col h-full">
         <RequestCardHeader request={request} view={view} />
 
         <CardContent className="pt-0 flex-1 pb-6">
