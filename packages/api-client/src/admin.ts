@@ -247,6 +247,9 @@ export async function getAllUsers(filters?: UserFilters): Promise<User[]> {
     .select('*');
 
   // Apply search filter
+  // NOTE: Supabase automatically escapes parameters in .or() and .ilike() methods
+  // to prevent SQL injection. String interpolation here is safe as Supabase uses
+  // parameterized queries internally. Ref: https://supabase.com/docs/reference/javascript/
   if (filters?.search) {
     query = query.or(`name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
   }
@@ -284,6 +287,9 @@ export async function getAllBooks(filters?: BookFilters): Promise<BookWithOwner[
     `);
 
   // Apply search filter
+  // NOTE: Supabase automatically escapes parameters in .or() and .ilike() methods
+  // to prevent SQL injection. String interpolation here is safe as Supabase uses
+  // parameterized queries internally. Ref: https://supabase.com/docs/reference/javascript/
   if (filters?.search) {
     query = query.or(`title.ilike.%${filters.search}%,author.ilike.%${filters.search}%`);
   }

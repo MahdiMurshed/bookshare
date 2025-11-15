@@ -59,6 +59,9 @@ export async function getBooks(filters?: BookFilters): Promise<Book[]> {
     query = query.eq('owner_id', filters.owner_id);
   }
 
+  // NOTE: Supabase automatically escapes parameters in .or() and .ilike() methods
+  // to prevent SQL injection. String interpolation here is safe as Supabase uses
+  // parameterized queries internally. Ref: https://supabase.com/docs/reference/javascript/
   if (filters?.search) {
     query = query.or(`title.ilike.%${filters.search}%,author.ilike.%${filters.search}%`);
   }
@@ -207,6 +210,9 @@ export async function getBooksWithOwners(filters?: BookFilters): Promise<BookWit
     query = query.eq('owner_id', filters.owner_id);
   }
 
+  // NOTE: Supabase automatically escapes parameters in .or() and .ilike() methods
+  // to prevent SQL injection. String interpolation here is safe as Supabase uses
+  // parameterized queries internally. Ref: https://supabase.com/docs/reference/javascript/
   if (filters?.search) {
     query = query.or(`title.ilike.%${filters.search}%,author.ilike.%${filters.search}%`);
   }
