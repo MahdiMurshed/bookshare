@@ -1,26 +1,19 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Card } from '@repo/ui/components/card';
-import { Input } from '@repo/ui/components/input';
-import { Textarea } from '@repo/ui/components/textarea';
-import { Checkbox } from '@repo/ui/components/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/ui/components/select';
 import { Button } from '@repo/ui/components/button';
-import { Upload, X, Loader2, Sparkles } from '@repo/ui/components/icons';
-import { ImageWithFallback } from '../ImageWithFallback';
+import { X, Loader2, Sparkles } from '@repo/ui/components/icons';
 import { BookAutocomplete } from './BookAutocomplete';
+import { BookFormFields } from './BookFormFields';
+import { BookCoverUpload } from './BookCoverUpload';
 import {
   Form,
-  FormControl,
   FormDescription,
   FormField,
   FormItem,
-  FormLabel,
-  FormMessage,
 } from '@repo/ui/components/form';
 import { mapCategoryToGenre, type BookSearchResult } from '@repo/api-client';
 import { bookFormSchema, type BookFormValues } from '../../lib/validations/book';
-import { BOOK_GENRES, BOOK_CONDITIONS } from '../../lib/constants/book';
 import { useCreateBook } from '../../hooks/useBooks';
 
 interface AddBookFormProps {
@@ -44,17 +37,6 @@ export function AddBookForm({ onSubmit, onCancel, userId }: AddBookFormProps) {
   });
 
   const createBookMutation = useCreateBook(userId);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        form.setValue('cover_image_url', reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleBookSelect = (book: BookSearchResult) => {
     form.setValue('title', book.title);
@@ -134,162 +116,13 @@ export function AddBookForm({ onSubmit, onCancel, userId }: AddBookFormProps) {
                 )}
               />
 
-              {/* Author */}
-              <FormField
-                control={form.control}
-                name="author"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Author *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter author name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Genre */}
-              <FormField
-                control={form.control}
-                name="genre"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Genre</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a genre (optional)" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {BOOK_GENRES.map((genre) => (
-                          <SelectItem key={genre} value={genre}>
-                            {genre}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Description */}
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter a brief description of the book"
-                        rows={3}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Condition */}
-              <FormField
-                control={form.control}
-                name="condition"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Condition *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select condition" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {BOOK_CONDITIONS.map((condition) => (
-                          <SelectItem key={condition} value={condition}>
-                            {condition.charAt(0).toUpperCase() + condition.slice(1)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Borrowable */}
-              <FormField
-                control={form.control}
-                name="borrowable"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel className="cursor-pointer">Available for borrowing</FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              {/* Cover Image URL */}
-              <FormField
-                control={form.control}
-                name="cover_image_url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cover Image URL</FormLabel>
-                    <FormControl>
-                      <Input type="url" placeholder="https://example.com/cover.jpg" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* File Upload */}
-              <div>
-                <FormLabel>Or Upload Image</FormLabel>
-                <div className="mt-2">
-                  <label
-                    htmlFor="file-upload"
-                    className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
-                  >
-                    <Upload className="w-4 h-4" />
-                    <span className="text-sm">Choose File</span>
-                  </label>
-                  <input
-                    id="file-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </div>
-              </div>
+              {/* Shared Form Fields */}
+              <BookFormFields form={form} showTitle={false} />
             </div>
 
-            {/* Right Column - Image Preview */}
-            <div>
-              <FormLabel>Preview</FormLabel>
-              <div className="mt-2 aspect-[2/3] bg-gray-100 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 flex items-center justify-center">
-                {form.watch('cover_image_url') ? (
-                  <ImageWithFallback
-                    src={form.watch('cover_image_url')}
-                    alt="Cover preview"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="text-center p-6">
-                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500 text-sm">Cover image preview</p>
-                  </div>
-                )}
-              </div>
+            {/* Right Column - Image Preview and Upload */}
+            <div className="space-y-4">
+              <BookCoverUpload form={form} />
             </div>
           </div>
 
