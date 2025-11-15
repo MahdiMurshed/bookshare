@@ -144,6 +144,29 @@ export {
   getTotalUnreadCount,
 } from './messages.js';
 
+// Export admin functions
+export type {
+  AdminStats,
+  ActivityItem,
+  UserFilters,
+  BookFilters as AdminBookFilters,
+  BorrowRequestFilters as AdminBorrowRequestFilters,
+  GenreDistribution,
+  BorrowActivityData,
+  UserGrowthData,
+} from './admin.js';
+export {
+  getAdminStats,
+  getAllUsers,
+  getAllBooks,
+  getAllBorrowRequests,
+  getRecentActivity,
+  getGenreDistribution,
+  getBorrowActivityData,
+  getUserGrowthData,
+  checkIsAdmin,
+} from './admin.js';
+
 // Export Supabase client for advanced use cases (use sparingly)
 // Note: Direct use of supabase client should be avoided in apps
 export { supabase } from './supabaseClient.js';

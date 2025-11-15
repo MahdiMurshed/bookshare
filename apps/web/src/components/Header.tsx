@@ -1,15 +1,17 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@repo/ui/components/button';
 import { Badge } from '@repo/ui/components/badge';
-import { BookOpen, LogOut, User } from '@repo/ui/components/icons';
+import { BookOpen, LogOut, User, Shield } from '@repo/ui/components/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '@repo/api-client';
 import { useTotalUnreadCount } from '../hooks/useUnreadMessages';
+import { useIsAdmin } from '../hooks/useAdminUser';
 
 export function Header() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: unreadCount = 0 } = useTotalUnreadCount();
+  const { isAdmin } = useIsAdmin();
 
   const handleSignOut = async () => {
     try {
@@ -63,6 +65,15 @@ export function Header() {
                 >
                   My Library
                 </Link>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium transition-all hover:shadow-md hover:scale-105"
+                  >
+                    <Shield className="w-4 h-4" />
+                    Admin
+                  </Link>
+                )}
                 <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <User className="w-4 h-4" />
