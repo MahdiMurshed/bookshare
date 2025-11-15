@@ -9,7 +9,7 @@
  */
 
 import { supabase } from './supabaseClient.js';
-import type { BorrowRequest, BorrowRequestStatus } from './types.js';
+import type { BorrowRequest, BorrowRequestWithDetails, BorrowRequestStatus } from './types.js';
 
 export interface CreateBorrowRequestInput {
   book_id: string;
@@ -237,4 +237,82 @@ export async function deleteBorrowRequest(id: string): Promise<void> {
 
   // Future: NestJS implementation
   // await fetch(`${API_URL}/borrow-requests/${id}`, { method: 'DELETE' });
+}
+
+/**
+ * Get borrow requests made by the current user with book and owner details
+ */
+export async function getMyBorrowRequestsWithDetails(
+  status?: BorrowRequestStatus
+): Promise<BorrowRequestWithDetails[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User must be authenticated');
+
+  let query = supabase
+    .from('borrow_requests')
+    .select(`
+      *,
+      book:books!book_id (
+        id,
+        title,
+        author,
+        cover_image_url,
+        genre
+      ),
+      owner:users!owner_id (
+        id,
+        name,
+        email,
+        avatar_url
+      )
+    `)
+    .eq('borrower_id', user.id);
+
+  if (status) {
+    query = query.eq('status', status);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as BorrowRequestWithDetails[];
+}
+
+/**
+ * Get borrow requests for books owned by the current user with book and borrower details
+ */
+export async function getIncomingBorrowRequestsWithDetails(
+  status?: BorrowRequestStatus
+): Promise<BorrowRequestWithDetails[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User must be authenticated');
+
+  let query = supabase
+    .from('borrow_requests')
+    .select(`
+      *,
+      book:books!book_id (
+        id,
+        title,
+        author,
+        cover_image_url,
+        genre
+      ),
+      borrower:users!borrower_id (
+        id,
+        name,
+        email,
+        avatar_url
+      )
+    `)
+    .eq('owner_id', user.id);
+
+  if (status) {
+    query = query.eq('status', status);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as BorrowRequestWithDetails[];
 }

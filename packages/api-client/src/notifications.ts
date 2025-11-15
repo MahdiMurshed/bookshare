@@ -190,7 +190,7 @@ export function subscribeToNotifications(callback: (notification: Notification) 
         schema: 'public',
         table: 'notifications',
       },
-      (payload) => {
+      (payload: { new: Notification }) => {
         callback(payload.new as Notification);
       }
     )

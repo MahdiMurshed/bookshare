@@ -21,6 +21,7 @@ export type {
   Book,
   BookWithOwner,
   BorrowRequest,
+  BorrowRequestWithDetails,
   BorrowRequestStatus,
   Review,
   Notification,
@@ -85,6 +86,8 @@ export {
   markBookReturned,
   getMyBorrowRequests,
   getIncomingBorrowRequests,
+  getMyBorrowRequestsWithDetails,
+  getIncomingBorrowRequestsWithDetails,
   deleteBorrowRequest,
 } from './borrowRequests.js';
 
