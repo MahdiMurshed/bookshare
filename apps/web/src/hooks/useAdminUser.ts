@@ -6,12 +6,13 @@ import { useQuery } from '@tanstack/react-query';
 import { getCurrentUserProfile } from '@repo/api-client';
 import type { User } from '@repo/api-client';
 import { useAuth } from '../contexts/AuthContext';
+import { adminKeys } from './useAdmin';
 
 export function useAdminUser() {
   const { user: authUser } = useAuth();
 
   return useQuery({
-    queryKey: ['admin-user', authUser?.id],
+    queryKey: adminKeys.userById(authUser?.id),
     queryFn: async (): Promise<User | null> => {
       if (!authUser?.id) return null;
       return await getCurrentUserProfile();
