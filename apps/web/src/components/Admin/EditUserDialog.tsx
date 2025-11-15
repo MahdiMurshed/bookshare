@@ -85,7 +85,7 @@ export function EditUserDialog({
         avatar_url: user.avatar_url || '',
       });
     }
-  }, [user, form]);
+  }, [user]);
 
   const handleSubmit = async (data: EditUserFormValues) => {
     try {

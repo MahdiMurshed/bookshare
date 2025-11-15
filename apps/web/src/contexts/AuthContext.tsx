@@ -14,24 +14,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Track if component is still mounted
+    let isMounted = true;
+
     // Check for existing session
     getCurrentUser()
       .then((currentUser) => {
-        setUser(currentUser);
+        if (isMounted) {
+          setUser(currentUser);
+        }
       })
       .catch(() => {
-        setUser(null);
+        if (isMounted) {
+          setUser(null);
+        }
       })
       .finally(() => {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       });
 
     // Subscribe to auth changes
     const unsubscribe = onAuthStateChange((user) => {
-      setUser(user);
+      if (isMounted) {
+        setUser(user);
+      }
     });
 
     return () => {
+      isMounted = false;
       unsubscribe();
     };
   }, []);
