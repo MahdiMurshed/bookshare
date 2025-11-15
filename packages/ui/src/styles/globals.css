@@ -9,7 +9,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /* Import elegant fonts for refined editorial aesthetic */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Outfit:wght@100..900&display=swap');
 
 :root {
   /* Base Colors */
@@ -118,8 +118,9 @@
   --font-weight-bold: 700;
 
   /* Font Families */
-  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'DM Sans', 'Outfit', ui-sans-serif, system-ui, sans-serif;
   --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
+  --font-serif-body: 'Crimson Pro', ui-serif, Georgia, serif;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -217,6 +218,7 @@
   /* Font Families */
   --font-family-sans: var(--font-sans);
   --font-family-serif: var(--font-serif);
+  --font-family-serif-body: var(--font-serif-body);
 
   /* Base Colors */
   --color-background: var(--background);
@@ -350,4 +352,17 @@
 
 .animate-shake {
   animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
 }
