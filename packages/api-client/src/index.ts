@@ -28,6 +28,8 @@ export type {
   Review,
   Notification,
   NotificationType,
+  Message,
+  MessageWithSender,
   AuthUser,
   Session,
   SignUpCredentials,
@@ -129,6 +131,13 @@ export {
   notifyRequestApproved,
   notifyRequestDenied,
 } from './notifications.js';
+
+// Export message functions
+export {
+  getMessagesByRequest,
+  sendMessage,
+  subscribeToMessages,
+} from './messages.js';
 
 // Export Supabase client for advanced use cases (use sparingly)
 // Note: Direct use of supabase client should be avoided in apps
