@@ -234,6 +234,7 @@ export async function getUnreadMessageCount(requestId: string): Promise<number> 
 
 /**
  * Get total unread message count across all chats
+ * Optimized to avoid N+1 query problem by batching requests by role
  */
 export async function getTotalUnreadCount(): Promise<number> {
   // Get current user
@@ -251,19 +252,40 @@ export async function getTotalUnreadCount(): Promise<number> {
   if (requestsError) throw requestsError;
   if (!requests || requests.length === 0) return 0;
 
-  // Count unread messages across all requests
+  // Split requests into those where user is owner vs borrower
+  const ownerRequestIds = requests
+    .filter(r => r.owner_id === user.id)
+    .map(r => r.id);
+
+  const borrowerRequestIds = requests
+    .filter(r => r.borrower_id === user.id)
+    .map(r => r.id);
+
   let totalUnread = 0;
 
-  for (const request of requests) {
-    const isOwner = request.owner_id === user.id;
-
-    const { count } = await supabase
+  // Count unread messages where user is the owner (batch query)
+  if (ownerRequestIds.length > 0) {
+    const { count, error } = await supabase
       .from('messages')
       .select('*', { count: 'exact', head: true })
-      .eq('borrow_request_id', request.id)
-      .eq(isOwner ? 'read_by_owner' : 'read_by_borrower', false)
+      .in('borrow_request_id', ownerRequestIds)
+      .eq('read_by_owner', false)
       .neq('sender_id', user.id);
 
+    if (error) throw error;
+    totalUnread += count || 0;
+  }
+
+  // Count unread messages where user is the borrower (batch query)
+  if (borrowerRequestIds.length > 0) {
+    const { count, error } = await supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .in('borrow_request_id', borrowerRequestIds)
+      .eq('read_by_borrower', false)
+      .neq('sender_id', user.id);
+
+    if (error) throw error;
     totalUnread += count || 0;
   }
 

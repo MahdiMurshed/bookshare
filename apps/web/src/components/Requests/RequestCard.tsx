@@ -30,6 +30,17 @@ export function RequestCard({
 }: RequestCardProps) {
   const [chatDialogOpen, setChatDialogOpen] = useState(false);
 
+  // Defensive null checks - if critical data is missing, show error state
+  if (!request.book) {
+    return (
+      <Card className="overflow-hidden">
+        <CardContent className="p-6">
+          <p className="text-sm text-destructive">Error: Book data not found for this request.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const isPending = request.status === 'pending';
   const isApproved = request.status === 'approved';
   const isBorrowed = request.status === 'borrowed';
@@ -39,6 +50,7 @@ export function RequestCard({
   const isIncoming = view === 'incoming';
 
   // For incoming requests, show borrower; for outgoing, show owner
+  // Fallback to empty object to prevent crashes if user data is missing
   const otherUser = isIncoming ? request.borrower : request.owner;
 
   const statusVariant = {
@@ -66,8 +78,8 @@ export function RequestCard({
           {/* Book Cover */}
           <div className="flex-shrink-0">
             <ImageWithFallback
-              src={request.book?.cover_image_url || ''}
-              alt={request.book?.title || 'Book cover'}
+              src={request.book.cover_image_url || ''}
+              alt={request.book.title || 'Book cover'}
               className="h-24 w-16 rounded object-cover"
             />
           </div>
@@ -77,12 +89,12 @@ export function RequestCard({
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-lg truncate">
-                  {request.book?.title || 'Unknown Book'}
+                  {request.book.title || 'Unknown Book'}
                 </h3>
                 <p className="text-sm text-muted-foreground truncate">
-                  by {request.book?.author || 'Unknown Author'}
+                  by {request.book.author || 'Unknown Author'}
                 </p>
-                {request.book?.genre && (
+                {request.book.genre && (
                   <p className="text-xs text-muted-foreground mt-1">{request.book.genre}</p>
                 )}
               </div>
@@ -324,8 +336,8 @@ export function RequestCard({
         open={chatDialogOpen}
         onOpenChange={setChatDialogOpen}
         requestId={request.id}
-        bookTitle={request.book?.title}
-        otherUserName={otherUser?.name || otherUser?.email}
+        bookTitle={request.book.title}
+        otherUserName={otherUser?.name || otherUser?.email || 'Unknown User'}
       />
     </Card>
   );
