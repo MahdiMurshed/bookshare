@@ -9,7 +9,7 @@
  */
 
 import { supabase } from './supabaseClient.js';
-import type { BorrowRequest, BorrowRequestWithDetails, BorrowRequestStatus } from './types.js';
+import type { BorrowRequest, BorrowRequestWithDetails, BorrowRequestStatus, HandoverMethod, ReturnMethod } from './types.js';
 
 export interface CreateBorrowRequestInput {
   book_id: string;
@@ -20,6 +20,33 @@ export interface UpdateBorrowRequestInput {
   status?: BorrowRequestStatus;
   response_message?: string;
   due_date?: string;
+  handover_method?: HandoverMethod;
+  handover_address?: string;
+  handover_datetime?: string;
+  handover_instructions?: string;
+  handover_tracking?: string;
+  handover_completed_at?: string;
+  return_method?: ReturnMethod;
+  return_address?: string;
+  return_datetime?: string;
+  return_instructions?: string;
+  return_tracking?: string;
+  return_initiated_at?: string;
+}
+
+export interface HandoverDetails {
+  method: HandoverMethod;
+  address?: string;
+  datetime?: string;
+  instructions?: string;
+}
+
+export interface ReturnDetails {
+  method: ReturnMethod;
+  address?: string;
+  datetime?: string;
+  instructions?: string;
+  tracking?: string;
 }
 
 export interface BorrowRequestFilters {
@@ -184,11 +211,12 @@ export async function updateBorrowRequest(
 }
 
 /**
- * Approve a borrow request
+ * Approve a borrow request with handover details
  */
 export async function approveBorrowRequest(
   id: string,
   dueDate: string,
+  handoverDetails: HandoverDetails,
   responseMessage?: string
 ): Promise<BorrowRequest> {
   // First, get the borrow request to find the book_id
@@ -209,11 +237,15 @@ export async function approveBorrowRequest(
 
   if (bookError) throw bookError;
 
-  // Update the borrow request status
+  // Update the borrow request status with handover details
   return updateBorrowRequest(id, {
     status: 'approved',
     due_date: dueDate,
     response_message: responseMessage,
+    handover_method: handoverDetails.method,
+    handover_address: handoverDetails.address,
+    handover_datetime: handoverDetails.datetime,
+    handover_instructions: handoverDetails.instructions,
   });
 }
 
@@ -370,4 +402,50 @@ export async function getIncomingBorrowRequestsWithDetails(
 
   if (error) throw error;
   return (data || []) as BorrowRequestWithDetails[];
+}
+
+/**
+ * Mark handover as complete (owner confirms borrower received the book)
+ */
+export async function markHandoverComplete(id: string): Promise<BorrowRequest> {
+  return updateBorrowRequest(id, {
+    status: 'borrowed',
+    handover_completed_at: new Date().toISOString(),
+  });
+}
+
+/**
+ * Add or update tracking number for handover
+ */
+export async function updateHandoverTracking(id: string, tracking: string): Promise<BorrowRequest> {
+  return updateBorrowRequest(id, {
+    handover_tracking: tracking,
+  });
+}
+
+/**
+ * Initiate return process (borrower starts return)
+ */
+export async function initiateReturn(
+  id: string,
+  returnDetails: ReturnDetails
+): Promise<BorrowRequest> {
+  return updateBorrowRequest(id, {
+    status: 'return_initiated',
+    return_method: returnDetails.method,
+    return_address: returnDetails.address,
+    return_datetime: returnDetails.datetime,
+    return_instructions: returnDetails.instructions,
+    return_tracking: returnDetails.tracking,
+    return_initiated_at: new Date().toISOString(),
+  });
+}
+
+/**
+ * Update return tracking number
+ */
+export async function updateReturnTracking(id: string, tracking: string): Promise<BorrowRequest> {
+  return updateBorrowRequest(id, {
+    return_tracking: tracking,
+  });
 }

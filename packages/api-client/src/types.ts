@@ -69,7 +69,9 @@ export interface BookWithOwner extends Book {
   };
 }
 
-export type BorrowRequestStatus = 'pending' | 'approved' | 'denied' | 'returned';
+export type BorrowRequestStatus = 'pending' | 'approved' | 'borrowed' | 'return_initiated' | 'returned' | 'denied';
+export type HandoverMethod = 'ship' | 'meetup' | 'pickup';
+export type ReturnMethod = 'ship' | 'meetup' | 'dropoff';
 
 export interface BorrowRequest {
   id: string;
@@ -83,6 +85,23 @@ export interface BorrowRequest {
   approved_at: string | null;
   due_date: string | null;
   returned_at: string | null;
+
+  // Handover fields
+  handover_method: HandoverMethod | null;
+  handover_address: string | null;
+  handover_datetime: string | null;
+  handover_instructions: string | null;
+  handover_tracking: string | null;
+  handover_completed_at: string | null;
+
+  // Return fields
+  return_method: ReturnMethod | null;
+  return_address: string | null;
+  return_datetime: string | null;
+  return_instructions: string | null;
+  return_tracking: string | null;
+  return_initiated_at: string | null;
+
   created_at: string;
   updated_at: string;
 }

@@ -23,6 +23,8 @@ export type {
   BorrowRequest,
   BorrowRequestWithDetails,
   BorrowRequestStatus,
+  HandoverMethod,
+  ReturnMethod,
   Review,
   Notification,
   NotificationType,
@@ -75,6 +77,8 @@ export type {
   CreateBorrowRequestInput,
   UpdateBorrowRequestInput,
   BorrowRequestFilters,
+  HandoverDetails,
+  ReturnDetails,
 } from './borrowRequests.js';
 export {
   getBorrowRequests,
@@ -89,6 +93,10 @@ export {
   getMyBorrowRequestsWithDetails,
   getIncomingBorrowRequestsWithDetails,
   deleteBorrowRequest,
+  markHandoverComplete,
+  updateHandoverTracking,
+  initiateReturn,
+  updateReturnTracking,
 } from './borrowRequests.js';
 
 // Export review functions

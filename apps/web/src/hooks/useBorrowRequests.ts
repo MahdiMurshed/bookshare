@@ -5,11 +5,15 @@ import {
   createBorrowRequest,
   approveBorrowRequest,
   denyBorrowRequest,
+  markHandoverComplete,
+  initiateReturn,
   notifyBorrowRequest,
   notifyRequestApproved,
   notifyRequestDenied,
   type CreateBorrowRequestInput,
   type BorrowRequest,
+  type HandoverDetails,
+  type ReturnDetails,
 } from '@repo/api-client';
 import { bookKeys } from './useBooks';
 
@@ -83,7 +87,7 @@ export function useCreateBorrowRequest() {
 }
 
 /**
- * Hook to approve a borrow request
+ * Hook to approve a borrow request with handover details
  */
 export function useApproveBorrowRequest() {
   const queryClient = useQueryClient();
@@ -92,13 +96,15 @@ export function useApproveBorrowRequest() {
     mutationFn: async ({
       id,
       dueDate,
+      handoverDetails,
       message,
     }: {
       id: string;
       dueDate: string;
+      handoverDetails: HandoverDetails;
       message?: string;
     }) => {
-      const request = await approveBorrowRequest(id, dueDate, message);
+      const request = await approveBorrowRequest(id, dueDate, handoverDetails, message);
       return request;
     },
     onSuccess: async (request: BorrowRequest) => {
@@ -150,6 +156,50 @@ export function useDenyBorrowRequest() {
       } catch (error) {
         console.error('Failed to send denial notification:', error);
       }
+    },
+  });
+}
+
+/**
+ * Hook to mark handover as complete
+ */
+export function useMarkHandoverComplete() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const request = await markHandoverComplete(id);
+      return request;
+    },
+    onSuccess: (request: BorrowRequest) => {
+      // Invalidate incoming requests
+      queryClient.invalidateQueries({ queryKey: borrowRequestKeys.incoming() });
+      queryClient.invalidateQueries({ queryKey: borrowRequestKeys.detail(request.id) });
+    },
+  });
+}
+
+/**
+ * Hook to initiate return
+ */
+export function useInitiateReturn() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      returnDetails,
+    }: {
+      id: string;
+      returnDetails: ReturnDetails;
+    }) => {
+      const request = await initiateReturn(id, returnDetails);
+      return request;
+    },
+    onSuccess: (request: BorrowRequest) => {
+      // Invalidate my borrow requests
+      queryClient.invalidateQueries({ queryKey: borrowRequestKeys.myRequests() });
+      queryClient.invalidateQueries({ queryKey: borrowRequestKeys.detail(request.id) });
     },
   });
 }
