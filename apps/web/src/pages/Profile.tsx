@@ -49,6 +49,8 @@ export default function Profile() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [editedBio, setEditedBio] = useState('');
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const { data: profile, isLoading: profileLoading } = useUserProfile(user?.id);
   const { data: stats, isLoading: statsLoading } = useUserStats(user?.id);
@@ -88,34 +90,39 @@ export default function Profile() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Clear any previous errors
+    setUploadError(null);
+
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file');
+      setUploadError('Please select an image file');
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image must be less than 5MB');
+      setUploadError('Image must be less than 5MB');
       return;
     }
 
     try {
       await uploadAvatarMutation(file);
+      setUploadError(null);
     } catch (error) {
       console.error('Failed to upload avatar:', error);
-      alert('Failed to upload avatar. Please try again.');
+      setUploadError('Failed to upload avatar. Please try again.');
     }
   };
 
   // Handle account deletion
   const handleDeleteAccount = async () => {
+    setDeleteError(null);
     try {
       await deleteAccountMutation();
       navigate('/');
     } catch (error) {
       console.error('Failed to delete account:', error);
-      alert('Failed to delete account. Please try again.');
+      setDeleteError('Failed to delete account. Please try again.');
     }
   };
 
@@ -219,6 +226,14 @@ export default function Profile() {
                     onChange={handleAvatarUpload}
                     className="hidden"
                   />
+
+                  {/* Upload Error Message */}
+                  {uploadError && (
+                    <div className="absolute -bottom-8 left-0 right-0 flex items-center gap-2 text-destructive text-sm">
+                      <AlertTriangle className="w-4 h-4" />
+                      <span>{uploadError}</span>
+                    </div>
+                  )}
 
                   {/* User Info */}
                   <div className="flex-1 space-y-4">
@@ -426,7 +441,13 @@ export default function Profile() {
       </div>
 
       {/* Delete Account Confirmation Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <Dialog
+        open={showDeleteDialog}
+        onOpenChange={(open) => {
+          setShowDeleteDialog(open);
+          if (!open) setDeleteError(null);
+        }}
+      >
         <DialogContent className="border-2">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
@@ -440,6 +461,15 @@ export default function Profile() {
               books, borrow requests, and messages will be permanently deleted.
             </DialogDescription>
           </DialogHeader>
+
+          {/* Delete Error Message */}
+          {deleteError && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span>{deleteError}</span>
+            </div>
+          )}
+
           <DialogFooter className="gap-2 sm:gap-2">
             <Button
               variant="outline"

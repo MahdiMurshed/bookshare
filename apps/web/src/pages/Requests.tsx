@@ -20,6 +20,7 @@ import { DenyRequestDialog } from '../components/Requests/DenyRequestDialog';
 import { AddTrackingDialog } from '../components/Requests/AddTrackingDialog';
 import { ReturnInitiateDialog } from '../components/Requests/ReturnInitiateDialog';
 import type { BorrowRequestWithDetails, ReturnMethod } from '@repo/api-client';
+import { logError } from '../lib/utils/errors';
 
 export default function Requests() {
   const [activeTab, setActiveTab] = useState<'incoming' | 'outgoing'>('incoming');
@@ -138,7 +139,7 @@ export default function Requests() {
       setApproveDialogOpen(false);
       setSelectedRequest(null);
     } catch (error) {
-      console.error('Failed to approve request:', error);
+      logError(error, 'approving request');
     }
   };
 
@@ -153,7 +154,7 @@ export default function Requests() {
       setDenyDialogOpen(false);
       setSelectedRequest(null);
     } catch (error) {
-      console.error('Failed to deny request:', error);
+      logError(error, 'denying request');
     }
   };
 
@@ -161,7 +162,7 @@ export default function Requests() {
     try {
       await markHandoverCompleteMutation.mutateAsync(requestId);
     } catch (error) {
-      console.error('Failed to mark handover complete:', error);
+      logError(error, 'marking handover complete');
     }
   };
 
@@ -184,7 +185,7 @@ export default function Requests() {
       setTrackingDialogOpen(false);
       setSelectedRequest(null);
     } catch (error) {
-      console.error('Failed to update tracking:', error);
+      logError(error, 'updating tracking');
     }
   };
 
@@ -221,7 +222,7 @@ export default function Requests() {
       setReturnDialogOpen(false);
       setSelectedRequest(null);
     } catch (error) {
-      console.error('Failed to initiate return:', error);
+      logError(error, 'initiating return');
     }
   };
 
@@ -229,7 +230,7 @@ export default function Requests() {
     try {
       await confirmReturnMutation.mutateAsync(requestId);
     } catch (error) {
-      console.error('Failed to confirm return:', error);
+      logError(error, 'confirming return');
     }
   };
 
