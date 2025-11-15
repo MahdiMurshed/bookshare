@@ -95,6 +95,23 @@ export async function createBorrowRequest(input: CreateBorrowRequestInput): Prom
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User must be authenticated to create a borrow request');
 
+  // Check for existing pending or approved request for this book
+  const { data: existingRequest } = await supabase
+    .from('borrow_requests')
+    .select('id, status')
+    .eq('book_id', input.book_id)
+    .eq('borrower_id', user.id)
+    .in('status', ['pending', 'approved'])
+    .maybeSingle();
+
+  if (existingRequest) {
+    if (existingRequest.status === 'pending') {
+      throw new Error('You already have a pending request for this book');
+    } else if (existingRequest.status === 'approved') {
+      throw new Error('You already have an approved request for this book');
+    }
+  }
+
   // Get the book to find the owner
   const { data: book, error: bookError } = await supabase
     .from('books')
@@ -174,6 +191,25 @@ export async function approveBorrowRequest(
   dueDate: string,
   responseMessage?: string
 ): Promise<BorrowRequest> {
+  // First, get the borrow request to find the book_id
+  const { data: borrowRequest, error: requestError } = await supabase
+    .from('borrow_requests')
+    .select('book_id')
+    .eq('id', id)
+    .single();
+
+  if (requestError) throw requestError;
+  if (!borrowRequest) throw new Error('Borrow request not found');
+
+  // Update the book to mark it as not borrowable
+  const { error: bookError } = await supabase
+    .from('books')
+    .update({ borrowable: false })
+    .eq('id', borrowRequest.book_id);
+
+  if (bookError) throw bookError;
+
+  // Update the borrow request status
   return updateBorrowRequest(id, {
     status: 'approved',
     due_date: dueDate,
@@ -195,6 +231,25 @@ export async function denyBorrowRequest(id: string, responseMessage?: string): P
  * Mark a borrow request as returned
  */
 export async function markBookReturned(id: string): Promise<BorrowRequest> {
+  // First, get the borrow request to find the book_id
+  const { data: borrowRequest, error: requestError } = await supabase
+    .from('borrow_requests')
+    .select('book_id')
+    .eq('id', id)
+    .single();
+
+  if (requestError) throw requestError;
+  if (!borrowRequest) throw new Error('Borrow request not found');
+
+  // Update the book to mark it as borrowable again
+  const { error: bookError } = await supabase
+    .from('books')
+    .update({ borrowable: true })
+    .eq('id', borrowRequest.book_id);
+
+  if (bookError) throw bookError;
+
+  // Update the borrow request status
   return updateBorrowRequest(id, {
     status: 'returned',
   });
