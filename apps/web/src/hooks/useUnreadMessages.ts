@@ -73,13 +73,20 @@ export function useUnreadSubscription(requestId: string | undefined) {
   useEffect(() => {
     if (!requestId) return;
 
+    // Track if component is still mounted
+    let isMounted = true;
+
     const unsubscribe = subscribeToMessages(requestId, () => {
+      // Only update cache if component is still mounted
+      if (!isMounted) return;
+
       // When new message arrives, invalidate unread counts
       queryClient.invalidateQueries({ queryKey: unreadKeys.total() });
       queryClient.invalidateQueries({ queryKey: unreadKeys.byRequest(requestId) });
     });
 
     return () => {
+      isMounted = false;
       unsubscribe();
     };
   }, [requestId, queryClient]);

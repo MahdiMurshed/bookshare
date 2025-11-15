@@ -54,7 +54,7 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess, userId }: E
         cover_image_url: book.cover_image_url || '',
       });
     }
-  }, [book, form]);
+  }, [book]);
 
   const handleFormSubmit = async (values: BookFormValues) => {
     if (!book) return;
