@@ -85,8 +85,12 @@ export default function Profile() {
               profile={profile}
               isUploading={isUploading}
               isUpdating={isUpdating}
-              onAvatarUpload={uploadAvatarMutation}
-              onUpdateProfile={updateProfileMutation}
+              onAvatarUpload={async (file) => {
+                await uploadAvatarMutation(file);
+              }}
+              onUpdateProfile={async (data) => {
+                await updateProfileMutation(data);
+              }}
             />
 
             {/* Stats Section */}
