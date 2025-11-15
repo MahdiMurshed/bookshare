@@ -17,6 +17,23 @@ export interface UpdateProfileInput {
 }
 
 /**
+ * Get the current authenticated user's full profile (including admin status)
+ */
+export async function getCurrentUserProfile(): Promise<User | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (error) throw error;
+  return data as User;
+}
+
+/**
  * Get user profile by ID
  */
 export async function getUserProfile(userId: string): Promise<User> {

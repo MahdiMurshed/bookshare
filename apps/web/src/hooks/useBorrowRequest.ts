@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createBorrowRequest } from '@repo/api-client';
+import { borrowRequestKeys } from './useBorrowRequests';
 
 interface UseBorrowRequestParams {
   bookId: string;
@@ -17,7 +18,7 @@ export function useBorrowRequest({ bookId, onSuccess }: UseBorrowRequestParams) 
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['borrowRequests'] });
+      queryClient.invalidateQueries({ queryKey: borrowRequestKeys.all });
       onSuccess?.();
     },
   });
