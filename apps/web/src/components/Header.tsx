@@ -105,11 +105,9 @@ export function Header() {
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 w-full transition-all duration-300',
-        'backdrop-blur-xl bg-background/80 supports-[backdrop-filter]:bg-background/60',
-        scrolled
-          ? 'border-b border-amber-500/20 shadow-lg shadow-amber-500/5'
-          : 'border-b border-border/40'
+        'sticky top-0 z-50 w-full bg-background transition-shadow duration-200',
+        'border-b-2 border-border',
+        scrolled && 'shadow-sm'
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -117,15 +115,10 @@ export function Header() {
           {/* Logo and Brand */}
           <Link
             to="/"
-            className="flex items-center gap-3 group relative"
+            className="flex items-center gap-2.5 group"
           >
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg blur opacity-50 group-hover:opacity-75 transition-opacity" />
-              <div className="relative bg-gradient-to-br from-amber-500 to-orange-600 p-2 rounded-lg shadow-lg">
-                <BookOpen className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            <span className="text-2xl font-serif font-bold bg-gradient-to-r from-amber-600 to-orange-700 bg-clip-text text-transparent">
+            <BookOpen className="w-6 h-6 text-primary transition-transform group-hover:scale-105" />
+            <span className="text-xl font-semibold text-foreground">
               BookShare
             </span>
           </Link>
@@ -140,22 +133,18 @@ export function Header() {
                   key={item.href}
                   to={item.href}
                   className={cn(
-                    'relative flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200',
-                    'hover:bg-amber-50 dark:hover:bg-amber-950/20',
+                    'relative flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
                     isActive
-                      ? 'text-amber-700 dark:text-amber-400'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'text-primary font-semibold'
+                      : 'text-muted-foreground hover:text-primary'
                   )}
                 >
                   <Icon className="w-4 h-4" />
                   <span>{item.label}</span>
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-gradient-to-r from-amber-500 to-orange-600 rounded-full shadow-lg animate-pulse">
+                    <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-primary-foreground bg-primary rounded-full">
                       {item.badge > 99 ? '99+' : item.badge}
                     </span>
-                  )}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full" />
                   )}
                 </Link>
               );
@@ -166,12 +155,11 @@ export function Header() {
           <div className="flex items-center gap-3">
             {/* Admin Button */}
             {user && isAdmin && (
-              <Link
-                to="/admin"
-                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white font-medium transition-all hover:shadow-xl hover:shadow-amber-500/25 hover:scale-105 active:scale-95"
-              >
-                <Shield className="w-4 h-4" />
-                <span>Admin</span>
+              <Link to="/admin" className="hidden md:block">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Shield className="w-4 h-4" />
+                  <span>Admin</span>
+                </Button>
               </Link>
             )}
 
@@ -179,45 +167,39 @@ export function Header() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="relative flex items-center gap-3 p-1 rounded-full hover:ring-2 hover:ring-amber-500/50 transition-all focus:outline-none focus:ring-2 focus:ring-amber-500/50">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full blur opacity-50" />
-                      <Avatar className="relative w-9 h-9 border-2 border-white dark:border-gray-900 shadow-lg">
-                        <AvatarImage src="" alt={user.email} />
-                        <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white font-semibold">
-                          {getUserInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
+                  <button className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full">
+                    <Avatar className="w-8 h-8 border-2 border-border transition-colors hover:border-primary">
+                      <AvatarImage src="" alt={user.email} />
+                      <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-64 backdrop-blur-xl bg-background/95 border-amber-500/20 shadow-xl"
-                >
+                <DropdownMenuContent align="end" className="w-64 border-2">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-semibold text-foreground">My Account</p>
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-amber-500/10" />
-                  <DropdownMenuItem className="cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-950/20 focus:bg-amber-50 dark:focus:bg-amber-950/20">
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-950/20 focus:bg-amber-50 dark:focus:bg-amber-950/20">
+                  <DropdownMenuItem className="cursor-pointer">
                     <Bell className="mr-2 h-4 w-4" />
                     <span>Notifications</span>
                     {unreadCount > 0 && (
-                      <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-gradient-to-r from-amber-500 to-orange-600 rounded-full">
-                        {unreadCount}
+                      <span className="ml-auto flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-primary-foreground bg-primary rounded-full">
+                        {unreadCount > 99 ? '99+' : unreadCount}
                       </span>
                     )}
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-amber-500/10" />
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    className="cursor-pointer text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 focus:bg-red-50 dark:focus:bg-red-950/20"
+                    className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
                     onClick={handleSignOut}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
@@ -228,15 +210,12 @@ export function Header() {
             ) : (
               <div className="hidden md:flex items-center gap-2">
                 <Link to="/signin">
-                  <Button variant="ghost" size="sm" className="hover:bg-amber-50 dark:hover:bg-amber-950/20">
+                  <Button variant="ghost" size="sm">
                     Sign In
                   </Button>
                 </Link>
                 <Link to="/signup">
-                  <Button
-                    size="sm"
-                    className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-xl hover:shadow-amber-500/25 hover:scale-105 active:scale-95 transition-all"
-                  >
+                  <Button size="sm">
                     Sign Up
                   </Button>
                 </Link>
@@ -246,34 +225,22 @@ export function Header() {
             {/* Mobile Menu */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="md:hidden hover:bg-amber-50 dark:hover:bg-amber-950/20"
-                >
+                <Button variant="ghost" size="sm" className="md:hidden">
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent
-                side="right"
-                className="w-full sm:max-w-md backdrop-blur-xl bg-background/95 border-l border-amber-500/20"
-              >
+              <SheetContent side="right" className="w-full sm:max-w-md border-l-2">
                 <div className="flex flex-col h-full">
                   {/* Mobile Header */}
-                  <div className="flex items-center gap-3 pb-6 border-b border-amber-500/20">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg blur opacity-50" />
-                      <div className="relative bg-gradient-to-br from-amber-500 to-orange-600 p-2 rounded-lg shadow-lg">
-                        <BookOpen className="w-5 h-5 text-white" />
-                      </div>
-                    </div>
-                    <span className="text-2xl font-serif font-bold bg-gradient-to-r from-amber-600 to-orange-700 bg-clip-text text-transparent">
+                  <div className="flex items-center gap-2.5 pb-6 border-b-2 border-border">
+                    <BookOpen className="w-6 h-6 text-primary" />
+                    <span className="text-xl font-semibold text-foreground">
                       BookShare
                     </span>
                   </div>
 
                   {/* Mobile Navigation */}
-                  <nav className="flex flex-col gap-2 py-6 flex-1">
+                  <nav className="flex flex-col gap-1 py-6 flex-1">
                     {navItems.map((item) => {
                       const Icon = item.icon;
                       const isActive = isActiveRoute(item.href);
@@ -283,22 +250,18 @@ export function Header() {
                           to={item.href}
                           onClick={() => setMobileMenuOpen(false)}
                           className={cn(
-                            'relative flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200',
-                            'hover:bg-amber-50 dark:hover:bg-amber-950/20',
+                            'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors',
                             isActive
-                              ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400'
-                              : 'text-muted-foreground hover:text-foreground'
+                              ? 'text-primary font-semibold bg-muted'
+                              : 'text-muted-foreground hover:text-primary hover:bg-muted'
                           )}
                         >
                           <Icon className="w-5 h-5" />
-                          <span className="text-lg">{item.label}</span>
+                          <span>{item.label}</span>
                           {item.badge !== undefined && item.badge > 0 && (
-                            <span className="ml-auto flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-bold text-white bg-gradient-to-r from-amber-500 to-orange-600 rounded-full">
+                            <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold text-primary-foreground bg-primary rounded-full">
                               {item.badge > 99 ? '99+' : item.badge}
                             </span>
-                          )}
-                          {isActive && (
-                            <span className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 to-orange-600 rounded-r-full" />
                           )}
                         </Link>
                       );
@@ -309,27 +272,26 @@ export function Header() {
                       <Link
                         to="/admin"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 mt-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white font-medium transition-all hover:shadow-xl hover:shadow-amber-500/25"
+                        className="mt-2"
                       >
-                        <Shield className="w-5 h-5" />
-                        <span className="text-lg">Admin Dashboard</span>
+                        <Button variant="outline" className="w-full justify-start gap-3">
+                          <Shield className="w-5 h-5" />
+                          <span>Admin Dashboard</span>
+                        </Button>
                       </Link>
                     )}
                   </nav>
 
                   {/* Mobile User Section */}
                   {user ? (
-                    <div className="pt-6 border-t border-amber-500/20">
-                      <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg mb-3">
-                        <div className="relative">
-                          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full blur opacity-50" />
-                          <Avatar className="relative w-10 h-10 border-2 border-white dark:border-gray-900 shadow-lg">
-                            <AvatarImage src="" alt={user.email} />
-                            <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-600 text-white font-semibold">
-                              {getUserInitials()}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
+                    <div className="pt-6 border-t-2 border-border">
+                      <div className="flex items-center gap-3 px-3 py-3 bg-muted rounded-md mb-3">
+                        <Avatar className="w-9 h-9 border-2 border-border">
+                          <AvatarImage src="" alt={user.email} />
+                          <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
+                            {getUserInitials()}
+                          </AvatarFallback>
+                        </Avatar>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-foreground">My Account</p>
                           <p className="text-xs text-muted-foreground truncate">{user.email}</p>
@@ -337,25 +299,25 @@ export function Header() {
                       </div>
                       <Button
                         variant="outline"
-                        className="w-full justify-start gap-3 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/20"
+                        className="w-full justify-start gap-3 text-red-600 dark:text-red-400 hover:text-red-600 dark:hover:text-red-400"
                         onClick={handleSignOut}
                       >
                         <LogOut className="w-5 h-5" />
-                        <span className="text-lg">Sign Out</span>
+                        <span>Sign Out</span>
                       </Button>
                     </div>
                   ) : (
-                    <div className="pt-6 border-t border-amber-500/20 flex flex-col gap-3">
+                    <div className="pt-6 border-t-2 border-border flex flex-col gap-2">
                       <Link to="/signin" onClick={() => setMobileMenuOpen(false)}>
-                        <Button variant="outline" className="w-full justify-start gap-3 hover:bg-amber-50 dark:hover:bg-amber-950/20">
+                        <Button variant="outline" className="w-full justify-start gap-3">
                           <User className="w-5 h-5" />
-                          <span className="text-lg">Sign In</span>
+                          <span>Sign In</span>
                         </Button>
                       </Link>
                       <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
-                        <Button className="w-full justify-start gap-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-xl hover:shadow-amber-500/25">
+                        <Button className="w-full justify-start gap-3">
                           <User className="w-5 h-5" />
-                          <span className="text-lg">Sign Up</span>
+                          <span>Sign Up</span>
                         </Button>
                       </Link>
                     </div>
@@ -366,9 +328,6 @@ export function Header() {
           </div>
         </div>
       </div>
-
-      {/* Gradient Border Bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
     </header>
   );
 }

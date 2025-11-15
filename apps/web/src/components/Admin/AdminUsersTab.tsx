@@ -122,14 +122,14 @@ export function AdminUsersTab() {
                           className="w-10 h-10 rounded-full object-cover border-2 border-border group-hover:border-primary/50 transition-colors"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center border-2 border-border group-hover:border-primary/50 transition-colors">
-                          <span className="text-white font-semibold text-sm">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-border group-hover:border-primary transition-colors">
+                          <span className="text-primary font-semibold text-sm">
                             {user.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
                       )}
                       <div>
-                        <p className="font-medium text-foreground group-hover:text-primary transition-colors">
+                        <p className="font-medium text-foreground">
                           {user.name}
                         </p>
                         {user.bio && (
@@ -149,13 +149,13 @@ export function AdminUsersTab() {
                     {user.is_admin ? (
                       <Badge
                         variant="default"
-                        className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0"
+                        className="bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
                       >
                         <UserCheck className="w-3 h-3 mr-1" />
                         Admin
                       </Badge>
                     ) : (
-                      <Badge variant="secondary">
+                      <Badge variant="secondary" className="bg-muted text-muted-foreground">
                         <UserIcon className="w-3 h-3 mr-1" />
                         User
                       </Badge>

@@ -25,10 +25,10 @@ import { Skeleton } from '@repo/ui/components/skeleton';
 import { format } from 'date-fns';
 
 const CONDITION_COLORS = {
-  excellent: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-  good: 'bg-blue-100 text-blue-800 border-blue-300',
-  fair: 'bg-amber-100 text-amber-800 border-amber-300',
-  poor: 'bg-red-100 text-red-800 border-red-300',
+  excellent: 'bg-primary/10 text-primary border-primary/20',
+  good: 'bg-muted text-foreground border-border',
+  fair: 'bg-muted text-muted-foreground border-border',
+  poor: 'bg-muted text-muted-foreground border-border',
 };
 
 export function AdminBooksTab() {
@@ -143,12 +143,12 @@ export function AdminBooksTab() {
                           className="w-12 h-16 rounded object-cover border border-border group-hover:border-primary/50 transition-colors shadow-sm"
                         />
                       ) : (
-                        <div className="w-12 h-16 rounded bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center border border-border group-hover:border-primary/50 transition-colors shadow-sm">
-                          <BookOpen className="w-6 h-6 text-white" />
+                        <div className="w-12 h-16 rounded bg-primary/10 flex items-center justify-center border-2 border-border group-hover:border-primary transition-colors">
+                          <BookOpen className="w-6 h-6 text-primary" />
                         </div>
                       )}
                       <div>
-                        <p className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                        <p className="font-medium text-foreground line-clamp-1">
                           {book.title}
                         </p>
                         <p className="text-sm text-muted-foreground line-clamp-1">
