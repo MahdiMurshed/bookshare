@@ -31,6 +31,7 @@ export type {
   Message,
   MessageWithSender,
   ChatSummary,
+  UserActivityLog,
   AuthUser,
   Session,
   SignUpCredentials,
