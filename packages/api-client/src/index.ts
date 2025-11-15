@@ -30,6 +30,7 @@ export type {
   NotificationType,
   Message,
   MessageWithSender,
+  ChatSummary,
   AuthUser,
   Session,
   SignUpCredentials,
@@ -94,6 +95,7 @@ export {
   getIncomingBorrowRequests,
   getMyBorrowRequestsWithDetails,
   getIncomingBorrowRequestsWithDetails,
+  getActiveChats,
   deleteBorrowRequest,
   markHandoverComplete,
   updateHandoverTracking,
@@ -137,6 +139,9 @@ export {
   getMessagesByRequest,
   sendMessage,
   subscribeToMessages,
+  markMessagesAsRead,
+  getUnreadMessageCount,
+  getTotalUnreadCount,
 } from './messages.js';
 
 // Export Supabase client for advanced use cases (use sparingly)
