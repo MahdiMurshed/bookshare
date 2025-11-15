@@ -31,6 +31,16 @@ export type Database = {
         Insert: Omit<Notification, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<Notification, 'id' | 'created_at' | 'updated_at'>>;
       };
+      messages: {
+        Row: Message;
+        Insert: Omit<Message, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Message, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      user_activity_logs: {
+        Row: UserActivityLog;
+        Insert: Omit<UserActivityLog, 'id' | 'created_at'>;
+        Update: Partial<Omit<UserActivityLog, 'id' | 'created_at'>>;
+      };
     };
   };
 };
@@ -149,6 +159,13 @@ export interface Review {
   updated_at: string;
 }
 
+/**
+ * NotificationType
+ *
+ * Defines all valid notification types in the system.
+ * - User notifications: borrow_request, request_approved, request_denied, book_returned, due_soon, overdue, new_message
+ * - Admin notifications: announcement (system-wide), alert (urgent), info (informational)
+ */
 export type NotificationType =
   | 'borrow_request'
   | 'request_approved'
@@ -156,7 +173,10 @@ export type NotificationType =
   | 'book_returned'
   | 'due_soon'
   | 'overdue'
-  | 'new_message';
+  | 'new_message'
+  | 'announcement' // Admin system notification
+  | 'alert'        // Admin urgent alert
+  | 'info';        // Admin informational message
 
 export interface Notification {
   id: string;
@@ -198,6 +218,23 @@ export interface ChatSummary {
     timestamp: string;
     senderId: string;
   } | null;
+}
+
+/**
+ * UserActivityLog
+ *
+ * Tracks user actions throughout the platform for audit and analytics.
+ * Automatically populated via database triggers for key actions.
+ */
+export interface UserActivityLog {
+  id: string;
+  user_id: string;
+  action_type: string; // e.g., 'book_added', 'borrow_request_created', 'book_borrowed', 'book_returned'
+  entity_type: string | null; // e.g., 'book', 'borrow_request', 'review'
+  entity_id: string | null; // UUID of the related entity
+  description: string; // Human-readable description of the action
+  metadata: Record<string, unknown> | null; // Additional action metadata (JSON)
+  created_at: string;
 }
 
 // Auth types
