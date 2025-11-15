@@ -91,7 +91,7 @@ export function BookAutocomplete({ value, onChange, onBookSelect, error }: BookA
         />
         {isSearching && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
           </div>
         )}
       </div>
@@ -99,7 +99,7 @@ export function BookAutocomplete({ value, onChange, onBookSelect, error }: BookA
 
       {/* Suggestions Dropdown */}
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
+        <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg">
           <Command className="rounded-lg border-none">
             <CommandList>
               <CommandEmpty>No books found.</CommandEmpty>
@@ -119,17 +119,17 @@ export function BookAutocomplete({ value, onChange, onBookSelect, error }: BookA
                           className="w-10 h-14 object-cover rounded flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-10 h-14 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
-                          <BookOpen className="w-5 h-5 text-gray-400" />
+                        <div className="w-10 h-14 bg-muted rounded flex items-center justify-center flex-shrink-0">
+                          <BookOpen className="w-5 h-5 text-muted-foreground" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{book.title}</p>
-                        <p className="text-xs text-gray-600 truncate">
+                        <p className="text-xs text-muted-foreground truncate">
                           {book.authors.length > 0 ? book.authors.join(', ') : 'Unknown Author'}
                         </p>
                         {book.publishedDate && (
-                          <p className="text-xs text-gray-500">{book.publishedDate.split('-')[0]}</p>
+                          <p className="text-xs text-muted-foreground/80">{book.publishedDate.split('-')[0]}</p>
                         )}
                       </div>
                     </div>

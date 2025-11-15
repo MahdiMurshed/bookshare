@@ -38,6 +38,7 @@ import { useTotalUnreadCount } from '../hooks/useUnreadMessages';
 import { useUnreadNotificationCount } from '../hooks/useNotifications';
 import { useIsAdmin } from '../hooks/useAdminUser';
 import { cn } from '@repo/ui/lib/utils';
+import { ThemeToggle } from './ThemeToggle';
 
 interface NavItem {
   label: string;
@@ -155,6 +156,9 @@ export function Header() {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-3">
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
             {/* Notifications Bell */}
             {user && (
               <Link to="/notifications" className="relative">
@@ -239,11 +243,14 @@ export function Header() {
               <SheetContent side="right" className="w-full sm:max-w-md border-l-2">
                 <div className="flex flex-col h-full">
                   {/* Mobile Header */}
-                  <div className="flex items-center gap-2.5 pb-6 border-b-2 border-border">
-                    <BookOpen className="w-6 h-6 text-primary" />
-                    <span className="text-xl font-semibold text-foreground">
-                      BookShare
-                    </span>
+                  <div className="flex items-center justify-between gap-2.5 pb-6 border-b-2 border-border">
+                    <div className="flex items-center gap-2.5">
+                      <BookOpen className="w-6 h-6 text-primary" />
+                      <span className="text-xl font-semibold text-foreground">
+                        BookShare
+                      </span>
+                    </div>
+                    <ThemeToggle />
                   </div>
 
                   {/* Mobile Navigation */}
