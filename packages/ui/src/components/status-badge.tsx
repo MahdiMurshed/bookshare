@@ -1,9 +1,9 @@
+import type { ComponentProps } from 'react';
 import { Badge } from './badge';
-import type { BadgeProps } from './badge';
 
 export type StatusVariant = 'pending' | 'approved' | 'denied' | 'borrowed' | 'completed' | 'success' | 'warning' | 'info' | 'danger';
 
-export interface StatusBadgeProps extends Omit<BadgeProps, 'variant'> {
+export interface StatusBadgeProps extends Omit<ComponentProps<typeof Badge>, 'variant'> {
   status: StatusVariant;
   label?: string;
 }
