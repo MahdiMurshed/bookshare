@@ -9,6 +9,7 @@ import { Send, Loader2, User as UserIcon } from '@repo/ui/components/icons';
 import { ImageWithFallback } from '../ImageWithFallback';
 import type { ChatSummary } from '@repo/api-client';
 import { cn } from '@repo/ui/lib/utils';
+import { logError } from '../../lib/utils/errors';
 
 export interface ChatConversationProps {
   chat: ChatSummary;
@@ -58,7 +59,7 @@ export function ChatConversation({ chat }: ChatConversationProps) {
       await sendMessageMutation.mutateAsync(messageContent);
       setMessageContent('');
     } catch (error) {
-      console.error('Failed to send message:', error);
+      logError(error, 'sending message');
     }
   };
 
