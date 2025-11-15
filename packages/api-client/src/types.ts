@@ -42,6 +42,9 @@ export interface User {
   avatar_url: string | null;
   bio: string | null;
   is_admin: boolean;
+  suspended: boolean;
+  suspended_at: string | null;
+  suspended_reason: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -57,6 +60,9 @@ export interface Book {
   cover_image_url: string | null;
   condition: 'excellent' | 'good' | 'fair' | 'poor';
   borrowable: boolean;
+  flagged: boolean;
+  flagged_at: string | null;
+  flagged_reason: string | null;
   created_at: string;
   updated_at: string;
 }

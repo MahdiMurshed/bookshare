@@ -6,10 +6,21 @@
  */
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { getAllBooks } from '@repo/api-client';
-import type { AdminBookFilters } from '@repo/api-client';
-import { Search, BookOpen, CheckCircle, XCircle } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  getAllBooks,
+  adminDeleteBook as deleteBook,
+  adminUpdateBook as updateBook,
+  flagBook,
+  unflagBook,
+} from '@repo/api-client';
+import type { AdminBookFilters as BookFilters, BookWithOwner, AdminUpdateBookInput as UpdateBookInput } from '@repo/api-client';
+import { Search, BookOpen, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { BookActionsMenu } from './BookActionsMenu';
+import { EditBookDialog } from './EditBookDialog';
+import { FlagBookDialog } from './FlagBookDialog';
+import { ViewFlaggedDialog } from './ViewFlaggedDialog';
+import { ConfirmDialog } from './ConfirmDialog';
 import { Card } from '@repo/ui/components/card';
 import {
   Table,
@@ -32,11 +43,20 @@ const CONDITION_COLORS = {
 };
 
 export function AdminBooksTab() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<AdminBookFilters>({
+  const [filters, setFilters] = useState<BookFilters>({
     sortBy: 'created_at',
     sortOrder: 'desc',
   });
+
+  // Dialog states
+  const [selectedBook, setSelectedBook] = useState<BookWithOwner | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showFlagDialog, setShowFlagDialog] = useState(false);
+  const [showViewFlagDialog, setShowViewFlagDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const { data: books, isLoading, error } = useQuery({
     queryKey: ['admin-books', search, filters],
@@ -47,8 +67,104 @@ export function AdminBooksTab() {
       }),
   });
 
+  // Mutation for editing book
+  const editBookMutation = useMutation({
+    mutationFn: ({ bookId, data }: { bookId: string; data: UpdateBookInput }) =>
+      updateBook(bookId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-books'] });
+      setShowEditDialog(false);
+      setSelectedBook(null);
+    },
+  });
+
+  // Mutation for deleting book
+  const deleteBookMutation = useMutation({
+    mutationFn: (bookId: string) => deleteBook(bookId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-books'] });
+      setShowDeleteDialog(false);
+      setSelectedBook(null);
+    },
+  });
+
+  // Mutation for flagging book
+  const flagBookMutation = useMutation({
+    mutationFn: ({ bookId, reason }: { bookId: string; reason: string }) =>
+      flagBook(bookId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-books'] });
+      setShowFlagDialog(false);
+      setSelectedBook(null);
+    },
+  });
+
+  // Mutation for unflagging book
+  const unflagBookMutation = useMutation({
+    mutationFn: (bookId: string) => unflagBook(bookId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-books'] });
+      setShowViewFlagDialog(false);
+      setSelectedBook(null);
+    },
+  });
+
+  // Handle book actions
+  const handleBookAction = (action: string, book: BookWithOwner) => {
+    setActionError(null);
+    setSelectedBook(book);
+
+    switch (action) {
+      case 'edit':
+        setShowEditDialog(true);
+        break;
+      case 'flag':
+        setShowFlagDialog(true);
+        break;
+      case 'unflag':
+        unflagBookMutation.mutate(book.id);
+        break;
+      case 'view-flag':
+        setShowViewFlagDialog(true);
+        break;
+      case 'delete':
+        setShowDeleteDialog(true);
+        break;
+    }
+  };
+
+  const handleEditBook = async (data: UpdateBookInput) => {
+    if (!selectedBook) return;
+    await editBookMutation.mutateAsync({ bookId: selectedBook.id, data });
+  };
+
+  const handleFlagBook = async (reason: string) => {
+    if (!selectedBook) return;
+    await flagBookMutation.mutateAsync({ bookId: selectedBook.id, reason });
+  };
+
+  const handleUnflagBook = async () => {
+    if (!selectedBook) return;
+    await unflagBookMutation.mutateAsync(selectedBook.id);
+  };
+
+  const handleDeleteBook = async () => {
+    if (!selectedBook) return;
+    await deleteBookMutation.mutateAsync(selectedBook.id);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Error Display */}
+      {actionError && (
+        <div className="rounded-lg border-2 border-destructive/50 bg-destructive/10 p-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+            <p className="text-sm text-destructive font-medium">{actionError}</p>
+          </div>
+        </div>
+      )}
+
       {/* Search and Filters */}
       <Card className="p-6">
         <div className="flex flex-col md:flex-row gap-4">
@@ -126,6 +242,7 @@ export function AdminBooksTab() {
                 <TableHead className="font-semibold">Condition</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
                 <TableHead className="font-semibold">Added</TableHead>
+                <TableHead className="font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -199,6 +316,9 @@ export function AdminBooksTab() {
                       {format(new Date(book.created_at), 'MMM d, yyyy')}
                     </span>
                   </TableCell>
+                  <TableCell>
+                    <BookActionsMenu book={book} onAction={handleBookAction} />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -213,6 +333,49 @@ export function AdminBooksTab() {
           </div>
         )}
       </Card>
+
+      {/* Dialogs */}
+      <EditBookDialog
+        book={selectedBook}
+        open={showEditDialog}
+        onClose={() => {
+          setShowEditDialog(false);
+          setSelectedBook(null);
+        }}
+        onSave={handleEditBook}
+      />
+
+      <FlagBookDialog
+        book={selectedBook}
+        open={showFlagDialog}
+        onClose={() => {
+          setShowFlagDialog(false);
+          setSelectedBook(null);
+        }}
+        onConfirm={handleFlagBook}
+      />
+
+      <ViewFlaggedDialog
+        book={selectedBook}
+        open={showViewFlagDialog}
+        onClose={() => {
+          setShowViewFlagDialog(false);
+          setSelectedBook(null);
+        }}
+        onUnflag={handleUnflagBook}
+      />
+
+      <ConfirmDialog
+        title="Delete Book"
+        description={`Are you sure you want to delete "${selectedBook?.title}" by ${selectedBook?.author}? This action cannot be undone and will remove all associated borrow requests and reviews.`}
+        open={showDeleteDialog}
+        onClose={() => {
+          setShowDeleteDialog(false);
+          setSelectedBook(null);
+        }}
+        onConfirm={handleDeleteBook}
+        variant="destructive"
+      />
     </div>
   );
 }
