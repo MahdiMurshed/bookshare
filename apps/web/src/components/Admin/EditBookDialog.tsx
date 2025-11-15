@@ -5,7 +5,7 @@
  * Features react-hook-form validation with clean monochrome design
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -38,7 +38,7 @@ import {
   FormMessage,
   FormDescription,
 } from '@repo/ui/components/form';
-import { Edit3 } from 'lucide-react';
+import { Edit3, BookOpen } from 'lucide-react';
 
 // Common book genres
 const BOOK_GENRES = [
@@ -115,6 +115,8 @@ export function EditBookDialog({
   onClose,
   onSave,
 }: EditBookDialogProps) {
+  const [imageError, setImageError] = useState(false);
+
   const form = useForm<EditBookFormValues>({
     resolver: zodResolver(editBookSchema),
     defaultValues: {
@@ -146,6 +148,7 @@ export function EditBookDialog({
         condition: book.condition || 'good',
         borrowable: book.borrowable ?? true,
       });
+      setImageError(false);
     }
   }, [book, form]);
 
@@ -341,18 +344,17 @@ export function EditBookDialog({
                   Cover Preview
                 </p>
                 <div className="flex items-start gap-4">
-                  <div className="w-24 h-32 rounded-md border-2 border-border bg-muted overflow-hidden flex-shrink-0">
-                    <img
-                      src={watchCoverUrl}
-                      alt="Book cover preview"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const parent = e.currentTarget.parentElement;
-                        if (parent) {
-                          parent.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg></div>';
-                        }
-                      }}
-                    />
+                  <div className="w-24 h-32 rounded-md border-2 border-border bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {!imageError ? (
+                      <img
+                        src={watchCoverUrl}
+                        alt="Book cover preview"
+                        className="w-full h-full object-cover"
+                        onError={() => setImageError(true)}
+                      />
+                    ) : (
+                      <BookOpen className="w-8 h-8 text-muted-foreground" />
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground pt-1">
                     This cover will be displayed on the book card

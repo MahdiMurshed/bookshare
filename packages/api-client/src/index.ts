@@ -213,6 +213,7 @@ export {
 // Export user profile functions
 export type { UpdateProfileInput } from './users.js';
 export {
+  getCurrentUserProfile,
   getUserProfile,
   updateProfile,
   uploadAvatar,
