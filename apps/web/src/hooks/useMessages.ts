@@ -54,6 +54,7 @@ export function useSendMessage(requestId: string | undefined) {
 
 /**
  * Hook to subscribe to real-time messages
+ * Uses a mounted flag to prevent memory leaks if component unmounts during setup
  */
 export function useMessageSubscription(requestId: string | undefined) {
   const queryClient = useQueryClient();
@@ -61,7 +62,13 @@ export function useMessageSubscription(requestId: string | undefined) {
   useEffect(() => {
     if (!requestId) return;
 
+    // Track if component is still mounted
+    let isMounted = true;
+
     const unsubscribe = subscribeToMessages(requestId, (newMessage) => {
+      // Only update cache if component is still mounted
+      if (!isMounted) return;
+
       // Add new message to cache
       queryClient.setQueryData<MessageWithSender[]>(
         messageKeys.byRequest(requestId),
@@ -75,6 +82,7 @@ export function useMessageSubscription(requestId: string | undefined) {
     });
 
     return () => {
+      isMounted = false;
       unsubscribe();
     };
   }, [requestId, queryClient]);
