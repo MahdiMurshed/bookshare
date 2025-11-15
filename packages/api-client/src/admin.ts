@@ -11,7 +11,7 @@
  */
 
 import { supabase } from './supabaseClient.js';
-import type { User, BorrowRequest, BookWithOwner, BorrowRequestWithDetails } from './types.js';
+import type { User, BorrowRequest, BookWithOwner, BorrowRequestWithDetails, Review } from './types.js';
 
 // Admin-specific types
 
@@ -72,6 +72,34 @@ export interface UserGrowthData {
   date: string;
   totalUsers: number;
   newUsers: number;
+}
+
+export interface UserActivityLog {
+  id: string;
+  user_id: string;
+  action_type: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  description: string;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface UpdateUserInput {
+  name?: string;
+  bio?: string;
+  avatar_url?: string;
+}
+
+export interface UpdateBookInput {
+  title?: string;
+  author?: string;
+  isbn?: string;
+  genre?: string;
+  description?: string;
+  cover_image_url?: string;
+  condition?: 'excellent' | 'good' | 'fair' | 'poor';
+  borrowable?: boolean;
 }
 
 /**
@@ -530,4 +558,364 @@ export async function checkIsAdmin(): Promise<boolean> {
 
   if (error) throw error;
   return data ?? false;
+}
+
+// ==========================
+// USER MANAGEMENT FUNCTIONS
+// ==========================
+
+/**
+ * Update user's admin status (promote/demote)
+ */
+export async function updateUserAdminStatus(
+  userId: string,
+  isAdmin: boolean
+): Promise<void> {
+  const { error } = await supabase
+    .from('users')
+    .update({ is_admin: isAdmin })
+    .eq('id', userId);
+
+  if (error) throw error;
+}
+
+/**
+ * Suspend a user account
+ */
+export async function suspendUser(userId: string, reason: string): Promise<void> {
+  const { error } = await supabase
+    .from('users')
+    .update({
+      suspended: true,
+      suspended_at: new Date().toISOString(),
+      suspended_reason: reason,
+    })
+    .eq('id', userId);
+
+  if (error) throw error;
+}
+
+/**
+ * Unsuspend a user account
+ */
+export async function unsuspendUser(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('users')
+    .update({
+      suspended: false,
+      suspended_at: null,
+      suspended_reason: null,
+    })
+    .eq('id', userId);
+
+  if (error) throw error;
+}
+
+/**
+ * Update user profile information
+ */
+export async function updateUserProfile(
+  userId: string,
+  data: UpdateUserInput
+): Promise<User> {
+  const { data: user, error } = await supabase
+    .from('users')
+    .update(data)
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return user;
+}
+
+/**
+ * Get user activity history
+ */
+export async function getUserActivityHistory(
+  userId: string,
+  limit: number = 50
+): Promise<UserActivityLog[]> {
+  const { data, error } = await supabase
+    .from('user_activity_logs')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+/**
+ * Delete a user account (dangerous operation)
+ */
+export async function deleteUser(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('users')
+    .delete()
+    .eq('id', userId);
+
+  if (error) throw error;
+}
+
+// ==========================
+// CONTENT MODERATION FUNCTIONS
+// ==========================
+
+/**
+ * Delete a book
+ */
+export async function deleteBook(bookId: string): Promise<void> {
+  const { error } = await supabase
+    .from('books')
+    .delete()
+    .eq('id', bookId);
+
+  if (error) throw error;
+}
+
+/**
+ * Update book information
+ */
+export async function updateBook(
+  bookId: string,
+  data: UpdateBookInput
+): Promise<BookWithOwner> {
+  const { data: book, error } = await supabase
+    .from('books')
+    .update(data)
+    .eq('id', bookId)
+    .select(`
+      *,
+      owner:users!owner_id (
+        id,
+        name,
+        email,
+        avatar_url
+      )
+    `)
+    .single();
+
+  if (error) throw error;
+  return book;
+}
+
+/**
+ * Flag a book as inappropriate
+ */
+export async function flagBook(bookId: string, reason: string): Promise<void> {
+  const { error } = await supabase
+    .from('books')
+    .update({
+      flagged: true,
+      flagged_at: new Date().toISOString(),
+      flagged_reason: reason,
+    })
+    .eq('id', bookId);
+
+  if (error) throw error;
+}
+
+/**
+ * Unflag a book
+ */
+export async function unflagBook(bookId: string): Promise<void> {
+  const { error } = await supabase
+    .from('books')
+    .update({
+      flagged: false,
+      flagged_at: null,
+      flagged_reason: null,
+    })
+    .eq('id', bookId);
+
+  if (error) throw error;
+}
+
+/**
+ * Get all reviews with optional book filter
+ */
+export async function getAllReviews(bookId?: string): Promise<Review[]> {
+  let query = supabase
+    .from('reviews')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (bookId) {
+    query = query.eq('book_id', bookId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+/**
+ * Delete a review
+ */
+export async function deleteReview(reviewId: string): Promise<void> {
+  const { error } = await supabase
+    .from('reviews')
+    .delete()
+    .eq('id', reviewId);
+
+  if (error) throw error;
+}
+
+// ==========================
+// REQUEST OVERRIDE FUNCTIONS
+// ==========================
+
+/**
+ * Admin approve a borrow request (override owner approval)
+ */
+export async function adminApproveRequest(
+  requestId: string,
+  dueDate: string,
+  message?: string
+): Promise<BorrowRequestWithDetails> {
+  const { data: request, error } = await supabase
+    .from('borrow_requests')
+    .update({
+      status: 'approved',
+      approved_at: new Date().toISOString(),
+      due_date: dueDate,
+      response_message: message || 'Approved by admin',
+    })
+    .eq('id', requestId)
+    .select(`
+      *,
+      book:books!book_id (
+        id,
+        title,
+        author,
+        cover_image_url,
+        genre
+      ),
+      borrower:users!borrower_id (
+        id,
+        name,
+        email,
+        avatar_url
+      ),
+      owner:users!owner_id (
+        id,
+        name,
+        email,
+        avatar_url
+      )
+    `)
+    .single();
+
+  if (error) throw error;
+  return request;
+}
+
+/**
+ * Admin deny a borrow request (override owner approval)
+ */
+export async function adminDenyRequest(
+  requestId: string,
+  reason: string
+): Promise<BorrowRequestWithDetails> {
+  const { data: request, error } = await supabase
+    .from('borrow_requests')
+    .update({
+      status: 'denied',
+      approved_at: new Date().toISOString(),
+      response_message: reason,
+    })
+    .eq('id', requestId)
+    .select(`
+      *,
+      book:books!book_id (
+        id,
+        title,
+        author,
+        cover_image_url,
+        genre
+      ),
+      borrower:users!borrower_id (
+        id,
+        name,
+        email,
+        avatar_url
+      ),
+      owner:users!owner_id (
+        id,
+        name,
+        email,
+        avatar_url
+      )
+    `)
+    .single();
+
+  if (error) throw error;
+  return request;
+}
+
+/**
+ * Admin cancel a borrow request (for stuck/problematic requests)
+ */
+export async function adminCancelRequest(
+  requestId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('borrow_requests')
+    .delete()
+    .eq('id', requestId);
+
+  if (error) throw error;
+}
+
+/**
+ * Admin mark a borrow request as returned (force return)
+ */
+export async function adminMarkAsReturned(
+  requestId: string
+): Promise<BorrowRequestWithDetails> {
+  const { data: request, error } = await supabase
+    .from('borrow_requests')
+    .update({
+      status: 'returned',
+      returned_at: new Date().toISOString(),
+    })
+    .eq('id', requestId)
+    .select(`
+      *,
+      book:books!book_id (
+        id,
+        title,
+        author,
+        cover_image_url,
+        genre
+      ),
+      borrower:users!borrower_id (
+        id,
+        name,
+        email,
+        avatar_url
+      ),
+      owner:users!owner_id (
+        id,
+        name,
+        email,
+        avatar_url
+      )
+    `)
+    .single();
+
+  if (error) throw error;
+
+  // Also set the book back to borrowable
+  if (request.book_id) {
+    await supabase
+      .from('books')
+      .update({ borrowable: true })
+      .eq('id', request.book_id);
+  }
+
+  return request;
 }

@@ -6,10 +6,21 @@
  */
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { getAllBorrowRequests } from '@repo/api-client';
-import type { AdminBorrowRequestFilters, BorrowRequestStatus } from '@repo/api-client';
-import { Filter, RefreshCw } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  getAllBorrowRequests,
+  adminApproveRequest,
+  adminDenyRequest,
+  adminCancelRequest,
+  adminMarkAsReturned,
+} from '@repo/api-client';
+import type { AdminBorrowRequestFilters as BorrowRequestFilters, BorrowRequestStatus, BorrowRequestWithDetails } from '@repo/api-client';
+import { Filter, RefreshCw, AlertCircle } from 'lucide-react';
+import { RequestActionsMenu } from './RequestActionsMenu';
+import { AdminApproveDialog } from './AdminApproveDialog';
+import { AdminDenyDialog } from './AdminDenyDialog';
+import { AdminReturnDialog } from './AdminReturnDialog';
+import { ConfirmDialog } from './ConfirmDialog';
 import { Card } from '@repo/ui/components/card';
 import {
   Table,
@@ -34,11 +45,20 @@ const STATUS_OPTIONS: { value: BorrowRequestStatus | 'all'; label: string }[] = 
 ];
 
 export function AdminRequestsTab() {
+  const queryClient = useQueryClient();
   const [selectedStatus, setSelectedStatus] = useState<BorrowRequestStatus | 'all'>('all');
-  const [filters, setFilters] = useState<AdminBorrowRequestFilters>({
+  const [filters, setFilters] = useState<BorrowRequestFilters>({
     sortBy: 'requested_at',
     sortOrder: 'desc',
   });
+
+  // Dialog states
+  const [selectedRequest, setSelectedRequest] = useState<BorrowRequestWithDetails | null>(null);
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showDenyDialog, setShowDenyDialog] = useState(false);
+  const [showReturnDialog, setShowReturnDialog] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const { data: requests, isLoading, error } = useQuery({
     queryKey: ['admin-borrow-requests', selectedStatus, filters],
@@ -49,8 +69,101 @@ export function AdminRequestsTab() {
       }),
   });
 
+  // Mutation for approving request
+  const approveMutation = useMutation({
+    mutationFn: ({ requestId, dueDate, message }: { requestId: string; dueDate: string; message?: string }) =>
+      adminApproveRequest(requestId, dueDate, message),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-borrow-requests'] });
+      setShowApproveDialog(false);
+      setSelectedRequest(null);
+    },
+  });
+
+  // Mutation for denying request
+  const denyMutation = useMutation({
+    mutationFn: ({ requestId, reason }: { requestId: string; reason: string }) =>
+      adminDenyRequest(requestId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-borrow-requests'] });
+      setShowDenyDialog(false);
+      setSelectedRequest(null);
+    },
+  });
+
+  // Mutation for marking as returned
+  const returnMutation = useMutation({
+    mutationFn: (requestId: string) => adminMarkAsReturned(requestId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-borrow-requests'] });
+      setShowReturnDialog(false);
+      setSelectedRequest(null);
+    },
+  });
+
+  // Mutation for canceling request
+  const cancelMutation = useMutation({
+    mutationFn: (requestId: string) => adminCancelRequest(requestId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-borrow-requests'] });
+      setShowCancelDialog(false);
+      setSelectedRequest(null);
+    },
+  });
+
+  // Handle request actions
+  const handleRequestAction = (action: string, request: BorrowRequestWithDetails) => {
+    setActionError(null);
+    setSelectedRequest(request);
+
+    switch (action) {
+      case 'approve':
+        setShowApproveDialog(true);
+        break;
+      case 'deny':
+        setShowDenyDialog(true);
+        break;
+      case 'mark-returned':
+        setShowReturnDialog(true);
+        break;
+      case 'cancel':
+        setShowCancelDialog(true);
+        break;
+    }
+  };
+
+  const handleApprove = async (dueDate: string, message?: string) => {
+    if (!selectedRequest) return;
+    await approveMutation.mutateAsync({ requestId: selectedRequest.id, dueDate, message });
+  };
+
+  const handleDeny = async (reason: string) => {
+    if (!selectedRequest) return;
+    await denyMutation.mutateAsync({ requestId: selectedRequest.id, reason });
+  };
+
+  const handleReturn = async () => {
+    if (!selectedRequest) return;
+    await returnMutation.mutateAsync(selectedRequest.id);
+  };
+
+  const handleCancel = async () => {
+    if (!selectedRequest) return;
+    await cancelMutation.mutateAsync(selectedRequest.id);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Error Display */}
+      {actionError && (
+        <div className="rounded-lg border-2 border-destructive/50 bg-destructive/10 p-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+            <p className="text-sm text-destructive font-medium">{actionError}</p>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
       <Card className="p-6">
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
@@ -127,6 +240,7 @@ export function AdminRequestsTab() {
                 <TableHead className="font-semibold">Status</TableHead>
                 <TableHead className="font-semibold">Requested</TableHead>
                 <TableHead className="font-semibold">Due Date</TableHead>
+                <TableHead className="font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -217,6 +331,9 @@ export function AdminRequestsTab() {
                       <span className="text-sm text-muted-foreground">-</span>
                     )}
                   </TableCell>
+                  <TableCell>
+                    <RequestActionsMenu request={request} onAction={handleRequestAction} />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -231,6 +348,49 @@ export function AdminRequestsTab() {
           </div>
         )}
       </Card>
+
+      {/* Dialogs */}
+      <AdminApproveDialog
+        request={selectedRequest}
+        open={showApproveDialog}
+        onClose={() => {
+          setShowApproveDialog(false);
+          setSelectedRequest(null);
+        }}
+        onApprove={handleApprove}
+      />
+
+      <AdminDenyDialog
+        request={selectedRequest}
+        open={showDenyDialog}
+        onClose={() => {
+          setShowDenyDialog(false);
+          setSelectedRequest(null);
+        }}
+        onDeny={handleDeny}
+      />
+
+      <AdminReturnDialog
+        request={selectedRequest}
+        open={showReturnDialog}
+        onClose={() => {
+          setShowReturnDialog(false);
+          setSelectedRequest(null);
+        }}
+        onConfirm={handleReturn}
+      />
+
+      <ConfirmDialog
+        title="Cancel Request"
+        description={`Are you sure you want to cancel this borrow request? This action cannot be undone and will permanently delete the request.`}
+        open={showCancelDialog}
+        onClose={() => {
+          setShowCancelDialog(false);
+          setSelectedRequest(null);
+        }}
+        onConfirm={handleCancel}
+        variant="destructive"
+      />
     </div>
   );
 }
