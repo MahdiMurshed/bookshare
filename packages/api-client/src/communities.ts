@@ -20,6 +20,7 @@ export interface Community {
   name: string;
   description: string | null;
   avatar_url: string | null;
+  location: string | null;
   is_private: boolean;
   requires_approval: boolean;
   created_by: string;
@@ -64,6 +65,7 @@ export interface CreateCommunityInput {
   name: string;
   description?: string;
   avatar_url?: string;
+  location?: string;
   is_private: boolean;
   requires_approval: boolean;
 }
@@ -72,6 +74,7 @@ export interface UpdateCommunityInput {
   name?: string;
   description?: string;
   avatar_url?: string;
+  location?: string;
   is_private?: boolean;
   requires_approval?: boolean;
 }
@@ -79,6 +82,7 @@ export interface UpdateCommunityInput {
 export interface CommunityFilters {
   isPrivate?: boolean;
   search?: string;
+  location?: string;
 }
 
 export interface CreateActivityInput {
@@ -103,7 +107,11 @@ export async function getCommunities(filters?: CommunityFilters): Promise<Commun
   }
 
   if (filters?.search) {
-    query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+    query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%,location.ilike.%${filters.search}%`);
+  }
+
+  if (filters?.location) {
+    query = query.ilike('location', `%${filters.location}%`);
   }
 
   const { data, error } = await query.order('created_at', { ascending: false });

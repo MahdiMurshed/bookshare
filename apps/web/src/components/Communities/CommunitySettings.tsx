@@ -67,6 +67,7 @@ export function CommunitySettings({ community, userId }: CommunitySettingsProps)
       name: community.name,
       description: community.description || '',
       avatar_url: community.avatar_url || '',
+      location: community.location || '',
       is_private: community.is_private,
       requires_approval: community.requires_approval,
     },
@@ -89,6 +90,7 @@ export function CommunitySettings({ community, userId }: CommunitySettingsProps)
       name: community.name,
       description: community.description || '',
       avatar_url: community.avatar_url || '',
+      location: community.location || '',
       is_private: community.is_private,
       requires_approval: community.requires_approval,
     });
@@ -102,6 +104,7 @@ export function CommunitySettings({ community, userId }: CommunitySettingsProps)
           name: values.name.trim(),
           description: values.description?.trim() || undefined,
           avatar_url: values.avatar_url?.trim() || undefined,
+          location: values.location?.trim() || undefined,
           is_private: values.is_private,
           requires_approval: values.requires_approval,
         },
@@ -188,6 +191,24 @@ export function CommunitySettings({ community, userId }: CommunitySettingsProps)
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Location */}
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location</FormLabel>
+                  <FormControl>
+                    <Input placeholder="San Francisco, CA" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Where is your community based? (e.g., city, campus, neighborhood)
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

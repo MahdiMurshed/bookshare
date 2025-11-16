@@ -129,6 +129,7 @@ CREATE TABLE public.communities (
   name TEXT NOT NULL,
   description TEXT,
   avatar_url TEXT,
+  location TEXT,
   is_private BOOLEAN NOT NULL DEFAULT false,
   requires_approval BOOLEAN NOT NULL DEFAULT true,
   created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -140,7 +141,8 @@ CREATE TABLE public.communities (
 **Indexes:**
 - `communities_created_by_idx` - Fast lookup by creator
 - `communities_is_private_idx` - Filter public/private
-- `communities_name_search_idx` - Full-text search on name/description
+- `communities_location_idx` - Fast lookup by location
+- `communities_name_search_idx` - Full-text search on name/description/location
 
 ### Table: `community_members`
 
@@ -247,13 +249,15 @@ Get all communities with optional filters.
 ```typescript
 interface CommunityFilters {
   isPrivate?: boolean;
-  search?: string;
+  search?: string;  // Searches name, description, and location
+  location?: string;  // Filter by specific location
 }
 
 // Usage
 const allCommunities = await getCommunities();
 const publicOnly = await getCommunities({ isPrivate: false });
 const searchResults = await getCommunities({ search: 'book club' });
+const sfCommunities = await getCommunities({ location: 'San Francisco' });
 ```
 
 #### `getMyCommunities(userId: string): Promise<Community[]>`
@@ -285,6 +289,7 @@ interface CreateCommunityInput {
   name: string;
   description?: string;
   avatar_url?: string;
+  location?: string;
   is_private: boolean;
   requires_approval: boolean;
 }
@@ -292,6 +297,7 @@ interface CreateCommunityInput {
 const community = await createCommunity({
   name: 'Book Club',
   description: 'Monthly book discussions',
+  location: 'San Francisco, CA',
   is_private: true,
   requires_approval: true,
 });
