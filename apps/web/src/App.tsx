@@ -11,6 +11,8 @@ import Chats from "./pages/Chats";
 import Notifications from "./pages/Notifications";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
+import Communities from "./pages/Communities";
+import CommunityDetail from "./pages/CommunityDetail";
 import { Header } from "./components/Header";
 
 import "@repo/ui/styles/globals.css";
@@ -78,6 +80,8 @@ function App() {
           />
           <Route path="/browse" element={<Browse />} />
           <Route path="/books/:id" element={<BookDetail />} />
+          <Route path="/communities" element={<Communities />} />
+          <Route path="/communities/:id" element={<CommunityDetail />} />
           <Route
             path="/requests"
             element={

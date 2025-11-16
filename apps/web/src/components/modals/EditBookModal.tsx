@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -13,9 +13,11 @@ import { Button } from '@repo/ui/components/button';
 import { Loader2 } from '@repo/ui/components/icons';
 import { Form } from '@repo/ui/components/form';
 import { BookFormFields } from '../Forms/BookFormFields';
-import { type Book } from '@repo/api-client';
+import { type Book, getBookCommunities } from '@repo/api-client';
 import { bookFormSchema, type BookFormValues } from '../../lib/validations/book';
 import { useUpdateBook } from '../../hooks/useBooks';
+import { useAddBookToCommunity, useRemoveBookFromCommunity } from '../../hooks/useCommunities';
+import { BookCommunitySelector } from '../Communities/BookCommunitySelector';
 
 interface EditBookModalProps {
   book: Book | null;
@@ -26,6 +28,9 @@ interface EditBookModalProps {
 }
 
 export function EditBookModal({ book, open, onOpenChange, onSuccess, userId }: EditBookModalProps) {
+  const [selectedCommunityIds, setSelectedCommunityIds] = useState<string[]>([]);
+  const [initialCommunityIds, setInitialCommunityIds] = useState<string[]>([]);
+
   const form = useForm<BookFormValues>({
     resolver: zodResolver(bookFormSchema),
     defaultValues: {
@@ -40,8 +45,10 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess, userId }: E
   });
 
   const updateBookMutation = useUpdateBook(userId);
+  const addBookToCommunityMutation = useAddBookToCommunity();
+  const removeBookFromCommunityMutation = useRemoveBookFromCommunity();
 
-  // Pre-fill form when book changes
+  // Pre-fill form and load communities when book changes
   useEffect(() => {
     if (book) {
       form.reset({
@@ -53,6 +60,17 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess, userId }: E
         borrowable: book.borrowable,
         cover_image_url: book.cover_image_url || '',
       });
+
+      // Load book's current communities
+      getBookCommunities(book.id)
+        .then((communities) => {
+          const communityIds = communities.map((c) => c.id);
+          setSelectedCommunityIds(communityIds);
+          setInitialCommunityIds(communityIds);
+        })
+        .catch((error) => {
+          console.error('Failed to load book communities:', error);
+        });
     }
   }, [book]);
 
@@ -60,6 +78,7 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess, userId }: E
     if (!book) return;
 
     try {
+      // Update book details
       await updateBookMutation.mutateAsync({
         id: book.id,
         data: {
@@ -72,6 +91,38 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess, userId }: E
           cover_image_url: values.cover_image_url || undefined,
         },
       });
+
+      // Handle community changes
+      const communitiesToAdd = selectedCommunityIds.filter(
+        (id) => !initialCommunityIds.includes(id)
+      );
+      const communitiesToRemove = initialCommunityIds.filter(
+        (id) => !selectedCommunityIds.includes(id)
+      );
+
+      // Add book to new communities
+      if (communitiesToAdd.length > 0) {
+        await Promise.all(
+          communitiesToAdd.map((communityId) =>
+            addBookToCommunityMutation.mutateAsync({
+              bookId: book.id,
+              communityId,
+            })
+          )
+        );
+      }
+
+      // Remove book from communities
+      if (communitiesToRemove.length > 0) {
+        await Promise.all(
+          communitiesToRemove.map((communityId) =>
+            removeBookFromCommunityMutation.mutateAsync({
+              bookId: book.id,
+              communityId,
+            })
+          )
+        );
+      }
 
       onOpenChange(false);
       onSuccess();
@@ -99,10 +150,19 @@ export function EditBookModal({ book, open, onOpenChange, onSuccess, userId }: E
               <BookFormFields form={form} showTitle={true} />
             </div>
 
+            {/* Community Selector */}
+            <div className="mt-6 p-4 border border-border rounded-lg bg-muted/30">
+              <BookCommunitySelector
+                userId={userId}
+                selectedCommunityIds={selectedCommunityIds}
+                onSelectionChange={setSelectedCommunityIds}
+              />
+            </div>
+
             {/* Error Message */}
             {form.formState.errors.root && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-600 text-sm">{form.formState.errors.root.message}</p>
+              <div className="mt-4 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/40 rounded-md">
+                <p className="text-red-600 dark:text-red-400 text-sm">{form.formState.errors.root.message}</p>
               </div>
             )}
 

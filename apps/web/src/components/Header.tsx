@@ -13,6 +13,7 @@ import {
   Search,
   Bell,
   Menu,
+  Users,
 } from '@repo/ui/components/icons';
 import {
   Avatar,
@@ -78,6 +79,7 @@ export function Header() {
   const navItems: NavItem[] = [
     { label: 'Home', href: '/', icon: Home },
     { label: 'Browse', href: '/browse', icon: Search },
+    { label: 'Communities', href: '/communities', icon: Users },
     ...(user
       ? [
           { label: 'My Library', href: '/my-library', icon: Library, requiresAuth: true },
