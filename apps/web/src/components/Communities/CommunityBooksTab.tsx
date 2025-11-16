@@ -32,7 +32,7 @@ export function CommunityBooksTab({ communityId, community, isMember }: Communit
   const [showAddBookModal, setShowAddBookModal] = useState(false);
 
   const { data: books = [], isLoading, refetch } = useCommunityBooks(communityId);
-  const { data: userBooks = [] } = useBooks({ ownerId: user?.id }, !!user?.id);
+  const { data: userBooks = [] } = useBooks(user?.id);
 
   const handleBookClick = (book: any) => {
     navigate(`/books/${book.id}`);
