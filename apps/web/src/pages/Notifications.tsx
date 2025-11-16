@@ -7,6 +7,7 @@ import {
   useDeleteNotification,
   useNotificationSubscription,
 } from '../hooks/useNotifications';
+import { useApproveMember, useRemoveMember } from '../hooks/useCommunityMembers';
 import { Button } from '@repo/ui/components/button';
 import { Card } from '@repo/ui/components/card';
 import { Tabs, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
@@ -19,6 +20,10 @@ import {
   Clock,
   AlertCircle,
   Trash2,
+  Users,
+  UserPlus,
+  UserCheck,
+  UserX,
 } from 'lucide-react';
 import type { Notification, NotificationType } from '@repo/api-client';
 import { formatDistanceToNow } from 'date-fns';
@@ -34,6 +39,8 @@ export default function Notifications() {
   const markAsReadMutation = useMarkNotificationAsRead();
   const markAllAsReadMutation = useMarkAllAsRead();
   const deleteNotificationMutation = useDeleteNotification();
+  const approveMemberMutation = useApproveMember();
+  const denyMemberMutation = useRemoveMember();
 
   // Subscribe to real-time notifications
   useNotificationSubscription();
@@ -41,18 +48,71 @@ export default function Notifications() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleNotificationClick = async (notification: Notification) => {
+    // Don't navigate if this is a community_join_request (has action buttons)
+    if (notification.type === 'community_join_request') {
+      if (!notification.read) {
+        await markAsReadMutation.mutateAsync(notification.id);
+      }
+      return;
+    }
+
     // Mark as read
     if (!notification.read) {
       await markAsReadMutation.mutateAsync(notification.id);
     }
 
-    // Navigate based on notification type and payload
-    if (notification.payload?.book_id) {
+    // Navigate based on link in payload or notification type
+    const link = notification.payload?.link as string | undefined;
+    if (link) {
+      navigate(link);
+    } else if (notification.payload?.book_id) {
       navigate(`/books/${notification.payload.book_id}`);
     } else if (notification.payload?.request_id) {
       navigate(`/requests`);
     } else if (notification.type === 'new_message') {
       navigate(`/chats`);
+    }
+  };
+
+  const handleApproveJoinRequest = async (
+    e: React.MouseEvent,
+    notification: Notification
+  ) => {
+    e.stopPropagation();
+    try {
+      const communityId = notification.payload?.community_id as string;
+      const requesterId = notification.payload?.requester_id as string;
+
+      await approveMemberMutation.mutateAsync({
+        communityId,
+        userId: requesterId,
+      });
+
+      // Delete notification after approval
+      await deleteNotificationMutation.mutateAsync(notification.id);
+    } catch (error) {
+      logError(error, 'approving join request');
+    }
+  };
+
+  const handleDenyJoinRequest = async (
+    e: React.MouseEvent,
+    notification: Notification
+  ) => {
+    e.stopPropagation();
+    try {
+      const communityId = notification.payload?.community_id as string;
+      const requesterId = notification.payload?.requester_id as string;
+
+      await denyMemberMutation.mutateAsync({
+        communityId,
+        userId: requesterId,
+      });
+
+      // Delete notification after denial
+      await deleteNotificationMutation.mutateAsync(notification.id);
+    } catch (error) {
+      logError(error, 'denying join request');
     }
   };
 
@@ -92,6 +152,10 @@ export default function Notifications() {
         return <Clock className="w-5 h-5 text-muted-foreground" />;
       case 'overdue':
         return <AlertCircle className="w-5 h-5 text-muted-foreground" />;
+      case 'community_join_request':
+        return <Users className="w-5 h-5 text-muted-foreground" />;
+      case 'community_invitation':
+        return <UserPlus className="w-5 h-5 text-muted-foreground" />;
       default:
         return <Bell className="w-5 h-5 text-muted-foreground" />;
     }
@@ -229,6 +293,49 @@ export default function Notifications() {
                       <Trash2 className="w-4 h-4 text-muted-foreground hover:text-foreground" />
                     </button>
                   </div>
+
+                  {/* Community Join Request Actions */}
+                  {notification.type === 'community_join_request' && (
+                    <div className="flex items-center gap-2 mt-3">
+                      <Button
+                        size="sm"
+                        onClick={(e) => handleApproveJoinRequest(e, notification)}
+                        disabled={approveMemberMutation.isPending || denyMemberMutation.isPending}
+                        className="h-8"
+                      >
+                        {approveMemberMutation.isPending ? (
+                          <>
+                            <Clock className="w-3 h-3 mr-1 animate-spin" />
+                            Approving...
+                          </>
+                        ) : (
+                          <>
+                            <UserCheck className="w-3 h-3 mr-1" />
+                            Approve
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => handleDenyJoinRequest(e, notification)}
+                        disabled={approveMemberMutation.isPending || denyMemberMutation.isPending}
+                        className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                      >
+                        {denyMemberMutation.isPending ? (
+                          <>
+                            <Clock className="w-3 h-3 mr-1 animate-spin" />
+                            Denying...
+                          </>
+                        ) : (
+                          <>
+                            <UserX className="w-3 h-3 mr-1" />
+                            Deny
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
 
                   {/* Timestamp and unread indicator */}
                   <div className="flex items-center gap-2 mt-2">
