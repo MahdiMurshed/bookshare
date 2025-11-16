@@ -277,12 +277,17 @@ export default function CommunityDetail() {
               </TabsList>
 
               <TabsContent value="books">
-                <CommunityBooksTab communityId={community.id} />
+                <CommunityBooksTab
+                  communityId={community.id}
+                  community={community}
+                  isMember={isMember}
+                />
               </TabsContent>
 
               <TabsContent value="members">
                 <CommunityMembersTab
                   communityId={community.id}
+                  community={community}
                   userRole={community.userRole}
                   currentUserId={user?.id}
                 />

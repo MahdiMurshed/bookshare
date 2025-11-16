@@ -92,6 +92,24 @@ export interface CreateActivityInput {
   metadata?: any;
 }
 
+export interface CommunityInvitation {
+  id: string;
+  community_id: string;
+  inviter_id: string;
+  invitee_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  responded_at: string | null;
+  inviter?: User;
+  invitee?: User;
+  community?: Community;
+}
+
+export interface CreateInvitationInput {
+  community_id: string;
+  invitee_id: string;
+}
+
 // ============================================================================
 // COMMUNITY MANAGEMENT
 // ============================================================================
@@ -593,7 +611,7 @@ export async function getCommunityActivity(communityId: string, limit = 50): Pro
  * Create an activity record
  */
 export async function createActivity(input: CreateActivityInput): Promise<CommunityActivity> {
-  const { data, error } = await supabase
+  const { data, error} = await supabase
     .from('community_activity')
     .insert(input)
     .select()
@@ -601,4 +619,108 @@ export async function createActivity(input: CreateActivityInput): Promise<Commun
 
   if (error) throw error;
   return data as CommunityActivity;
+}
+
+// ============================================================================
+// COMMUNITY INVITATIONS
+// ============================================================================
+
+/**
+ * Send invitation to user to join community
+ */
+export async function inviteUserToCommunity(input: CreateInvitationInput): Promise<CommunityInvitation> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('community_invitations')
+    .insert({
+      ...input,
+      inviter_id: session.user.id,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as CommunityInvitation;
+}
+
+/**
+ * Get pending invitations for a community (admin/owner only)
+ */
+export async function getCommunityInvitations(communityId: string): Promise<CommunityInvitation[]> {
+  const { data, error } = await supabase
+    .from('community_invitations')
+    .select(`
+      *,
+      inviter:users!community_invitations_inviter_id_fkey (*),
+      invitee:users!community_invitations_invitee_id_fkey (*)
+    `)
+    .eq('community_id', communityId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as CommunityInvitation[];
+}
+
+/**
+ * Get invitations received by current user
+ */
+export async function getMyInvitations(userId: string): Promise<CommunityInvitation[]> {
+  const { data, error } = await supabase
+    .from('community_invitations')
+    .select(`
+      *,
+      inviter:users!community_invitations_inviter_id_fkey (*),
+      community:communities (*)
+    `)
+    .eq('invitee_id', userId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as CommunityInvitation[];
+}
+
+/**
+ * Accept community invitation
+ */
+export async function acceptInvitation(invitationId: string): Promise<CommunityInvitation> {
+  const { data, error } = await supabase
+    .from('community_invitations')
+    .update({ status: 'accepted' })
+    .eq('id', invitationId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as CommunityInvitation;
+}
+
+/**
+ * Reject community invitation
+ */
+export async function rejectInvitation(invitationId: string): Promise<CommunityInvitation> {
+  const { data, error } = await supabase
+    .from('community_invitations')
+    .update({ status: 'rejected' })
+    .eq('id', invitationId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as CommunityInvitation;
+}
+
+/**
+ * Cancel/delete invitation (inviter or admin only)
+ */
+export async function cancelInvitation(invitationId: string): Promise<void> {
+  const { error } = await supabase
+    .from('community_invitations')
+    .delete()
+    .eq('id', invitationId);
+
+  if (error) throw error;
 }

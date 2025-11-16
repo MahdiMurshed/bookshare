@@ -231,6 +231,8 @@ export type {
   UpdateCommunityInput,
   CommunityFilters,
   CreateActivityInput,
+  CommunityInvitation,
+  CreateInvitationInput,
 } from './communities.js';
 export {
   getCommunities,
@@ -253,6 +255,12 @@ export {
   getBookCommunities,
   getCommunityActivity,
   createActivity,
+  inviteUserToCommunity,
+  getCommunityInvitations,
+  getMyInvitations,
+  acceptInvitation,
+  rejectInvitation,
+  cancelInvitation,
 } from './communities.js';
 
 // Note: Supabase client is intentionally NOT exported to enforce backend abstraction.
