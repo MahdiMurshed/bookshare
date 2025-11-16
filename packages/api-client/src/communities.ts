@@ -209,19 +209,26 @@ export async function getCommunityById(id: string, userId?: string): Promise<Com
  * Create a new community
  */
 export async function createCommunity(input: CreateCommunityInput): Promise<Community> {
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user) throw new Error('Not authenticated');
+  // Get current session to ensure we have a valid auth token
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) throw new Error('Not authenticated');
+
+  console.log('Creating community with user ID:', session.user.id);
 
   const { data, error } = await supabase
     .from('communities')
     .insert({
       ...input,
-      created_by: user.user.id,
+      created_by: session.user.id,
     })
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('Failed to create community:', error);
+    throw error;
+  }
+
   return data as Community;
 }
 
