@@ -42,7 +42,7 @@ CREATE POLICY "Users can view their invitations"
   USING (
     auth.uid() = inviter_id
     OR auth.uid() = invitee_id
-    OR is_community_admin((SELECT community_id FROM public.community_invitations WHERE id = community_invitations.id), auth.uid())
+    OR is_community_admin(community_id, auth.uid())
   );
 
 -- Community admins/owners can send invitations
