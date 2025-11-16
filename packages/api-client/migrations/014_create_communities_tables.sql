@@ -1,5 +1,6 @@
--- Migration 014: Create Communities Tables (FIXED)
+-- Migration 014: Create Communities Tables (FIXED v2)
 -- Add community feature for sharing books within communities
+-- Fixed: Infinite recursion in RLS policies
 
 -- ============================================================================
 -- STEP 1: CREATE ALL TABLES (without RLS policies)
@@ -73,7 +74,52 @@ CREATE INDEX IF NOT EXISTS community_activity_type_idx ON public.community_activ
 CREATE INDEX IF NOT EXISTS community_activity_created_at_idx ON public.community_activity(created_at DESC);
 
 -- ============================================================================
--- STEP 3: ENABLE ROW LEVEL SECURITY
+-- STEP 3: CREATE HELPER FUNCTIONS (before RLS policies)
+-- ============================================================================
+
+-- Helper function to check if user is approved member (bypasses RLS)
+CREATE OR REPLACE FUNCTION is_community_member(community_id_param UUID, user_id_param UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.community_members
+    WHERE community_id = community_id_param
+    AND user_id = user_id_param
+    AND status = 'approved'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Helper function to check if user has admin/owner role (bypasses RLS)
+CREATE OR REPLACE FUNCTION is_community_admin(community_id_param UUID, user_id_param UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.community_members
+    WHERE community_id = community_id_param
+    AND user_id = user_id_param
+    AND role IN ('owner', 'admin')
+    AND status = 'approved'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Helper function to check if user is owner (bypasses RLS)
+CREATE OR REPLACE FUNCTION is_community_owner(community_id_param UUID, user_id_param UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.community_members
+    WHERE community_id = community_id_param
+    AND user_id = user_id_param
+    AND role = 'owner'
+    AND status = 'approved'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================================================
+-- STEP 4: ENABLE ROW LEVEL SECURITY
 -- ============================================================================
 
 ALTER TABLE public.communities ENABLE ROW LEVEL SECURITY;
@@ -82,7 +128,7 @@ ALTER TABLE public.book_communities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.community_activity ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================================
--- STEP 4: CREATE RLS POLICIES (now that all tables exist)
+-- STEP 5: CREATE RLS POLICIES (using helper functions)
 -- ============================================================================
 
 -- COMMUNITIES POLICIES
@@ -91,12 +137,7 @@ CREATE POLICY "Anyone can view public communities"
   ON public.communities FOR SELECT
   USING (
     is_private = false
-    OR EXISTS (
-      SELECT 1 FROM public.community_members cm
-      WHERE cm.community_id = id
-      AND cm.user_id = auth.uid()
-      AND cm.status = 'approved'
-    )
+    OR is_community_member(id, auth.uid())
   );
 
 DROP POLICY IF EXISTS "Authenticated users can create communities" ON public.communities;
@@ -107,41 +148,22 @@ CREATE POLICY "Authenticated users can create communities"
 DROP POLICY IF EXISTS "Owners and admins can update communities" ON public.communities;
 CREATE POLICY "Owners and admins can update communities"
   ON public.communities FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.community_members cm
-      WHERE cm.community_id = id
-      AND cm.user_id = auth.uid()
-      AND cm.role IN ('owner', 'admin')
-      AND cm.status = 'approved'
-    )
-  );
+  USING (is_community_admin(id, auth.uid()));
 
 DROP POLICY IF EXISTS "Owners can delete communities" ON public.communities;
 CREATE POLICY "Owners can delete communities"
   ON public.communities FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.community_members cm
-      WHERE cm.community_id = id
-      AND cm.user_id = auth.uid()
-      AND cm.role = 'owner'
-      AND cm.status = 'approved'
-    )
-  );
+  USING (is_community_owner(id, auth.uid()));
 
--- COMMUNITY_MEMBERS POLICIES
+-- COMMUNITY_MEMBERS POLICIES (simplified to avoid recursion)
 DROP POLICY IF EXISTS "Members can view members in their communities" ON public.community_members;
 CREATE POLICY "Members can view members in their communities"
   ON public.community_members FOR SELECT
   USING (
-    EXISTS (
-      SELECT 1 FROM public.community_members cm
-      WHERE cm.community_id = community_id
-      AND cm.user_id = auth.uid()
-      AND cm.status = 'approved'
-    )
-    OR user_id = auth.uid()
+    -- User can always see their own membership
+    user_id = auth.uid()
+    -- Or user is an approved member of the community
+    OR is_community_member(community_id, auth.uid())
   );
 
 DROP POLICY IF EXISTS "Users can join communities" ON public.community_members;
@@ -152,28 +174,14 @@ CREATE POLICY "Users can join communities"
 DROP POLICY IF EXISTS "Owners and admins can update members" ON public.community_members;
 CREATE POLICY "Owners and admins can update members"
   ON public.community_members FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.community_members cm
-      WHERE cm.community_id = community_id
-      AND cm.user_id = auth.uid()
-      AND cm.role IN ('owner', 'admin')
-      AND cm.status = 'approved'
-    )
-  );
+  USING (is_community_admin(community_id, auth.uid()));
 
 DROP POLICY IF EXISTS "Members can leave communities" ON public.community_members;
 CREATE POLICY "Members can leave communities"
   ON public.community_members FOR DELETE
   USING (
     auth.uid() = user_id
-    OR EXISTS (
-      SELECT 1 FROM public.community_members cm
-      WHERE cm.community_id = community_id
-      AND cm.user_id = auth.uid()
-      AND cm.role IN ('owner', 'admin')
-      AND cm.status = 'approved'
-    )
+    OR is_community_admin(community_id, auth.uid())
   );
 
 -- BOOK_COMMUNITIES POLICIES
@@ -181,12 +189,7 @@ DROP POLICY IF EXISTS "Members can view books in their communities" ON public.bo
 CREATE POLICY "Members can view books in their communities"
   ON public.book_communities FOR SELECT
   USING (
-    EXISTS (
-      SELECT 1 FROM public.community_members cm
-      WHERE cm.community_id = community_id
-      AND cm.user_id = auth.uid()
-      AND cm.status = 'approved'
-    )
+    is_community_member(community_id, auth.uid())
     OR EXISTS (
       SELECT 1 FROM public.communities c
       WHERE c.id = community_id
@@ -204,12 +207,7 @@ CREATE POLICY "Book owners can add books to their communities"
       WHERE b.id = book_id
       AND b.owner_id = auth.uid()
     )
-    AND EXISTS (
-      SELECT 1 FROM public.community_members cm
-      WHERE cm.community_id = community_id
-      AND cm.user_id = auth.uid()
-      AND cm.status = 'approved'
-    )
+    AND is_community_member(community_id, auth.uid())
   );
 
 DROP POLICY IF EXISTS "Owners and admins can remove books from communities" ON public.book_communities;
@@ -221,13 +219,7 @@ CREATE POLICY "Owners and admins can remove books from communities"
       WHERE b.id = book_id
       AND b.owner_id = auth.uid()
     )
-    OR EXISTS (
-      SELECT 1 FROM public.community_members cm
-      WHERE cm.community_id = community_id
-      AND cm.user_id = auth.uid()
-      AND cm.role IN ('owner', 'admin')
-      AND cm.status = 'approved'
-    )
+    OR is_community_admin(community_id, auth.uid())
   );
 
 -- COMMUNITY_ACTIVITY POLICIES
@@ -235,12 +227,7 @@ DROP POLICY IF EXISTS "Members can view activity in their communities" ON public
 CREATE POLICY "Members can view activity in their communities"
   ON public.community_activity FOR SELECT
   USING (
-    EXISTS (
-      SELECT 1 FROM public.community_members cm
-      WHERE cm.community_id = community_id
-      AND cm.user_id = auth.uid()
-      AND cm.status = 'approved'
-    )
+    is_community_member(community_id, auth.uid())
     OR EXISTS (
       SELECT 1 FROM public.communities c
       WHERE c.id = community_id
@@ -254,7 +241,7 @@ CREATE POLICY "Authenticated users can create activity"
   WITH CHECK (auth.uid() = user_id);
 
 -- ============================================================================
--- STEP 5: CREATE TRIGGERS AND FUNCTIONS
+-- STEP 6: CREATE TRIGGERS AND FUNCTIONS
 -- ============================================================================
 
 -- Apply updated_at trigger to communities
