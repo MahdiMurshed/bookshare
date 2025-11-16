@@ -155,7 +155,6 @@ export type {
   GenreDistribution,
   BorrowActivityData,
   UserGrowthData,
-  UserActivityLog,
   UpdateUserInput,
   UpdateBookInput as AdminUpdateBookInput,
   // System Notifications types
@@ -247,6 +246,7 @@ export {
   updateMemberRole,
   removeMember,
   leaveCommunity,
+  transferOwnership,
   addBookToCommunity,
   removeBookFromCommunity,
   getCommunityBooks,

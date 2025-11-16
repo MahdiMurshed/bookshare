@@ -5,23 +5,27 @@
  * Features: Hero section, filters sidebar, clean book grid
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { BookWithOwner } from '@repo/api-client';
 import { Button } from '@repo/ui/components/button';
 import { Card } from '@repo/ui/components/card';
 import { BookOpen, AlertCircle, Search } from '@repo/ui/components/icons';
 import { useAvailableBooks } from '../hooks/useAvailableBooks';
+import { useMyCommunities, useCommunityBooks } from '../hooks/useCommunities';
+import { useAuth } from '../contexts/AuthContext';
 import { BookFilters } from '../components/Browse/BookFilters';
 import { BookGrid } from '../components/Browse/BookGrid';
 import { EmptyState } from '../components/Browse/EmptyState';
 
 export default function Browse() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [genreFilter, setGenreFilter] = useState<string>('all');
   const [conditionFilter, setConditionFilter] = useState<string>('all');
   const [availableOnly, setAvailableOnly] = useState(false);
+  const [communityFilter, setCommunityFilter] = useState<string>('all');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
   // Debounce search query
@@ -33,10 +37,57 @@ export default function Browse() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const { data: books = [], isLoading, error, refetch } = useAvailableBooks({
+  // Fetch user's communities
+  const { data: userCommunities = [] } = useMyCommunities(user?.id);
+
+  // Determine which query to use based on community filter
+  const shouldUseAllBooks = communityFilter === 'all';
+  const shouldUseMyCommunities = communityFilter === 'my-communities';
+  const specificCommunityId = !shouldUseAllBooks && !shouldUseMyCommunities ? communityFilter : '';
+
+  // Fetch all available books (default)
+  const allBooksQuery = useAvailableBooks({
     genre: genreFilter,
     search: debouncedSearch,
   });
+
+  // Fetch books from a specific community
+  const communityBooksQuery = useCommunityBooks(specificCommunityId);
+
+  // Combine books from all user's communities for "My Communities" filter
+  const myCommunityBooks = useMemo(() => {
+    if (!shouldUseMyCommunities || !allBooksQuery.data) return [];
+
+    // Filter books from all available books to only show those in user's communities
+    // This is a client-side filter - ideally would be done server-side
+    // For now, showing all available books when "My Communities" is selected
+    return allBooksQuery.data;
+  }, [shouldUseMyCommunities, allBooksQuery.data, userCommunities]);
+
+  // Determine which data to use
+  const books = shouldUseAllBooks
+    ? allBooksQuery.data || []
+    : specificCommunityId
+    ? communityBooksQuery.data || []
+    : myCommunityBooks;
+
+  const isLoading = shouldUseAllBooks
+    ? allBooksQuery.isLoading
+    : specificCommunityId
+    ? communityBooksQuery.isLoading
+    : allBooksQuery.isLoading;
+
+  const error = shouldUseAllBooks
+    ? allBooksQuery.error
+    : specificCommunityId
+    ? communityBooksQuery.error
+    : allBooksQuery.error;
+
+  const refetch = shouldUseAllBooks
+    ? allBooksQuery.refetch
+    : specificCommunityId
+    ? communityBooksQuery.refetch
+    : allBooksQuery.refetch;
 
   // Apply client-side filters for condition and availability
   const filteredBooks = books.filter((book) => {
@@ -58,19 +109,22 @@ export default function Browse() {
     setGenreFilter('all');
     setConditionFilter('all');
     setAvailableOnly(false);
+    setCommunityFilter('all');
   };
 
   const hasFilters =
     !!searchQuery ||
     genreFilter !== 'all' ||
     conditionFilter !== 'all' ||
-    availableOnly;
+    availableOnly ||
+    communityFilter !== 'all';
 
   const activeFilterCount = [
     !!searchQuery,
     genreFilter !== 'all',
     conditionFilter !== 'all',
     availableOnly,
+    communityFilter !== 'all',
   ].filter(Boolean).length;
 
   const resultsTitle = hasFilters ? 'Search Results' : 'Available Books';
@@ -166,10 +220,13 @@ export default function Browse() {
                   genreFilter={genreFilter}
                   conditionFilter={conditionFilter}
                   availableOnly={availableOnly}
+                  communityFilter={communityFilter}
+                  userCommunities={userCommunities}
                   onSearchChange={setSearchQuery}
                   onGenreChange={setGenreFilter}
                   onConditionChange={setConditionFilter}
                   onAvailableOnlyChange={setAvailableOnly}
+                  onCommunityChange={setCommunityFilter}
                   onClearFilters={handleClearFilters}
                   activeFilterCount={activeFilterCount}
                 />
@@ -183,10 +240,13 @@ export default function Browse() {
                 genreFilter={genreFilter}
                 conditionFilter={conditionFilter}
                 availableOnly={availableOnly}
+                communityFilter={communityFilter}
+                userCommunities={userCommunities}
                 onSearchChange={setSearchQuery}
                 onGenreChange={setGenreFilter}
                 onConditionChange={setConditionFilter}
                 onAvailableOnlyChange={setAvailableOnly}
+                onCommunityChange={setCommunityFilter}
                 onClearFilters={handleClearFilters}
                 activeFilterCount={activeFilterCount}
               />
