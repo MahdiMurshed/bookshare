@@ -221,6 +221,12 @@ export {
   getUserStats,
 } from './users.js';
 
+// Export user search functions
+export {
+  searchUsers,
+  getUserById,
+} from './userSearch.js';
+
 // Export community functions
 export type {
   Community,
