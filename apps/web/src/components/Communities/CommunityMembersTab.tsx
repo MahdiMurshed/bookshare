@@ -6,13 +6,16 @@
  * - Role management (promote/demote) for owners/admins
  * - Remove member functionality for owners/admins
  * - Pending join requests with approve/deny buttons
+ * - Invite new members (owners/admins only)
  * - Beautiful member cards with role badges
  */
 
+import { useState } from 'react';
+import type { Community } from '@repo/api-client';
 import { Card } from '@repo/ui/components/card';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
-import { Loader2, Users, UserCheck, UserX, ShieldCheck, Shield, User as UserIcon } from '@repo/ui/components/icons';
+import { Loader2, Users, UserCheck, UserX, ShieldCheck, Shield, User as UserIcon, UserPlus } from '@repo/ui/components/icons';
 import { ImageWithFallback } from '../ImageWithFallback';
 import {
   useCommunityMembers,
@@ -21,14 +24,18 @@ import {
   useUpdateMemberRole,
   useRemoveMember,
 } from '../../hooks/useCommunityMembers';
+import { InviteMemberModal } from './InviteMemberModal';
 
 interface CommunityMembersTabProps {
   communityId: string;
+  community: Community;
   userRole?: 'owner' | 'admin' | 'member';
   currentUserId?: string;
 }
 
-export function CommunityMembersTab({ communityId, userRole, currentUserId }: CommunityMembersTabProps) {
+export function CommunityMembersTab({ communityId, community, userRole, currentUserId }: CommunityMembersTabProps) {
+  const [showInviteModal, setShowInviteModal] = useState(false);
+
   const { data: members = [], isLoading: isLoadingMembers, refetch: refetchMembers } = useCommunityMembers(communityId);
   const { data: pendingRequests = [], isLoading: isLoadingPending, refetch: refetchPending } = usePendingJoinRequests(communityId);
 
@@ -177,12 +184,20 @@ export function CommunityMembersTab({ communityId, userRole, currentUserId }: Co
 
       {/* Members List */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-muted-foreground" />
-          <h3 className="text-lg font-semibold">Members</h3>
-          <Badge variant="secondary" className="ml-2">
-            {members.length}
-          </Badge>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-muted-foreground" />
+            <h3 className="text-lg font-semibold">Members</h3>
+            <Badge variant="secondary" className="ml-2">
+              {members.length}
+            </Badge>
+          </div>
+          {isOwnerOrAdmin && (
+            <Button onClick={() => setShowInviteModal(true)} size="sm" variant="outline">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Invite Member
+            </Button>
+          )}
         </div>
 
         {members.length === 0 ? (
@@ -274,6 +289,21 @@ export function CommunityMembersTab({ communityId, userRole, currentUserId }: Co
           </div>
         )}
       </div>
+
+      {/* Invite Member Modal */}
+      {isOwnerOrAdmin && (
+        <InviteMemberModal
+          open={showInviteModal}
+          onOpenChange={setShowInviteModal}
+          community={community}
+          existingMemberIds={members.map((m) => m.user_id)}
+          pendingInvitationIds={[]}
+          onSuccess={() => {
+            refetchMembers();
+            refetchPending();
+          }}
+        />
+      )}
     </div>
   );
 }
