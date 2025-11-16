@@ -1,10 +1,11 @@
--- Migration 014: Create Communities Tables
+-- Migration 014: Create Communities Tables (FIXED)
 -- Add community feature for sharing books within communities
 
 -- ============================================================================
--- COMMUNITIES TABLE
+-- STEP 1: CREATE ALL TABLES (without RLS policies)
 -- ============================================================================
--- Communities allow users to create groups for sharing books
+
+-- COMMUNITIES TABLE
 CREATE TABLE IF NOT EXISTS public.communities (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
@@ -17,15 +18,75 @@ CREATE TABLE IF NOT EXISTS public.communities (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Indexes for fast queries
+-- COMMUNITY_MEMBERS TABLE
+CREATE TABLE IF NOT EXISTS public.community_members (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  community_id UUID NOT NULL REFERENCES public.communities(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('owner', 'admin', 'member')) DEFAULT 'member',
+  status TEXT NOT NULL CHECK (status IN ('approved', 'pending')) DEFAULT 'pending',
+  joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(community_id, user_id)
+);
+
+-- BOOK_COMMUNITIES TABLE
+CREATE TABLE IF NOT EXISTS public.book_communities (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  book_id UUID NOT NULL REFERENCES public.books(id) ON DELETE CASCADE,
+  community_id UUID NOT NULL REFERENCES public.communities(id) ON DELETE CASCADE,
+  added_by UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  added_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(book_id, community_id)
+);
+
+-- COMMUNITY_ACTIVITY TABLE
+CREATE TABLE IF NOT EXISTS public.community_activity (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  community_id UUID NOT NULL REFERENCES public.communities(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('member_joined', 'book_added', 'borrow_created', 'borrow_returned', 'review_posted')),
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  metadata JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================================
+-- STEP 2: CREATE INDEXES
+-- ============================================================================
+
+-- Communities indexes
 CREATE INDEX IF NOT EXISTS communities_created_by_idx ON public.communities(created_by);
 CREATE INDEX IF NOT EXISTS communities_is_private_idx ON public.communities(is_private);
 CREATE INDEX IF NOT EXISTS communities_name_search_idx ON public.communities USING gin(to_tsvector('english', name || ' ' || COALESCE(description, '')));
 
--- Row Level Security (RLS)
-ALTER TABLE public.communities ENABLE ROW LEVEL SECURITY;
+-- Community members indexes
+CREATE INDEX IF NOT EXISTS community_members_community_id_idx ON public.community_members(community_id);
+CREATE INDEX IF NOT EXISTS community_members_user_id_idx ON public.community_members(user_id);
+CREATE INDEX IF NOT EXISTS community_members_status_idx ON public.community_members(status);
 
--- Anyone can view public communities
+-- Book communities indexes
+CREATE INDEX IF NOT EXISTS book_communities_book_id_idx ON public.book_communities(book_id);
+CREATE INDEX IF NOT EXISTS book_communities_community_id_idx ON public.book_communities(community_id);
+
+-- Community activity indexes
+CREATE INDEX IF NOT EXISTS community_activity_community_id_idx ON public.community_activity(community_id);
+CREATE INDEX IF NOT EXISTS community_activity_type_idx ON public.community_activity(type);
+CREATE INDEX IF NOT EXISTS community_activity_created_at_idx ON public.community_activity(created_at DESC);
+
+-- ============================================================================
+-- STEP 3: ENABLE ROW LEVEL SECURITY
+-- ============================================================================
+
+ALTER TABLE public.communities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.book_communities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_activity ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================================
+-- STEP 4: CREATE RLS POLICIES (now that all tables exist)
+-- ============================================================================
+
+-- COMMUNITIES POLICIES
+DROP POLICY IF EXISTS "Anyone can view public communities" ON public.communities;
 CREATE POLICY "Anyone can view public communities"
   ON public.communities FOR SELECT
   USING (
@@ -38,12 +99,12 @@ CREATE POLICY "Anyone can view public communities"
     )
   );
 
--- Authenticated users can create communities
+DROP POLICY IF EXISTS "Authenticated users can create communities" ON public.communities;
 CREATE POLICY "Authenticated users can create communities"
   ON public.communities FOR INSERT
   WITH CHECK (auth.uid() = created_by);
 
--- Community owners and admins can update communities
+DROP POLICY IF EXISTS "Owners and admins can update communities" ON public.communities;
 CREATE POLICY "Owners and admins can update communities"
   ON public.communities FOR UPDATE
   USING (
@@ -56,7 +117,7 @@ CREATE POLICY "Owners and admins can update communities"
     )
   );
 
--- Only owners can delete communities
+DROP POLICY IF EXISTS "Owners can delete communities" ON public.communities;
 CREATE POLICY "Owners can delete communities"
   ON public.communities FOR DELETE
   USING (
@@ -69,29 +130,8 @@ CREATE POLICY "Owners can delete communities"
     )
   );
 
--- ============================================================================
--- COMMUNITY_MEMBERS TABLE
--- ============================================================================
--- Tracks community membership and roles
-CREATE TABLE IF NOT EXISTS public.community_members (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  community_id UUID NOT NULL REFERENCES public.communities(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-  role TEXT NOT NULL CHECK (role IN ('owner', 'admin', 'member')) DEFAULT 'member',
-  status TEXT NOT NULL CHECK (status IN ('approved', 'pending')) DEFAULT 'pending',
-  joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(community_id, user_id)
-);
-
--- Indexes
-CREATE INDEX IF NOT EXISTS community_members_community_id_idx ON public.community_members(community_id);
-CREATE INDEX IF NOT EXISTS community_members_user_id_idx ON public.community_members(user_id);
-CREATE INDEX IF NOT EXISTS community_members_status_idx ON public.community_members(status);
-
--- Row Level Security (RLS)
-ALTER TABLE public.community_members ENABLE ROW LEVEL SECURITY;
-
--- Members can view other members in their communities
+-- COMMUNITY_MEMBERS POLICIES
+DROP POLICY IF EXISTS "Members can view members in their communities" ON public.community_members;
 CREATE POLICY "Members can view members in their communities"
   ON public.community_members FOR SELECT
   USING (
@@ -104,12 +144,12 @@ CREATE POLICY "Members can view members in their communities"
     OR user_id = auth.uid()
   );
 
--- Users can join communities (status depends on community settings)
+DROP POLICY IF EXISTS "Users can join communities" ON public.community_members;
 CREATE POLICY "Users can join communities"
   ON public.community_members FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
--- Owners and admins can update member roles and status
+DROP POLICY IF EXISTS "Owners and admins can update members" ON public.community_members;
 CREATE POLICY "Owners and admins can update members"
   ON public.community_members FOR UPDATE
   USING (
@@ -122,7 +162,7 @@ CREATE POLICY "Owners and admins can update members"
     )
   );
 
--- Members can leave communities (delete their membership)
+DROP POLICY IF EXISTS "Members can leave communities" ON public.community_members;
 CREATE POLICY "Members can leave communities"
   ON public.community_members FOR DELETE
   USING (
@@ -136,27 +176,8 @@ CREATE POLICY "Members can leave communities"
     )
   );
 
--- ============================================================================
--- BOOK_COMMUNITIES TABLE
--- ============================================================================
--- Many-to-many relationship between books and communities
-CREATE TABLE IF NOT EXISTS public.book_communities (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  book_id UUID NOT NULL REFERENCES public.books(id) ON DELETE CASCADE,
-  community_id UUID NOT NULL REFERENCES public.communities(id) ON DELETE CASCADE,
-  added_by UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-  added_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(book_id, community_id)
-);
-
--- Indexes
-CREATE INDEX IF NOT EXISTS book_communities_book_id_idx ON public.book_communities(book_id);
-CREATE INDEX IF NOT EXISTS book_communities_community_id_idx ON public.book_communities(community_id);
-
--- Row Level Security (RLS)
-ALTER TABLE public.book_communities ENABLE ROW LEVEL SECURITY;
-
--- Members can view books in their communities
+-- BOOK_COMMUNITIES POLICIES
+DROP POLICY IF EXISTS "Members can view books in their communities" ON public.book_communities;
 CREATE POLICY "Members can view books in their communities"
   ON public.book_communities FOR SELECT
   USING (
@@ -173,7 +194,7 @@ CREATE POLICY "Members can view books in their communities"
     )
   );
 
--- Book owners can add their books to communities they're members of
+DROP POLICY IF EXISTS "Book owners can add books to their communities" ON public.book_communities;
 CREATE POLICY "Book owners can add books to their communities"
   ON public.book_communities FOR INSERT
   WITH CHECK (
@@ -191,7 +212,7 @@ CREATE POLICY "Book owners can add books to their communities"
     )
   );
 
--- Book owners and community admins can remove books
+DROP POLICY IF EXISTS "Owners and admins can remove books from communities" ON public.book_communities;
 CREATE POLICY "Owners and admins can remove books from communities"
   ON public.book_communities FOR DELETE
   USING (
@@ -209,28 +230,8 @@ CREATE POLICY "Owners and admins can remove books from communities"
     )
   );
 
--- ============================================================================
--- COMMUNITY_ACTIVITY TABLE
--- ============================================================================
--- Track activity feed for communities
-CREATE TABLE IF NOT EXISTS public.community_activity (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  community_id UUID NOT NULL REFERENCES public.communities(id) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK (type IN ('member_joined', 'book_added', 'borrow_created', 'borrow_returned', 'review_posted')),
-  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-  metadata JSONB,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Indexes
-CREATE INDEX IF NOT EXISTS community_activity_community_id_idx ON public.community_activity(community_id);
-CREATE INDEX IF NOT EXISTS community_activity_type_idx ON public.community_activity(type);
-CREATE INDEX IF NOT EXISTS community_activity_created_at_idx ON public.community_activity(created_at DESC);
-
--- Row Level Security (RLS)
-ALTER TABLE public.community_activity ENABLE ROW LEVEL SECURITY;
-
--- Members can view activity in their communities
+-- COMMUNITY_ACTIVITY POLICIES
+DROP POLICY IF EXISTS "Members can view activity in their communities" ON public.community_activity;
 CREATE POLICY "Members can view activity in their communities"
   ON public.community_activity FOR SELECT
   USING (
@@ -247,16 +248,17 @@ CREATE POLICY "Members can view activity in their communities"
     )
   );
 
--- System can create activity records
+DROP POLICY IF EXISTS "Authenticated users can create activity" ON public.community_activity;
 CREATE POLICY "Authenticated users can create activity"
   ON public.community_activity FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
 -- ============================================================================
--- TRIGGERS
+-- STEP 5: CREATE TRIGGERS AND FUNCTIONS
 -- ============================================================================
 
 -- Apply updated_at trigger to communities
+DROP TRIGGER IF EXISTS update_communities_updated_at ON public.communities;
 CREATE TRIGGER update_communities_updated_at BEFORE UPDATE ON public.communities
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -270,6 +272,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS add_creator_as_owner ON public.communities;
 CREATE TRIGGER add_creator_as_owner AFTER INSERT ON public.communities
   FOR EACH ROW EXECUTE FUNCTION add_community_creator_as_owner();
 
@@ -290,6 +293,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS create_member_joined_activity_trigger ON public.community_members;
 CREATE TRIGGER create_member_joined_activity_trigger AFTER INSERT OR UPDATE ON public.community_members
   FOR EACH ROW EXECUTE FUNCTION create_member_joined_activity();
 
@@ -308,5 +312,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS create_book_added_activity_trigger ON public.book_communities;
 CREATE TRIGGER create_book_added_activity_trigger AFTER INSERT ON public.book_communities
   FOR EACH ROW EXECUTE FUNCTION create_book_added_activity();
