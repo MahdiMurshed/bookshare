@@ -43,10 +43,37 @@ export interface CommunityMember {
   user?: User;
 }
 
+export type CommunityActivityType =
+  // Member activities
+  | 'member_joined'
+  | 'member_left'
+  | 'member_removed'
+  | 'member_role_changed'
+  | 'join_request_created'
+  | 'join_request_approved'
+  | 'join_request_denied'
+  // Invitation activities
+  | 'user_invited'
+  | 'invitation_accepted'
+  | 'invitation_rejected'
+  | 'invitation_cancelled'
+  // Book activities
+  | 'book_added'
+  | 'book_removed'
+  // Community lifecycle
+  | 'community_created'
+  | 'community_updated'
+  | 'community_deleted'
+  | 'ownership_transferred'
+  // Legacy types (kept for backward compatibility)
+  | 'borrow_created'
+  | 'borrow_returned'
+  | 'review_posted';
+
 export interface CommunityActivity {
   id: string;
   community_id: string;
-  type: 'member_joined' | 'book_added' | 'borrow_created' | 'borrow_returned' | 'review_posted';
+  type: CommunityActivityType;
   user_id: string;
   metadata: any;
   created_at: string;
