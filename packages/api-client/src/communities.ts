@@ -210,10 +210,20 @@ export async function getCommunityById(id: string, userId?: string): Promise<Com
  */
 export async function createCommunity(input: CreateCommunityInput): Promise<Community> {
   // Get current session to ensure we have a valid auth token
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) throw new Error('Not authenticated');
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    console.error('Session error:', sessionError);
+    throw new Error(`Authentication session error: ${sessionError.message}`);
+  }
+
+  if (!session?.user) {
+    console.error('No active session found');
+    throw new Error('Not authenticated. Please log in again.');
+  }
 
   console.log('Creating community with user ID:', session.user.id);
+  console.log('Community data:', { ...input, created_by: session.user.id });
 
   const { data, error } = await supabase
     .from('communities')
@@ -225,10 +235,27 @@ export async function createCommunity(input: CreateCommunityInput): Promise<Comm
     .single();
 
   if (error) {
-    console.error('Failed to create community:', error);
+    console.error('Failed to create community. Error details:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+
+    // Enhanced error message for RLS violations
+    if (error.code === '42501') {
+      throw new Error(
+        'Permission denied: Unable to create community. This usually means:\n' +
+        '1. You need to log out and log back in (stale auth token)\n' +
+        '2. Database migrations may not have run correctly\n' +
+        `Technical details: ${error.message}`
+      );
+    }
+
     throw error;
   }
 
+  console.log('Community created successfully:', data);
   return data as Community;
 }
 
