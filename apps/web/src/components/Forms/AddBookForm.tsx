@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Card } from '@repo/ui/components/card';
@@ -15,6 +16,8 @@ import {
 import { mapCategoryToGenre, type BookSearchResult } from '@repo/api-client';
 import { bookFormSchema, type BookFormValues } from '../../lib/validations/book';
 import { useCreateBook } from '../../hooks/useBooks';
+import { useAddBookToCommunity } from '../../hooks/useCommunities';
+import { BookCommunitySelector } from '../Communities/BookCommunitySelector';
 import { logError } from '../../lib/utils/errors';
 
 interface AddBookFormProps {
@@ -24,6 +27,8 @@ interface AddBookFormProps {
 }
 
 export function AddBookForm({ onSubmit, onCancel, userId }: AddBookFormProps) {
+  const [selectedCommunityIds, setSelectedCommunityIds] = useState<string[]>([]);
+
   const form = useForm<BookFormValues>({
     resolver: zodResolver(bookFormSchema),
     defaultValues: {
@@ -38,6 +43,7 @@ export function AddBookForm({ onSubmit, onCancel, userId }: AddBookFormProps) {
   });
 
   const createBookMutation = useCreateBook(userId);
+  const addBookToCommunityMutation = useAddBookToCommunity();
 
   const handleBookSelect = (book: BookSearchResult) => {
     form.setValue('title', book.title);
@@ -63,7 +69,8 @@ export function AddBookForm({ onSubmit, onCancel, userId }: AddBookFormProps) {
 
   const handleFormSubmit = async (values: BookFormValues) => {
     try {
-      await createBookMutation.mutateAsync({
+      // Create the book
+      const newBook = await createBookMutation.mutateAsync({
         title: values.title.trim(),
         author: values.author.trim(),
         genre: values.genre || undefined,
@@ -73,7 +80,20 @@ export function AddBookForm({ onSubmit, onCancel, userId }: AddBookFormProps) {
         cover_image_url: values.cover_image_url || undefined,
       });
 
+      // Add book to selected communities
+      if (selectedCommunityIds.length > 0) {
+        await Promise.all(
+          selectedCommunityIds.map((communityId) =>
+            addBookToCommunityMutation.mutateAsync({
+              bookId: newBook.id,
+              communityId,
+            })
+          )
+        );
+      }
+
       form.reset();
+      setSelectedCommunityIds([]);
       onSubmit();
     } catch (error) {
       logError(error, 'creating book');
@@ -127,10 +147,19 @@ export function AddBookForm({ onSubmit, onCancel, userId }: AddBookFormProps) {
             </div>
           </div>
 
+          {/* Community Selector */}
+          <div className="mt-6 p-4 border border-border rounded-lg bg-muted/30">
+            <BookCommunitySelector
+              userId={userId}
+              selectedCommunityIds={selectedCommunityIds}
+              onSelectionChange={setSelectedCommunityIds}
+            />
+          </div>
+
           {/* Error Message */}
           {form.formState.errors.root && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-600 text-sm">{form.formState.errors.root.message}</p>
+            <div className="mt-4 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/40 rounded-md">
+              <p className="text-red-600 dark:text-red-400 text-sm">{form.formState.errors.root.message}</p>
             </div>
           )}
 

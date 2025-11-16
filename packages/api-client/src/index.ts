@@ -222,6 +222,39 @@ export {
   getUserStats,
 } from './users.js';
 
+// Export community functions
+export type {
+  Community,
+  CommunityMember,
+  CommunityActivity,
+  BookCommunity,
+  CreateCommunityInput,
+  UpdateCommunityInput,
+  CommunityFilters,
+  CreateActivityInput,
+} from './communities.js';
+export {
+  getCommunities,
+  getMyCommunities,
+  getCommunityById,
+  createCommunity,
+  updateCommunity,
+  deleteCommunity,
+  getCommunityMembers,
+  getPendingJoinRequests,
+  joinCommunity,
+  approveMember,
+  updateMemberRole,
+  removeMember,
+  leaveCommunity,
+  addBookToCommunity,
+  removeBookFromCommunity,
+  getCommunityBooks,
+  getBookCommunities,
+  getCommunityActivity,
+  createActivity,
+} from './communities.js';
+
 // Note: Supabase client is intentionally NOT exported to enforce backend abstraction.
 // All database operations should go through the functions above.
 // When migrating to NestJS, only this package needs changes - apps stay unchanged.
