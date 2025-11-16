@@ -12,6 +12,9 @@ import {
   notifyBorrowRequest,
   notifyRequestApproved,
   notifyRequestDenied,
+  getBookCommunities,
+  createActivity,
+  getBook,
   type CreateBorrowRequestInput,
   type BorrowRequest,
   type HandoverDetails,
@@ -84,6 +87,31 @@ export function useCreateBorrowRequest() {
         );
       } catch (error) {
         logError(error, 'sending borrow request notification');
+      }
+
+      // Create activity records for communities the book belongs to
+      try {
+        const communities = await getBookCommunities(request.book_id);
+        const book = await getBook(request.book_id);
+
+        if (communities.length > 0 && book) {
+          await Promise.all(
+            communities.map((community) =>
+              createActivity({
+                community_id: community.id,
+                type: 'borrow_created',
+                user_id: request.borrower_id,
+                metadata: {
+                  book_id: request.book_id,
+                  borrower_id: request.borrower_id,
+                  book_title: book.title,
+                },
+              })
+            )
+          );
+        }
+      } catch (error) {
+        logError(error, 'creating borrow activity');
       }
     },
   });
@@ -237,7 +265,7 @@ export function useConfirmReturn() {
       const request = await markBookReturned(id);
       return request;
     },
-    onSuccess: (request: BorrowRequest) => {
+    onSuccess: async (request: BorrowRequest) => {
       // Invalidate incoming requests
       queryClient.invalidateQueries({ queryKey: borrowRequestKeys.incoming() });
       queryClient.invalidateQueries({ queryKey: borrowRequestKeys.detail(request.id) });
@@ -245,6 +273,37 @@ export function useConfirmReturn() {
       // Invalidate book queries so the book's availability status updates
       queryClient.invalidateQueries({ queryKey: bookKeys.all });
       queryClient.invalidateQueries({ queryKey: bookKeys.detail(request.book_id) });
+
+      // Create activity records for communities the book belongs to
+      try {
+        const communities = await getBookCommunities(request.book_id);
+        const book = await getBook(request.book_id);
+
+        if (communities.length > 0 && book && request.approved_at) {
+          // Calculate duration in days
+          const borrowDate = new Date(request.approved_at);
+          const returnDate = new Date();
+          const durationDays = Math.ceil((returnDate.getTime() - borrowDate.getTime()) / (1000 * 60 * 60 * 24));
+
+          await Promise.all(
+            communities.map((community) =>
+              createActivity({
+                community_id: community.id,
+                type: 'borrow_returned',
+                user_id: request.borrower_id,
+                metadata: {
+                  book_id: request.book_id,
+                  borrower_id: request.borrower_id,
+                  book_title: book.title,
+                  duration_days: durationDays,
+                },
+              })
+            )
+          );
+        }
+      } catch (error) {
+        logError(error, 'creating return activity');
+      }
     },
   });
 }

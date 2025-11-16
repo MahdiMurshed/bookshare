@@ -388,6 +388,71 @@ export async function leaveCommunity(communityId: string, userId: string): Promi
   if (error) throw error;
 }
 
+/**
+ * Transfer community ownership to another member
+ * The current owner will become an admin, and the new member will become the owner.
+ */
+export async function transferOwnership(
+  communityId: string,
+  currentOwnerId: string,
+  newOwnerId: string
+): Promise<void> {
+  // Verify current owner
+  const { data: currentOwnerMembership, error: currentOwnerError } = await supabase
+    .from('community_members')
+    .select('role')
+    .eq('community_id', communityId)
+    .eq('user_id', currentOwnerId)
+    .single();
+
+  if (currentOwnerError) throw currentOwnerError;
+
+  if (currentOwnerMembership.role !== 'owner') {
+    throw new Error('Only the community owner can transfer ownership.');
+  }
+
+  // Verify new owner is a member
+  const { data: newOwnerMembership, error: newOwnerError } = await supabase
+    .from('community_members')
+    .select('role, status')
+    .eq('community_id', communityId)
+    .eq('user_id', newOwnerId)
+    .single();
+
+  if (newOwnerError) throw newOwnerError;
+
+  if (newOwnerMembership.status !== 'approved') {
+    throw new Error('New owner must be an approved member.');
+  }
+
+  // Update current owner to admin
+  const { error: demoteError } = await supabase
+    .from('community_members')
+    .update({ role: 'admin' })
+    .eq('community_id', communityId)
+    .eq('user_id', currentOwnerId);
+
+  if (demoteError) throw demoteError;
+
+  // Update new owner to owner role
+  const { error: promoteError } = await supabase
+    .from('community_members')
+    .update({ role: 'owner' })
+    .eq('community_id', communityId)
+    .eq('user_id', newOwnerId);
+
+  if (promoteError) {
+    // Rollback: restore current owner if new owner update fails
+    await supabase
+      .from('community_members')
+      .update({ role: 'owner' })
+      .eq('community_id', communityId)
+      .eq('user_id', currentOwnerId);
+
+    throw promoteError;
+  }
+}
+
 // ============================================================================
 // BOOK-COMMUNITY ASSOCIATION
 // ============================================================================

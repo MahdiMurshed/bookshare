@@ -15,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { Community } from '@repo/api-client';
 import { Card } from '@repo/ui/components/card';
 import { Button } from '@repo/ui/components/button';
-import { Loader2, Trash2, Settings as SettingsIcon } from '@repo/ui/components/icons';
+import { Loader2, Trash2, Settings as SettingsIcon, UserCog } from '@repo/ui/components/icons';
 import {
   Form,
   FormControl,
@@ -29,6 +29,13 @@ import { Input } from '@repo/ui/components/input';
 import { Textarea } from '@repo/ui/components/textarea';
 import { Switch } from '@repo/ui/components/switch';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@repo/ui/components/select';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -41,6 +48,7 @@ import {
 } from '@repo/ui/components/alert-dialog';
 import { editCommunitySchema, type EditCommunityFormValues } from '../../lib/validations/community';
 import { useUpdateCommunity, useDeleteCommunity } from '../../hooks/useCommunities';
+import { useCommunityMembers, useTransferOwnership } from '../../hooks/useCommunityMembers';
 
 interface CommunitySettingsProps {
   community: Community;
@@ -50,6 +58,8 @@ interface CommunitySettingsProps {
 export function CommunitySettings({ community, userId }: CommunitySettingsProps) {
   const navigate = useNavigate();
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [selectedNewOwner, setSelectedNewOwner] = useState<string>('');
+  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
 
   const form = useForm<EditCommunityFormValues>({
     resolver: zodResolver(editCommunitySchema),
@@ -64,7 +74,14 @@ export function CommunitySettings({ community, userId }: CommunitySettingsProps)
 
   const updateCommunityMutation = useUpdateCommunity();
   const deleteCommunityMutation = useDeleteCommunity(userId);
+  const transferOwnershipMutation = useTransferOwnership(userId);
+  const { data: members = [] } = useCommunityMembers(community.id);
   const isPrivate = form.watch('is_private');
+
+  // Filter members to only show admins and members (not current owner)
+  const eligibleMembers = members.filter(
+    (member) => member.user_id !== userId && member.role !== 'owner'
+  );
 
   // Update form when community changes
   useEffect(() => {
@@ -107,6 +124,27 @@ export function CommunitySettings({ community, userId }: CommunitySettingsProps)
     } catch (error) {
       console.error('Failed to delete community:', error);
       alert('Failed to delete community. Please try again.');
+    }
+  };
+
+  const handleTransferOwnership = async () => {
+    if (!selectedNewOwner) return;
+
+    try {
+      await transferOwnershipMutation.mutateAsync({
+        communityId: community.id,
+        newOwnerId: selectedNewOwner,
+      });
+      setIsTransferDialogOpen(false);
+      setSelectedNewOwner('');
+      alert('Ownership transferred successfully! You are now an admin.');
+    } catch (error) {
+      console.error('Failed to transfer ownership:', error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'Failed to transfer ownership. Please try again.'
+      );
     }
   };
 
@@ -246,6 +284,91 @@ export function CommunitySettings({ community, userId }: CommunitySettingsProps)
           </form>
         </Form>
       </Card>
+
+      {/* Transfer Ownership Section */}
+      {eligibleMembers.length > 0 && (
+        <Card className="p-6 border-2">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <UserCog className="h-5 w-5 text-muted-foreground" />
+              <h3 className="text-lg font-semibold">Transfer Ownership</h3>
+            </div>
+
+            <p className="text-sm text-muted-foreground mb-4">
+              Transfer ownership of this community to another member. You will become an admin after the transfer.
+            </p>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Select New Owner
+                </label>
+                <Select value={selectedNewOwner} onValueChange={setSelectedNewOwner}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Choose a member..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {eligibleMembers.map((member) => (
+                      <SelectItem key={member.user_id} value={member.user_id}>
+                        <div className="flex items-center gap-2">
+                          <span>{member.user?.name || member.user?.email || 'Unknown'}</span>
+                          <span className="text-xs text-muted-foreground capitalize">
+                            ({member.role})
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <AlertDialog open={isTransferDialogOpen} onOpenChange={setIsTransferDialogOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    disabled={!selectedNewOwner}
+                    className="w-full sm:w-auto"
+                  >
+                    <UserCog className="h-4 w-4 mr-2" />
+                    Transfer Ownership
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Transfer Ownership?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to transfer ownership to{' '}
+                      <strong>
+                        {eligibleMembers.find((m) => m.user_id === selectedNewOwner)?.user?.name ||
+                          eligibleMembers.find((m) => m.user_id === selectedNewOwner)?.user?.email ||
+                          'this member'}
+                      </strong>
+                      ? You will become an admin and will no longer have owner privileges.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleTransferOwnership}
+                      disabled={transferOwnershipMutation.isPending}
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      {transferOwnershipMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Transferring...
+                        </>
+                      ) : (
+                        'Transfer Ownership'
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Danger Zone - Delete Community */}
       <Card className="p-6 border-red-200 dark:border-red-800/40">

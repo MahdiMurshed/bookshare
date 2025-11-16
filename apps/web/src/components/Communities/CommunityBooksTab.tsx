@@ -9,9 +9,7 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import type { Book } from '@repo/api-client';
 import { Loader2, BookOpen } from '@repo/ui/components/icons';
-import { Button } from '@repo/ui/components/button';
 import { useCommunityBooks } from '../../hooks/useCommunities';
 import { BookCard } from '../Browse/BookCard';
 
