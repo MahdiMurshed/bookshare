@@ -8,6 +8,8 @@ import {
   useNotificationSubscription,
 } from '../hooks/useNotifications';
 import { useApproveMember, useRemoveMember } from '../hooks/useCommunityMembers';
+import { useAcceptInvitation, useRejectInvitation } from '../hooks/useCommunityInvitations';
+import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@repo/ui/components/button';
 import { Card } from '@repo/ui/components/card';
 import { Tabs, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
@@ -33,6 +35,7 @@ type FilterType = 'all' | 'unread' | 'read';
 
 export default function Notifications() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [filter, setFilter] = useState<FilterType>('all');
 
   const { data: notifications = [], isLoading } = useNotifications(filter);
@@ -41,6 +44,8 @@ export default function Notifications() {
   const deleteNotificationMutation = useDeleteNotification();
   const approveMemberMutation = useApproveMember();
   const denyMemberMutation = useRemoveMember();
+  const acceptInvitationMutation = useAcceptInvitation(user?.id);
+  const rejectInvitationMutation = useRejectInvitation(user?.id);
 
   // Subscribe to real-time notifications
   useNotificationSubscription();
@@ -48,8 +53,8 @@ export default function Notifications() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleNotificationClick = async (notification: Notification) => {
-    // Don't navigate if this is a community_join_request (has action buttons)
-    if (notification.type === 'community_join_request') {
+    // Don't navigate if this has action buttons (join request or invitation)
+    if (notification.type === 'community_join_request' || notification.type === 'community_invitation') {
       if (!notification.read) {
         await markAsReadMutation.mutateAsync(notification.id);
       }
@@ -113,6 +118,40 @@ export default function Notifications() {
       await deleteNotificationMutation.mutateAsync(notification.id);
     } catch (error) {
       logError(error, 'denying join request');
+    }
+  };
+
+  const handleAcceptInvitation = async (
+    e: React.MouseEvent,
+    notification: Notification
+  ) => {
+    e.stopPropagation();
+    try {
+      const invitationId = notification.payload?.invitation_id as string;
+
+      await acceptInvitationMutation.mutateAsync(invitationId);
+
+      // Delete notification after acceptance
+      await deleteNotificationMutation.mutateAsync(notification.id);
+    } catch (error) {
+      logError(error, 'accepting invitation');
+    }
+  };
+
+  const handleRejectInvitation = async (
+    e: React.MouseEvent,
+    notification: Notification
+  ) => {
+    e.stopPropagation();
+    try {
+      const invitationId = notification.payload?.invitation_id as string;
+
+      await rejectInvitationMutation.mutateAsync(invitationId);
+
+      // Delete notification after rejection
+      await deleteNotificationMutation.mutateAsync(notification.id);
+    } catch (error) {
+      logError(error, 'rejecting invitation');
     }
   };
 
@@ -331,6 +370,49 @@ export default function Notifications() {
                           <>
                             <UserX className="w-3 h-3 mr-1" />
                             Deny
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Community Invitation Actions */}
+                  {notification.type === 'community_invitation' && (
+                    <div className="flex items-center gap-2 mt-3">
+                      <Button
+                        size="sm"
+                        onClick={(e) => handleAcceptInvitation(e, notification)}
+                        disabled={acceptInvitationMutation.isPending || rejectInvitationMutation.isPending}
+                        className="h-8"
+                      >
+                        {acceptInvitationMutation.isPending ? (
+                          <>
+                            <Clock className="w-3 h-3 mr-1 animate-spin" />
+                            Accepting...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-3 h-3 mr-1" />
+                            Accept
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => handleRejectInvitation(e, notification)}
+                        disabled={acceptInvitationMutation.isPending || rejectInvitationMutation.isPending}
+                        className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                      >
+                        {rejectInvitationMutation.isPending ? (
+                          <>
+                            <Clock className="w-3 h-3 mr-1 animate-spin" />
+                            Rejecting...
+                          </>
+                        ) : (
+                          <>
+                            <X className="w-3 h-3 mr-1" />
+                            Reject
                           </>
                         )}
                       </Button>
