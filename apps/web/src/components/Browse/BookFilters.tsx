@@ -8,6 +8,7 @@
  * - Active filter badge
  */
 
+import type { Community } from '@repo/api-client';
 import { Card } from '@repo/ui/components/card';
 import { Button } from '@repo/ui/components/button';
 import { Badge } from '@repo/ui/components/badge';
@@ -15,6 +16,7 @@ import { Switch } from '@repo/ui/components/switch';
 import {
   SlidersHorizontal,
   X,
+  Users,
 } from '@repo/ui/components/icons';
 import { BOOK_GENRES, BOOK_CONDITIONS } from '../../lib/constants/book';
 
@@ -23,10 +25,13 @@ interface BookFiltersProps {
   genreFilter: string;
   conditionFilter: string;
   availableOnly: boolean;
+  communityFilter: string;
+  userCommunities: Community[];
   onSearchChange: (value: string) => void;
   onGenreChange: (value: string) => void;
   onConditionChange: (value: string) => void;
   onAvailableOnlyChange: (value: boolean) => void;
+  onCommunityChange: (value: string) => void;
   onClearFilters: () => void;
   activeFilterCount: number;
 }
@@ -36,9 +41,12 @@ export function BookFilters({
   genreFilter,
   conditionFilter,
   availableOnly,
+  communityFilter,
+  userCommunities,
   onGenreChange,
   onConditionChange,
   onAvailableOnlyChange,
+  onCommunityChange,
   onClearFilters,
   activeFilterCount,
 }: BookFiltersProps) {
@@ -71,6 +79,59 @@ export function BookFilters({
 
         {/* Divider */}
         <div className="h-px bg-border" />
+
+        {/* Community Filter */}
+        {userCommunities.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-semibold text-foreground">
+                Community
+              </h3>
+            </div>
+
+            <div className="space-y-2">
+              {/* All Books */}
+              <button
+                onClick={() => onCommunityChange('all')}
+                className={`w-full text-left px-3 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                  communityFilter === 'all'
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                All Books
+              </button>
+
+              {/* My Communities */}
+              <button
+                onClick={() => onCommunityChange('my-communities')}
+                className={`w-full text-left px-3 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                  communityFilter === 'my-communities'
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                My Communities
+              </button>
+
+              {/* Individual Communities */}
+              {userCommunities.map((community) => (
+                <button
+                  key={community.id}
+                  onClick={() => onCommunityChange(community.id)}
+                  className={`w-full text-left px-3 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                    communityFilter === community.id
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  {community.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Availability Toggle */}
         <div className="space-y-3">
@@ -186,6 +247,13 @@ export function BookFilters({
               {searchQuery && (
                 <Badge variant="secondary" className="text-xs">
                   Search: "{searchQuery}"
+                </Badge>
+              )}
+              {communityFilter !== 'all' && (
+                <Badge variant="secondary" className="text-xs">
+                  {communityFilter === 'my-communities'
+                    ? 'My Communities'
+                    : userCommunities.find(c => c.id === communityFilter)?.name || 'Community'}
                 </Badge>
               )}
               {genreFilter !== 'all' && (

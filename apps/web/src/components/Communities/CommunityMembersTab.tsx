@@ -9,7 +9,6 @@
  * - Beautiful member cards with role badges
  */
 
-import type { CommunityMember } from '@repo/api-client';
 import { Card } from '@repo/ui/components/card';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';

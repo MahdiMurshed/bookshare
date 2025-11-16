@@ -7,6 +7,7 @@ import {
   updateMemberRole,
   removeMember,
   leaveCommunity,
+  transferOwnership,
 } from '@repo/api-client';
 import { communityKeys } from './useCommunities';
 
@@ -144,6 +145,35 @@ export function useLeaveCommunity(userId: string | undefined) {
       // Invalidate members, community details, and user's communities
       queryClient.invalidateQueries({ queryKey: memberKeys.members(communityId) });
       queryClient.invalidateQueries({ queryKey: communityKeys.detail(communityId) });
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: communityKeys.myCommunities(userId) });
+      }
+    },
+  });
+}
+
+/**
+ * Hook to transfer community ownership
+ */
+export function useTransferOwnership(userId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      communityId,
+      newOwnerId,
+    }: {
+      communityId: string;
+      newOwnerId: string;
+    }) => {
+      if (!userId) throw new Error('User must be authenticated');
+      await transferOwnership(communityId, userId, newOwnerId);
+      return { communityId, newOwnerId };
+    },
+    onSuccess: (variables) => {
+      // Invalidate members, community details, and user's communities
+      queryClient.invalidateQueries({ queryKey: memberKeys.members(variables.communityId) });
+      queryClient.invalidateQueries({ queryKey: communityKeys.detail(variables.communityId) });
       if (userId) {
         queryClient.invalidateQueries({ queryKey: communityKeys.myCommunities(userId) });
       }

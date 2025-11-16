@@ -10,7 +10,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import type { Community } from '@repo/api-client';
 import { Card } from '@repo/ui/components/card';
 import { Checkbox } from '@repo/ui/components/checkbox';
 import { Label } from '@repo/ui/components/label';
