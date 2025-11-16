@@ -11,7 +11,27 @@
 
 import type { CommunityActivity } from '@repo/api-client';
 import { Card } from '@repo/ui/components/card';
-import { Loader2, Activity, UserPlus, BookOpen, ArrowLeftRight, Star } from '@repo/ui/components/icons';
+import {
+  Loader2,
+  Activity,
+  UserPlus,
+  UserMinus,
+  UserX,
+  Shield,
+  UserCheck,
+  UserCog,
+  BookOpen,
+  BookX,
+  Send,
+  CheckCircle,
+  XCircle,
+  Circle,
+  Edit,
+  Trash2,
+  ArrowLeftRight,
+  Star,
+  Crown,
+} from '@repo/ui/components/icons';
 import { ImageWithFallback } from '../ImageWithFallback';
 import { useCommunityActivity } from '../../hooks/useCommunityActivity';
 
@@ -24,10 +44,45 @@ export function CommunityActivityFeed({ communityId }: CommunityActivityFeedProp
 
   const getActivityIcon = (type: CommunityActivity['type']) => {
     switch (type) {
+      // Member activities
       case 'member_joined':
         return <UserPlus className="h-4 w-4" />;
+      case 'member_left':
+        return <UserMinus className="h-4 w-4" />;
+      case 'member_removed':
+        return <UserX className="h-4 w-4" />;
+      case 'member_role_changed':
+        return <UserCog className="h-4 w-4" />;
+      case 'join_request_created':
+        return <Shield className="h-4 w-4" />;
+      case 'join_request_approved':
+        return <UserCheck className="h-4 w-4" />;
+      case 'join_request_denied':
+        return <UserX className="h-4 w-4" />;
+      // Invitation activities
+      case 'user_invited':
+        return <Send className="h-4 w-4" />;
+      case 'invitation_accepted':
+        return <CheckCircle className="h-4 w-4" />;
+      case 'invitation_rejected':
+        return <XCircle className="h-4 w-4" />;
+      case 'invitation_cancelled':
+        return <Circle className="h-4 w-4" />;
+      // Book activities
       case 'book_added':
         return <BookOpen className="h-4 w-4" />;
+      case 'book_removed':
+        return <BookX className="h-4 w-4" />;
+      // Community lifecycle
+      case 'community_created':
+        return <Circle className="h-4 w-4" />;
+      case 'community_updated':
+        return <Edit className="h-4 w-4" />;
+      case 'community_deleted':
+        return <Trash2 className="h-4 w-4" />;
+      case 'ownership_transferred':
+        return <Crown className="h-4 w-4" />;
+      // Legacy types
       case 'borrow_created':
         return <ArrowLeftRight className="h-4 w-4" />;
       case 'borrow_returned':
@@ -41,10 +96,41 @@ export function CommunityActivityFeed({ communityId }: CommunityActivityFeedProp
 
   const getActivityIconColor = (type: CommunityActivity['type']) => {
     switch (type) {
+      // Member activities - Green shades
       case 'member_joined':
+      case 'join_request_approved':
         return 'bg-green-100 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-800/40';
+      case 'member_left':
+        return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-950/30 dark:text-slate-400 dark:border-slate-800/40';
+      case 'member_removed':
+      case 'join_request_denied':
+        return 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40';
+      case 'member_role_changed':
+      case 'ownership_transferred':
+        return 'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/30 dark:text-violet-400 dark:border-violet-800/40';
+      case 'join_request_created':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-950/30 dark:text-yellow-400 dark:border-yellow-800/40';
+      // Invitation activities - Blue/Cyan shades
+      case 'user_invited':
+        return 'bg-cyan-100 text-cyan-700 border-cyan-200 dark:bg-cyan-950/30 dark:text-cyan-400 dark:border-cyan-800/40';
+      case 'invitation_accepted':
+        return 'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-800/40';
+      case 'invitation_rejected':
+      case 'invitation_cancelled':
+        return 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800/40';
+      // Book activities - Blue shades
       case 'book_added':
         return 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800/40';
+      case 'book_removed':
+        return 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-800/40';
+      // Community lifecycle - Purple/Pink shades
+      case 'community_created':
+        return 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200 dark:bg-fuchsia-950/30 dark:text-fuchsia-400 dark:border-fuchsia-800/40';
+      case 'community_updated':
+        return 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950/30 dark:text-indigo-400 dark:border-indigo-800/40';
+      case 'community_deleted':
+        return 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-950/30 dark:text-gray-400 dark:border-gray-800/40';
+      // Legacy types
       case 'borrow_created':
         return 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/40';
       case 'borrow_returned':
@@ -58,24 +144,136 @@ export function CommunityActivityFeed({ communityId }: CommunityActivityFeedProp
 
   const getActivityMessage = (activity: CommunityActivity) => {
     const userName = activity.user?.name || 'A user';
+    const metadata = activity.metadata || {};
 
     switch (activity.type) {
+      // Member activities
       case 'member_joined':
         return (
           <>
             <span className="font-semibold">{userName}</span> joined the community
+            {metadata.role && metadata.role !== 'member' && (
+              <span className="text-muted-foreground"> as {metadata.role}</span>
+            )}
           </>
         );
+      case 'member_left':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span> left the community
+          </>
+        );
+      case 'member_removed':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span> was removed from the community
+          </>
+        );
+      case 'member_role_changed':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span> was promoted from{' '}
+            <span className="font-medium">{metadata.old_role}</span> to{' '}
+            <span className="font-medium">{metadata.new_role}</span>
+          </>
+        );
+      case 'join_request_created':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span> requested to join
+          </>
+        );
+      case 'join_request_approved':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span>'s request to join was approved
+          </>
+        );
+      case 'join_request_denied':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span>'s request to join was denied
+          </>
+        );
+      // Invitation activities
+      case 'user_invited':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span> invited a user to join
+          </>
+        );
+      case 'invitation_accepted':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span> accepted an invitation
+          </>
+        );
+      case 'invitation_rejected':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span> rejected an invitation
+          </>
+        );
+      case 'invitation_cancelled':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span> cancelled an invitation
+          </>
+        );
+      // Book activities
       case 'book_added':
         return (
           <>
             <span className="font-semibold">{userName}</span> added a book to the community
           </>
         );
+      case 'book_removed':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span> removed a book from the community
+          </>
+        );
+      // Community lifecycle
+      case 'community_created':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span> created this community
+          </>
+        );
+      case 'community_updated':
+        const changes = [];
+        if (metadata.name_changed) changes.push('name');
+        if (metadata.description_changed) changes.push('description');
+        if (metadata.privacy_changed) changes.push('privacy settings');
+        if (metadata.location_changed) changes.push('location');
+
+        return (
+          <>
+            <span className="font-semibold">{userName}</span> updated the community
+            {changes.length > 0 && (
+              <span className="text-muted-foreground">
+                {' '}({changes.join(', ')})
+              </span>
+            )}
+          </>
+        );
+      case 'community_deleted':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span> deleted the community
+          </>
+        );
+      case 'ownership_transferred':
+        return (
+          <>
+            <span className="font-semibold">{userName}</span> became the new owner
+          </>
+        );
+      // Legacy types
       case 'borrow_created':
         return (
           <>
-            <span className="font-semibold">{userName}</span> borrowed a book from the community
+            <span className="font-semibold">{userName}</span> borrowed a book
           </>
         );
       case 'borrow_returned':
