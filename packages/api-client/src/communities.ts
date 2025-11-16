@@ -9,7 +9,7 @@
  */
 
 import { supabase } from './supabaseClient.js';
-import type { User, Book } from './types.js';
+import type { User, Book, BookWithOwner } from './types.js';
 
 // ============================================================================
 // TYPES
@@ -552,20 +552,28 @@ export async function removeBookFromCommunity(bookId: string, communityId: strin
 }
 
 /**
- * Get all books in a community
+ * Get all books in a community with owner information
  */
-export async function getCommunityBooks(communityId: string): Promise<Book[]> {
+export async function getCommunityBooks(communityId: string): Promise<BookWithOwner[]> {
   const { data, error } = await supabase
     .from('book_communities')
     .select(`
-      books (*)
+      books (
+        *,
+        owner:users!owner_id (
+          id,
+          name,
+          email,
+          avatar_url
+        )
+      )
     `)
     .eq('community_id', communityId);
 
   if (error) throw error;
 
   // Extract books from the nested structure
-  return (data || []).map((item: any) => item.books).filter(Boolean) as Book[];
+  return (data || []).map((item: any) => item.books).filter(Boolean) as BookWithOwner[];
 }
 
 /**
