@@ -7,6 +7,7 @@ export const createCommunitySchema = z.object({
     .max(100, 'Community name is too long'),
   description: z.string().max(500, 'Description is too long').optional(),
   avatar_url: z.string().url('Invalid URL').optional().or(z.literal('')),
+  location: z.string().max(200, 'Location is too long').optional().or(z.literal('')),
   is_private: z.boolean(),
   requires_approval: z.boolean(),
 });

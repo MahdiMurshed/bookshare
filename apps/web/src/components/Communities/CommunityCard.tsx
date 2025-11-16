@@ -14,7 +14,7 @@ import type { Community } from '@repo/api-client';
 import { Card } from '@repo/ui/components/card';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
-import { Users, BookOpen, Lock, Globe } from '@repo/ui/components/icons';
+import { Users, BookOpen, Lock, Globe, MapPin } from '@repo/ui/components/icons';
 import { ImageWithFallback } from '../ImageWithFallback';
 
 interface CommunityCardProps {
@@ -83,6 +83,12 @@ export function CommunityCard({ community, onJoin, onView, isJoining }: Communit
             <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
               {community.description}
             </p>
+          )}
+          {community.location && (
+            <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground pt-1">
+              <MapPin className="h-3 w-3" />
+              <span>{community.location}</span>
+            </div>
           )}
         </div>
 

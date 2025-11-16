@@ -39,6 +39,7 @@ export function CreateCommunityModal({ open, onOpenChange, onSuccess, userId }: 
       name: '',
       description: '',
       avatar_url: '',
+      location: '',
       is_private: false,
       requires_approval: true,
     },
@@ -53,6 +54,7 @@ export function CreateCommunityModal({ open, onOpenChange, onSuccess, userId }: 
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
         avatar_url: values.avatar_url?.trim() || undefined,
+        location: values.location?.trim() || undefined,
         is_private: values.is_private,
         requires_approval: values.requires_approval,
       });
@@ -113,6 +115,27 @@ export function CreateCommunityModal({ open, onOpenChange, onSuccess, userId }: 
                     </FormControl>
                     <FormDescription>
                       Brief description of your community and what members can expect.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Location */}
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="San Francisco, CA"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Where is your community based? (e.g., city, campus, neighborhood)
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
