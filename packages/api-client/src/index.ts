@@ -232,6 +232,7 @@ export type {
   Community,
   CommunityMember,
   CommunityActivity,
+  CommunityActivityType,
   BookCommunity,
   CreateCommunityInput,
   UpdateCommunityInput,
