@@ -164,6 +164,7 @@ export interface Review {
  *
  * Defines all valid notification types in the system.
  * - User notifications: borrow_request, request_approved, request_denied, book_returned, due_soon, overdue, new_message
+ * - Community notifications: community_join_request, community_invitation
  * - Admin notifications: announcement (system-wide), alert (urgent), info (informational)
  */
 export type NotificationType =
@@ -174,6 +175,8 @@ export type NotificationType =
   | 'due_soon'
   | 'overdue'
   | 'new_message'
+  | 'community_join_request' // When someone requests to join a private community
+  | 'community_invitation'   // When someone invites you to join a community
   | 'announcement' // Admin system notification
   | 'alert'        // Admin urgent alert
   | 'info';        // Admin informational message
