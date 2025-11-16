@@ -101,6 +101,9 @@ export function useAcceptInvitation(userId: string | undefined) {
 
       // Invalidate community members
       queryClient.invalidateQueries({ queryKey: ['community-members', data.community_id] });
+
+      // Invalidate community detail to refresh userStatus
+      queryClient.invalidateQueries({ queryKey: ['communities', 'detail', data.community_id] });
     },
   });
 }
@@ -121,6 +124,9 @@ export function useRejectInvitation(userId: string | undefined) {
 
       // Invalidate community invitations
       queryClient.invalidateQueries({ queryKey: invitationKeys.community(data.community_id) });
+
+      // Invalidate community detail to refresh userStatus
+      queryClient.invalidateQueries({ queryKey: ['communities', 'detail', data.community_id] });
     },
   });
 }
