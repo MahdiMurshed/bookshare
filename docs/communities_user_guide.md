@@ -56,6 +56,7 @@ Communities are groups where you can share books with specific people who share 
 2. **Fill in Details**
    - **Name** (required): Choose a descriptive name for your community
    - **Description** (optional): Explain what your community is about
+   - **Location** (optional): Where your community is based (e.g., "San Francisco, CA", "MIT Campus", "Downtown Seattle")
    - **Avatar URL** (optional): Add an image URL to make your community stand out
    - **Privacy Settings**:
      - ☐ **Make this community private**: Check to require approval for new members
@@ -125,7 +126,7 @@ Communities are groups where you can share books with specific people who share 
 ### Editing Community Details
 
 1. In the Settings tab, find the "Edit Community" section
-2. Update the name, description, avatar, or privacy settings
+2. Update the name, description, location, avatar, or privacy settings
 3. Click **"Save Changes"**
 
 ### Managing Members
@@ -251,7 +252,7 @@ A: Owners can transfer ownership and delete the community. Admins can manage mem
 A: Yes! You can join as many communities as you want.
 
 **Q: How do I find communities near me?**
-A: Use the search function to search for location-based terms like your city, university, or neighborhood name.
+A: Communities can include a location field (e.g., "Boston, MA" or "UC Berkeley Campus"). Use the search bar on the Communities page to search by location. The search looks through community names, descriptions, and locations to help you find relevant communities in your area.
 
 ---
 
