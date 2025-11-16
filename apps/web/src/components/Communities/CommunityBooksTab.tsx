@@ -11,7 +11,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Community } from '@repo/api-client';
+import type { Community, BookWithOwner } from '@repo/api-client';
 import { Loader2, BookOpen, Plus } from '@repo/ui/components/icons';
 import { Button } from '@repo/ui/components/button';
 import { useCommunityBooks } from '../../hooks/useCommunities';
@@ -34,7 +34,7 @@ export function CommunityBooksTab({ communityId, community, isMember }: Communit
   const { data: books = [], isLoading, refetch } = useCommunityBooks(communityId);
   const { data: userBooks = [] } = useBooks(user?.id);
 
-  const handleBookClick = (book: any) => {
+  const handleBookClick = (book: BookWithOwner) => {
     navigate(`/books/${book.id}`);
   };
 
@@ -101,7 +101,7 @@ export function CommunityBooksTab({ communityId, community, isMember }: Communit
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {books.map((book) => (
-            <BookCard key={book.id} book={book as any} onClick={handleBookClick} />
+            <BookCard key={book.id} book={book} onClick={handleBookClick} />
           ))}
         </div>
       </div>
