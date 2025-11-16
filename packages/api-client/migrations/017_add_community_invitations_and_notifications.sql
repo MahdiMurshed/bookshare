@@ -96,19 +96,19 @@ BEGIN
       AND role IN ('owner', 'admin')
       AND status = 'approved'
     LOOP
-      INSERT INTO public.notifications (user_id, type, title, message, link, metadata)
+      INSERT INTO public.notifications (user_id, type, title, message, payload)
       VALUES (
         admin_record.user_id,
         'community_join_request',
         'New Join Request',
         requester_name || ' requested to join ' || community_name,
-        '/communities/' || NEW.community_id || '?tab=members',
         jsonb_build_object(
           'community_id', NEW.community_id,
           'community_name', community_name,
           'requester_id', NEW.user_id,
           'requester_name', requester_name,
-          'membership_id', NEW.id
+          'membership_id', NEW.id,
+          'link', '/communities/' || NEW.community_id || '?tab=members'
         )
       );
     END LOOP;
@@ -139,19 +139,19 @@ BEGIN
     SELECT name INTO inviter_name FROM public.users WHERE id = NEW.inviter_id;
 
     -- Create notification for invitee
-    INSERT INTO public.notifications (user_id, type, title, message, link, metadata)
+    INSERT INTO public.notifications (user_id, type, title, message, payload)
     VALUES (
       NEW.invitee_id,
       'community_invitation',
       'Community Invitation',
       inviter_name || ' invited you to join ' || community_name,
-      '/communities/' || NEW.community_id,
       jsonb_build_object(
         'community_id', NEW.community_id,
         'community_name', community_name,
         'inviter_id', NEW.inviter_id,
         'inviter_name', inviter_name,
-        'invitation_id', NEW.id
+        'invitation_id', NEW.id,
+        'link', '/communities/' || NEW.community_id
       )
     );
   END IF;
