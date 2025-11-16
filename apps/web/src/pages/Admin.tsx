@@ -5,7 +5,7 @@
  * Features stats, charts, activity feed, and data management tabs
  */
 
-import { Shield, Users, BookOpen, RefreshCw, Bell, BarChart3 } from 'lucide-react';
+import { Shield, Users, BookOpen, RefreshCw, Bell, BarChart3, UsersRound } from 'lucide-react';
 import { PageContainer } from '@repo/ui/components/page-container';
 import { PageHeader } from '@repo/ui/components/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
@@ -17,6 +17,7 @@ import { AdminBooksTab } from '../components/Admin/AdminBooksTab';
 import { AdminRequestsTab } from '../components/Admin/AdminRequestsTab';
 import { AdminNotificationsTab } from '../components/Admin/AdminNotificationsTab';
 import { AdminAnalyticsTab } from '../components/Admin/AdminAnalyticsTab';
+import { AdminCommunitiesTab } from '../components/Admin/AdminCommunitiesTab';
 import { useIsAdmin } from '../hooks/useAdminUser';
 import { Navigate } from 'react-router-dom';
 import { LoadingSpinner } from '@repo/ui/components/loading-spinner';
@@ -94,6 +95,13 @@ export default function Admin() {
               Books
             </TabsTrigger>
             <TabsTrigger
+              value="communities"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent pb-3 pt-3"
+            >
+              <UsersRound className="w-4 h-4 mr-2" />
+              Communities
+            </TabsTrigger>
+            <TabsTrigger
               value="requests"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent pb-3 pt-3"
             >
@@ -119,6 +127,10 @@ export default function Admin() {
 
           <TabsContent value="books" className="space-y-4">
             <AdminBooksTab />
+          </TabsContent>
+
+          <TabsContent value="communities" className="space-y-4">
+            <AdminCommunitiesTab />
           </TabsContent>
 
           <TabsContent value="requests" className="space-y-4">

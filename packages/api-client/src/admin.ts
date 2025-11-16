@@ -12,12 +12,14 @@
 
 import { supabase } from './supabaseClient.js';
 import type { User, BorrowRequest, BookWithOwner, BorrowRequestWithDetails, Review } from './types.js';
+import type { Community } from './communities.js';
 
 // Admin-specific types
 
 export interface AdminStats {
   totalUsers: number;
   totalBooks: number;
+  totalCommunities: number;
   activeBorrows: number;
   pendingRequests: number;
   totalBorrowRequests: number;
@@ -197,6 +199,13 @@ export async function getAdminStats(): Promise<AdminStats> {
 
   if (booksError) throw booksError;
 
+  // Get total communities
+  const { count: totalCommunities, error: communitiesError } = await supabase
+    .from('communities')
+    .select('*', { count: 'exact', head: true });
+
+  if (communitiesError) throw communitiesError;
+
   // Get active borrows (borrowed status)
   const { count: activeBorrows, error: activeBorrowsError } = await supabase
     .from('borrow_requests')
@@ -231,6 +240,7 @@ export async function getAdminStats(): Promise<AdminStats> {
   return {
     totalUsers: totalUsers ?? 0,
     totalBooks: totalBooks ?? 0,
+    totalCommunities: totalCommunities ?? 0,
     activeBorrows: activeBorrows ?? 0,
     pendingRequests: pendingRequests ?? 0,
     totalBorrowRequests: totalBorrowRequests ?? 0,
@@ -1445,4 +1455,118 @@ export async function getPlatformKPIs(): Promise<PlatformKPIs> {
     bookGrowthRate30Days: Math.round(bookGrowthRate30Days * 10) / 10,
     borrowGrowthRate30Days: Math.round(borrowGrowthRate30Days * 10) / 10,
   };
+}
+
+// ============================================================================
+// COMMUNITY MANAGEMENT
+// ============================================================================
+
+export interface CommunityFilters {
+  search?: string;
+  isPrivate?: boolean;
+  sortBy?: 'created_at' | 'name';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface CommunityWithStats extends Community {
+  memberCount: number;
+  bookCount: number;
+  creatorName: string;
+  creatorEmail: string;
+}
+
+/**
+ * Get all communities with member and book counts (admin only)
+ */
+export async function getAllCommunities(filters?: CommunityFilters): Promise<CommunityWithStats[]> {
+  let query = supabase
+    .from('communities')
+    .select(`
+      *,
+      creator:users!created_by (
+        name,
+        email
+      )
+    `);
+
+  // Apply filters
+  if (filters?.search) {
+    query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+  }
+
+  if (filters?.isPrivate !== undefined) {
+    query = query.eq('is_private', filters.isPrivate);
+  }
+
+  // Apply sorting
+  const sortBy = filters?.sortBy || 'created_at';
+  const sortOrder = filters?.sortOrder || 'desc';
+  query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+
+  const { data: communities, error } = await query;
+
+  if (error) throw error;
+
+  // Get member and book counts for each community
+  const communitiesWithStats = await Promise.all(
+    (communities || []).map(async (community: any) => {
+      // Get member count
+      const { count: memberCount } = await supabase
+        .from('community_members')
+        .select('*', { count: 'exact', head: true })
+        .eq('community_id', community.id)
+        .eq('status', 'approved');
+
+      // Get book count
+      const { count: bookCount } = await supabase
+        .from('book_communities')
+        .select('*', { count: 'exact', head: true })
+        .eq('community_id', community.id);
+
+      return {
+        ...community,
+        memberCount: memberCount ?? 0,
+        bookCount: bookCount ?? 0,
+        creatorName: community.creator?.name || 'Unknown',
+        creatorEmail: community.creator?.email || 'Unknown',
+      };
+    })
+  );
+
+  return communitiesWithStats as CommunityWithStats[];
+}
+
+/**
+ * Admin delete community (bypasses ownership check)
+ */
+export async function adminDeleteCommunity(communityId: string): Promise<void> {
+  const { error } = await supabase
+    .from('communities')
+    .delete()
+    .eq('id', communityId);
+
+  if (error) throw error;
+}
+
+/**
+ * Admin update community (bypasses ownership check)
+ */
+export async function adminUpdateCommunity(
+  communityId: string,
+  data: {
+    name?: string;
+    description?: string;
+    is_private?: boolean;
+    requires_approval?: boolean;
+  }
+): Promise<Community> {
+  const { data: community, error } = await supabase
+    .from('communities')
+    .update(data)
+    .eq('id', communityId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return community as Community;
 }

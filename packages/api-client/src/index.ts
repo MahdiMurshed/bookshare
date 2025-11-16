@@ -168,6 +168,9 @@ export type {
   BorrowDurationMetrics,
   UserRetentionMetrics,
   PlatformKPIs,
+  // Community Management types
+  CommunityFilters as AdminCommunityFilters,
+  CommunityWithStats,
 } from './admin.js';
 export {
   getAdminStats,
@@ -208,6 +211,10 @@ export {
   getAverageBorrowDuration,
   getUserRetentionMetrics,
   getPlatformKPIs,
+  // Community Management functions
+  getAllCommunities,
+  adminDeleteCommunity,
+  adminUpdateCommunity,
 } from './admin.js';
 
 // Export user profile functions

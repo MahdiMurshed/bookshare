@@ -7,7 +7,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { getAdminStats } from '@repo/api-client';
-import { Users, BookOpen, RefreshCw, Clock, CheckCircle2, BarChart3 } from 'lucide-react';
+import { Users, BookOpen, RefreshCw, Clock, CheckCircle2, BarChart3, UsersRound } from 'lucide-react';
 import { Card } from '@repo/ui/components/card';
 import { Skeleton } from '@repo/ui/components/skeleton';
 
@@ -69,8 +69,8 @@ export function AdminStats() {
 
   if (isLoading || !stats) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
-        {Array.from({ length: 6 }).map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+        {Array.from({ length: 7 }).map((_, i) => (
           <StatCardSkeleton key={i} />
         ))}
       </div>
@@ -87,6 +87,11 @@ export function AdminStats() {
       title: 'Total Books',
       value: stats.totalBooks,
       icon: BookOpen,
+    },
+    {
+      title: 'Total Communities',
+      value: stats.totalCommunities,
+      icon: UsersRound,
     },
     {
       title: 'Active Borrows',
@@ -111,7 +116,7 @@ export function AdminStats() {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
       {statCards.map((stat) => (
         <StatCard
           key={stat.title}
