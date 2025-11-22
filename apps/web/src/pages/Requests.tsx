@@ -19,7 +19,7 @@ import { ApproveRequestDialog } from '../components/Requests/ApproveRequestDialo
 import { DenyRequestDialog } from '../components/Requests/DenyRequestDialog';
 import { AddTrackingDialog } from '../components/Requests/AddTrackingDialog';
 import { ReturnInitiateDialog } from '../components/Requests/ReturnInitiateDialog';
-import type { BorrowRequestWithDetails, ReturnMethod } from '@repo/api-client';
+import type { BorrowRequestWithDetails, ReturnMethod, HandoverMethod } from '@repo/api-client';
 import { logError } from '../lib/utils/errors';
 
 export default function Requests() {
@@ -118,7 +118,7 @@ export default function Requests() {
 
   const handleApprove = async (
     dueDate: string,
-    handoverMethod: 'ship' | 'meetup' | 'pickup',
+    handoverMethod: HandoverMethod,
     handoverDetails: { address?: string; datetime?: string; instructions?: string },
     message?: string
   ) => {

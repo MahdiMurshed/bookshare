@@ -25,6 +25,9 @@ export type {
   BorrowRequestStatus,
   HandoverMethod,
   ReturnMethod,
+  BookCondition,
+  AdminNotificationType,
+  UserGroup,
   Review,
   Notification,
   NotificationType,
@@ -39,6 +42,43 @@ export type {
   ApiError,
   ApiResponse,
 } from './types.js';
+
+// Export constants for use in validation schemas and UI components
+export {
+  BOOK_CONDITIONS,
+  BORROW_REQUEST_STATUSES,
+  HANDOVER_METHODS,
+  RETURN_METHODS,
+  ADMIN_NOTIFICATION_TYPES,
+  USER_GROUPS,
+} from './types.js';
+
+// Export Zod schemas for form validation (types are inferred from these)
+export {
+  // Book schemas
+  bookConditionSchema,
+  bookFormSchema,
+  editBookFormSchema,
+  // Borrow request schemas
+  borrowRequestStatusSchema,
+  handoverMethodSchema,
+  returnMethodSchema,
+  // Notification schemas
+  adminNotificationTypeSchema,
+  userGroupSchema,
+  broadcastNotificationSchema,
+  groupNotificationSchema,
+  userNotificationSchema,
+} from './schemas.js';
+
+// Export schema-inferred form value types
+export type {
+  BookFormValues,
+  EditBookFormValues,
+  BroadcastNotificationFormValues,
+  GroupNotificationFormValues,
+  UserNotificationFormValues,
+} from './schemas.js';
 
 // Export auth functions
 export {
@@ -157,8 +197,7 @@ export type {
   UserGrowthData,
   UpdateUserInput,
   UpdateBookInput as AdminUpdateBookInput,
-  // System Notifications types
-  UserGroup,
+  // System Notifications types (UserGroup is exported from types.js above)
   BroadcastNotificationInput,
   GroupNotificationInput,
   UserNotificationInput,

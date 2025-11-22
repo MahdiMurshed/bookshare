@@ -3,6 +3,26 @@
  * These types represent the database schema and are shared across all apps
  */
 
+// Re-export constants and their derived types
+export {
+  BOOK_CONDITIONS,
+  BORROW_REQUEST_STATUSES,
+  HANDOVER_METHODS,
+  RETURN_METHODS,
+  ADMIN_NOTIFICATION_TYPES,
+  USER_GROUPS,
+} from './constants.js';
+export type {
+  BookCondition,
+  BorrowRequestStatus,
+  HandoverMethod,
+  ReturnMethod,
+  AdminNotificationType,
+  UserGroup,
+} from './constants.js';
+
+import type { BookCondition, BorrowRequestStatus, HandoverMethod, ReturnMethod } from './constants.js';
+
 export type Database = {
   public: {
     Tables: {
@@ -68,7 +88,7 @@ export interface Book {
   genre: string | null;
   description: string | null;
   cover_image_url: string | null;
-  condition: 'excellent' | 'good' | 'fair' | 'poor';
+  condition: BookCondition;
   borrowable: boolean;
   flagged: boolean;
   flagged_at: string | null;
@@ -85,10 +105,6 @@ export interface BookWithOwner extends Book {
     avatar_url: string | null;
   };
 }
-
-export type BorrowRequestStatus = 'pending' | 'approved' | 'borrowed' | 'return_initiated' | 'returned' | 'denied';
-export type HandoverMethod = 'ship' | 'meetup' | 'pickup';
-export type ReturnMethod = 'ship' | 'meetup' | 'dropoff';
 
 export interface BorrowRequest {
   id: string;

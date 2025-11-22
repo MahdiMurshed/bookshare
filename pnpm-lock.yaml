@@ -137,6 +137,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.47.10
         version: 2.80.0
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*

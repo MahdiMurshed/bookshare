@@ -11,8 +11,21 @@
  */
 
 import { supabase } from './supabaseClient.js';
-import type { User, BorrowRequest, BookWithOwner, BorrowRequestWithDetails, Review } from './types.js';
+import type {
+  User,
+  BorrowRequest,
+  BookWithOwner,
+  BorrowRequestWithDetails,
+  Review,
+  UserActivityLog,
+  AdminNotificationType,
+  UserGroup,
+} from './types.js';
 import type { Community } from './communities.js';
+import type { UpdateBookInput } from './books.js';
+
+// Re-export UpdateBookInput as AdminUpdateBookInput for backwards compatibility
+export type { UpdateBookInput } from './books.js';
 
 // Admin-specific types
 
@@ -76,16 +89,8 @@ export interface UserGrowthData {
   newUsers: number;
 }
 
-export interface UserActivityLog {
-  id: string;
-  user_id: string;
-  action_type: string;
-  entity_type: string | null;
-  entity_id: string | null;
-  description: string;
-  metadata: Record<string, unknown> | null;
-  created_at: string;
-}
+// Re-export UserActivityLog from types.ts for backwards compatibility
+export type { UserActivityLog } from './types.js';
 
 export interface UpdateUserInput {
   name?: string;
@@ -93,38 +98,28 @@ export interface UpdateUserInput {
   avatar_url?: string;
 }
 
-export interface UpdateBookInput {
-  title?: string;
-  author?: string;
-  isbn?: string;
-  genre?: string;
-  description?: string;
-  cover_image_url?: string;
-  condition?: 'excellent' | 'good' | 'fair' | 'poor';
-  borrowable?: boolean;
-}
-
 // System Notifications types
-export type UserGroup = 'all' | 'admins' | 'borrowers' | 'lenders' | 'suspended';
+// Re-export UserGroup from types.ts
+export type { UserGroup } from './types.js';
 
 export interface BroadcastNotificationInput {
   title: string;
   message: string;
-  type?: 'announcement' | 'alert' | 'info';
+  type?: AdminNotificationType;
 }
 
 export interface GroupNotificationInput {
   group: UserGroup;
   title: string;
   message: string;
-  type?: 'announcement' | 'alert' | 'info';
+  type?: AdminNotificationType;
 }
 
 export interface UserNotificationInput {
   userId: string;
   title: string;
   message: string;
-  type?: 'announcement' | 'alert' | 'info';
+  type?: AdminNotificationType;
 }
 
 // Advanced Analytics types
