@@ -3,7 +3,7 @@
  * These types represent the database schema and are shared across all apps
  */
 
-// Re-export constants and their derived types
+// Re-export constants and types from @repo/shared
 export {
   BOOK_CONDITIONS,
   BORROW_REQUEST_STATUSES,
@@ -11,7 +11,7 @@ export {
   RETURN_METHODS,
   ADMIN_NOTIFICATION_TYPES,
   USER_GROUPS,
-} from './constants.js';
+} from '@repo/shared';
 export type {
   BookCondition,
   BorrowRequestStatus,
@@ -19,9 +19,9 @@ export type {
   ReturnMethod,
   AdminNotificationType,
   UserGroup,
-} from './constants.js';
+} from '@repo/shared';
 
-import type { BookCondition, BorrowRequestStatus, HandoverMethod, ReturnMethod } from './constants.js';
+import type { BookCondition, BorrowRequestStatus, HandoverMethod, ReturnMethod } from '@repo/shared';
 
 export type Database = {
   public: {

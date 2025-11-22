@@ -53,7 +53,7 @@ export {
   USER_GROUPS,
 } from './types.js';
 
-// Export Zod schemas for form validation (types are inferred from these)
+// Export Zod schemas for form validation (from @repo/shared)
 export {
   // Book schemas
   bookConditionSchema,
@@ -69,7 +69,9 @@ export {
   broadcastNotificationSchema,
   groupNotificationSchema,
   userNotificationSchema,
-} from './schemas.js';
+  // UI constants
+  USER_GROUP_LABELS,
+} from '@repo/shared';
 
 // Export schema-inferred form value types
 export type {
@@ -78,7 +80,7 @@ export type {
   BroadcastNotificationFormValues,
   GroupNotificationFormValues,
   UserNotificationFormValues,
-} from './schemas.js';
+} from '@repo/shared';
 
 // Export auth functions
 export {
