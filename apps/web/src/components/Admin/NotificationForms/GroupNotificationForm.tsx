@@ -9,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { sendGroupNotification, groupNotificationSchema } from '@repo/api-client';
-import type { GroupNotificationInput, UserGroup, GroupNotificationFormValues } from '@repo/api-client';
+import type { GroupNotificationInput, GroupNotificationFormValues } from '@repo/api-client';
 import { Send, Megaphone, AlertTriangle, Info } from 'lucide-react';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';

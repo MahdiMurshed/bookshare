@@ -50,7 +50,7 @@ export function AdminCommunitiesTab() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<AdminCommunityFilters>({
+  const [filters, _setFilters] = useState<AdminCommunityFilters>({
     sortBy: 'created_at',
     sortOrder: 'desc',
   });

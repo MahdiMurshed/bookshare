@@ -9,7 +9,7 @@
  */
 
 import { supabase } from './supabaseClient.js';
-import type { User, Book, BookWithOwner } from './types.js';
+import type { User, BookWithOwner } from './types.js';
 
 // ============================================================================
 // TYPES

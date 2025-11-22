@@ -27,6 +27,13 @@ import type { UpdateBookInput } from './books.js';
 // Re-export UpdateBookInput as AdminUpdateBookInput for backwards compatibility
 export type { UpdateBookInput } from './books.js';
 
+/**
+ * Extract date string (YYYY-MM-DD) from ISO date string
+ */
+function getDateString(isoDate: string): string {
+  return isoDate.split('T')[0] ?? isoDate.slice(0, 10);
+}
+
 // Admin-specific types
 
 export interface AdminStats {
@@ -550,7 +557,7 @@ export async function getBorrowActivityData(): Promise<BorrowActivityData[]> {
 
   data?.forEach((request) => {
     // Count requests
-    const requestDate = new Date(request.requested_at).toISOString().split('T')[0];
+    const requestDate = getDateString(new Date(request.requested_at).toISOString());
     if (!activityByDate.has(requestDate)) {
       activityByDate.set(requestDate, { requests: 0, approvals: 0, returns: 0 });
     }
@@ -558,7 +565,7 @@ export async function getBorrowActivityData(): Promise<BorrowActivityData[]> {
 
     // Count approvals
     if (request.approved_at) {
-      const approvalDate = new Date(request.approved_at).toISOString().split('T')[0];
+      const approvalDate = getDateString(new Date(request.approved_at).toISOString());
       if (!activityByDate.has(approvalDate)) {
         activityByDate.set(approvalDate, { requests: 0, approvals: 0, returns: 0 });
       }
@@ -567,7 +574,7 @@ export async function getBorrowActivityData(): Promise<BorrowActivityData[]> {
 
     // Count returns
     if (request.returned_at) {
-      const returnDate = new Date(request.returned_at).toISOString().split('T')[0];
+      const returnDate = getDateString(new Date(request.returned_at).toISOString());
       if (!activityByDate.has(returnDate)) {
         activityByDate.set(returnDate, { requests: 0, approvals: 0, returns: 0 });
       }
@@ -596,7 +603,7 @@ export async function getUserGrowthData(): Promise<UserGrowthData[]> {
   const usersByDate = new Map<string, number>();
 
   data?.forEach((user) => {
-    const date = new Date(user.created_at).toISOString().split('T')[0];
+    const date = getDateString(new Date(user.created_at).toISOString());
     usersByDate.set(date, (usersByDate.get(date) ?? 0) + 1);
   });
 
@@ -618,7 +625,7 @@ export async function getUserGrowthData(): Promise<UserGrowthData[]> {
   for (let i = 29; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
-    const dateString = date.toISOString().split('T')[0];
+    const dateString = getDateString(date.toISOString());
 
     const newUsers = usersByDate.get(dateString) ?? 0;
     cumulativeTotal += newUsers;
@@ -1291,8 +1298,8 @@ export async function getAverageBorrowDuration(): Promise<BorrowDurationMetrics>
   // Calculate statistics
   const averageDays = durations.reduce((sum, d) => sum + d, 0) / durations.length;
   const medianDays = sortedDurations.length % 2 === 0
-    ? (sortedDurations[sortedDurations.length / 2 - 1] + sortedDurations[sortedDurations.length / 2]) / 2
-    : sortedDurations[Math.floor(sortedDurations.length / 2)];
+    ? (sortedDurations[sortedDurations.length / 2 - 1]! + sortedDurations[sortedDurations.length / 2]!) / 2
+    : sortedDurations[Math.floor(sortedDurations.length / 2)]!;
   const minDays = Math.min(...durations);
   const maxDays = Math.max(...durations);
 
