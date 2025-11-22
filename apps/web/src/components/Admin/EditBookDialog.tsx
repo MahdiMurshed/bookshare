@@ -8,8 +8,8 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import type { BookWithOwner, UpdateBookInput } from '@repo/api-client';
+import type { BookWithOwner, UpdateBookInput, EditBookFormValues } from '@repo/api-client';
+import { editBookFormSchema } from '@repo/api-client';
 import {
   Dialog,
   DialogContent,
@@ -39,68 +39,7 @@ import {
   FormDescription,
 } from '@repo/ui/components/form';
 import { Edit3, BookOpen } from 'lucide-react';
-
-// Common book genres
-const BOOK_GENRES = [
-  'Fiction',
-  'Non-Fiction',
-  'Mystery',
-  'Romance',
-  'Science Fiction',
-  'Fantasy',
-  'Biography',
-  'History',
-  'Thriller',
-  'Horror',
-  'Self-Help',
-  'Business',
-  'Poetry',
-  'Drama',
-  'Children',
-  'Young Adult',
-  'Graphic Novel',
-  'Other',
-];
-
-// Book conditions
-const BOOK_CONDITIONS = [
-  { value: 'excellent', label: 'Excellent' },
-  { value: 'good', label: 'Good' },
-  { value: 'fair', label: 'Fair' },
-  { value: 'poor', label: 'Poor' },
-] as const;
-
-// Validation schema
-const editBookSchema = z.object({
-  title: z
-    .string()
-    .min(1, 'Title is required')
-    .max(200, 'Title must be less than 200 characters'),
-  author: z
-    .string()
-    .min(1, 'Author is required')
-    .max(200, 'Author must be less than 200 characters'),
-  isbn: z
-    .string()
-    .max(20, 'ISBN must be less than 20 characters')
-    .optional()
-    .or(z.literal('')),
-  genre: z.string().optional().or(z.literal('')),
-  description: z
-    .string()
-    .max(2000, 'Description must be less than 2000 characters')
-    .optional()
-    .or(z.literal('')),
-  cover_image_url: z
-    .string()
-    .url('Must be a valid URL')
-    .or(z.literal(''))
-    .optional(),
-  condition: z.enum(['excellent', 'good', 'fair', 'poor']),
-  borrowable: z.boolean(),
-});
-
-type EditBookFormValues = z.infer<typeof editBookSchema>;
+import { BOOK_GENRES, BOOK_CONDITIONS_WITH_LABELS } from '../../lib/constants/book';
 
 export interface EditBookDialogProps {
   book: BookWithOwner | null;
@@ -118,7 +57,7 @@ export function EditBookDialog({
   const [imageError, setImageError] = useState(false);
 
   const form = useForm<EditBookFormValues>({
-    resolver: zodResolver(editBookSchema),
+    resolver: zodResolver(editBookFormSchema),
     defaultValues: {
       title: '',
       author: '',
@@ -385,7 +324,7 @@ export function EditBookDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {BOOK_CONDITIONS.map((condition) => (
+                        {BOOK_CONDITIONS_WITH_LABELS.map((condition) => (
                           <SelectItem key={condition.value} value={condition.value}>
                             {condition.label}
                           </SelectItem>

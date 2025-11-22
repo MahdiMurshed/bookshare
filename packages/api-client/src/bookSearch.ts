@@ -105,7 +105,7 @@ export async function getBookDetails(bookId: string): Promise<BookSearchResult |
 export function mapCategoryToGenre(categories: string[]): string | undefined {
   if (!categories || categories.length === 0) return undefined;
 
-  const category = categories[0].toLowerCase();
+  const category = categories[0]!.toLowerCase();
   const genreMap: Record<string, string> = {
     'fiction': 'Fiction',
     'literary fiction': 'Fiction',

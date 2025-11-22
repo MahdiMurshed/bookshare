@@ -7,10 +7,9 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import { sendGroupNotification } from '@repo/api-client';
-import type { GroupNotificationInput, UserGroup } from '@repo/api-client';
+import { sendGroupNotification, groupNotificationSchema } from '@repo/api-client';
+import type { GroupNotificationInput, GroupNotificationFormValues } from '@repo/api-client';
 import { Send, Megaphone, AlertTriangle, Info } from 'lucide-react';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
@@ -31,35 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@repo/ui/components/select';
-
-// Validation schema
-const groupNotificationSchema = z.object({
-  group: z.enum(['all', 'admins', 'borrowers', 'lenders', 'suspended']),
-  title: z
-    .string()
-    .min(5, 'Title must be at least 5 characters')
-    .max(100, 'Title must be less than 100 characters'),
-  message: z
-    .string()
-    .min(10, 'Message must be at least 10 characters')
-    .max(500, 'Message must be less than 500 characters'),
-  type: z.enum(['announcement', 'alert', 'info']),
-});
-
-type GroupNotificationFormValues = z.infer<typeof groupNotificationSchema>;
+import { USER_GROUP_LABELS } from '../../../lib/constants/notification';
 
 interface GroupNotificationFormProps {
   onSuccess?: (data: GroupNotificationInput) => void;
   onError?: (error: unknown) => void;
 }
-
-const groupNames: Record<UserGroup, string> = {
-  all: 'All Users',
-  admins: 'Administrators',
-  borrowers: 'Active Borrowers',
-  lenders: 'Book Lenders',
-  suspended: 'Suspended Users',
-};
 
 export function GroupNotificationForm({ onSuccess, onError }: GroupNotificationFormProps) {
   const form = useForm<GroupNotificationFormValues>({
@@ -273,12 +249,12 @@ export function GroupNotificationForm({ onSuccess, onError }: GroupNotificationF
             {isSubmitting ? (
               <>
                 <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
-                Sending to {groupNames[selectedGroup]}...
+                Sending to {USER_GROUP_LABELS[selectedGroup]}...
               </>
             ) : (
               <>
                 <Send className="w-4 h-4 mr-2" />
-                Send to {groupNames[selectedGroup]}
+                Send to {USER_GROUP_LABELS[selectedGroup]}
               </>
             )}
           </Button>

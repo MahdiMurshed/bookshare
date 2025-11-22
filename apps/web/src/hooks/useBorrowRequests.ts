@@ -15,10 +15,13 @@ import {
   getBookCommunities,
   createActivity,
   getBook,
-  type CreateBorrowRequestInput,
-  type BorrowRequest,
-  type HandoverDetails,
-  type ReturnDetails,
+} from '@repo/api-client';
+import type {
+  CreateBorrowRequestInput,
+  BorrowRequest,
+  BorrowRequestStatus,
+  HandoverDetails,
+  ReturnDetails,
 } from '@repo/api-client';
 import { bookKeys } from './useBooks';
 import { logError } from '../lib/utils/errors';
@@ -38,7 +41,7 @@ export const borrowRequestKeys = {
 /**
  * Hook to fetch borrow requests made by the current user
  */
-export function useMyBorrowRequests(status?: 'pending' | 'approved' | 'denied' | 'returned') {
+export function useMyBorrowRequests(status?: BorrowRequestStatus) {
   return useQuery({
     queryKey: borrowRequestKeys.myRequestsWithStatus(status),
     queryFn: async () => {
@@ -51,9 +54,7 @@ export function useMyBorrowRequests(status?: 'pending' | 'approved' | 'denied' |
 /**
  * Hook to fetch incoming borrow requests for the current user's books
  */
-export function useIncomingBorrowRequests(
-  status?: 'pending' | 'approved' | 'denied' | 'returned'
-) {
+export function useIncomingBorrowRequests(status?: BorrowRequestStatus) {
   return useQuery({
     queryKey: borrowRequestKeys.incomingWithStatus(status),
     queryFn: async () => {

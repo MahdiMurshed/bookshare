@@ -7,10 +7,9 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import { sendBroadcastNotification } from '@repo/api-client';
-import type { BroadcastNotificationInput } from '@repo/api-client';
+import { sendBroadcastNotification, broadcastNotificationSchema } from '@repo/api-client';
+import type { BroadcastNotificationInput, BroadcastNotificationFormValues } from '@repo/api-client';
 import { Send, Megaphone, AlertTriangle, Info } from 'lucide-react';
 import { Button } from '@repo/ui/components/button';
 import { Input } from '@repo/ui/components/input';
@@ -24,21 +23,6 @@ import {
   FormMessage,
   FormDescription,
 } from '@repo/ui/components/form';
-
-// Validation schema
-const broadcastNotificationSchema = z.object({
-  title: z
-    .string()
-    .min(5, 'Title must be at least 5 characters')
-    .max(100, 'Title must be less than 100 characters'),
-  message: z
-    .string()
-    .min(10, 'Message must be at least 10 characters')
-    .max(500, 'Message must be less than 500 characters'),
-  type: z.enum(['announcement', 'alert', 'info']),
-});
-
-type BroadcastNotificationFormValues = z.infer<typeof broadcastNotificationSchema>;
 
 interface BroadcastNotificationFormProps {
   onSuccess?: (data: BroadcastNotificationInput) => void;

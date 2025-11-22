@@ -9,7 +9,7 @@
  */
 
 import { supabase } from './supabaseClient.js';
-import type { Book, BookWithOwner } from './types.js';
+import type { Book, BookWithOwner, BookCondition } from './types.js';
 
 export interface CreateBookInput {
   title: string;
@@ -18,7 +18,7 @@ export interface CreateBookInput {
   genre?: string;
   description?: string;
   cover_image_url?: string;
-  condition: 'excellent' | 'good' | 'fair' | 'poor';
+  condition: BookCondition;
   borrowable: boolean;
 }
 
@@ -29,7 +29,7 @@ export interface UpdateBookInput {
   genre?: string;
   description?: string;
   cover_image_url?: string;
-  condition?: 'excellent' | 'good' | 'fair' | 'poor';
+  condition?: BookCondition;
   borrowable?: boolean;
 }
 
