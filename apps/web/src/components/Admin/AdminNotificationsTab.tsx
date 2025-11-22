@@ -14,6 +14,7 @@ import type {
   GroupNotificationInput,
   UserNotificationInput,
   User,
+  AdminNotificationType,
 } from '@repo/api-client';
 import {
   Send,
@@ -39,7 +40,7 @@ interface SentNotification {
   id: string;
   title: string;
   message: string;
-  type: 'announcement' | 'alert' | 'info';
+  type: AdminNotificationType;
   recipientType: 'broadcast' | 'group' | 'individual';
   recipientCount: number;
   recipientInfo: string;
@@ -118,7 +119,7 @@ export function AdminNotificationsTab() {
     console.error('Failed to send notification:', error);
   };
 
-  const getNotificationIcon = (type: 'announcement' | 'alert' | 'info') => {
+  const getNotificationIcon = (type: AdminNotificationType) => {
     switch (type) {
       case 'announcement':
         return <Megaphone className="w-5 h-5" />;
@@ -129,7 +130,7 @@ export function AdminNotificationsTab() {
     }
   };
 
-  const getNotificationColor = (type: 'announcement' | 'alert' | 'info') => {
+  const getNotificationColor = (type: AdminNotificationType) => {
     switch (type) {
       case 'announcement':
         return 'text-primary';
