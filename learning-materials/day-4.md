@@ -50,7 +50,7 @@ By the end of today, you will:
 
 ### Module 1: supabaseClient.ts
 
-**Lines**: 36
+**Lines**: 35
 **Responsibility**: Single point of backend connection
 
 ```typescript
@@ -111,7 +111,7 @@ export function setSupabaseClient(mockClient: SupabaseClient) {
 
 ### Module 2: types.ts
 
-**Lines**: 282
+**Lines**: 297
 **Responsibility**: Type definitions
 
 #### Architectural Assessment
@@ -173,7 +173,7 @@ Either:
 
 ### Module 3: auth.ts
 
-**Lines**: 197
+**Lines**: 196
 **Responsibility**: Authentication operations
 
 ```typescript
@@ -226,7 +226,7 @@ This separation is intentional:
 
 ### Module 4: books.ts
 
-**Lines**: 307
+**Lines**: 306
 **Responsibility**: Book CRUD and queries
 
 ```typescript
@@ -327,7 +327,7 @@ export async function uploadBookCover(bookId: string, file: File): Promise<strin
 
 ### Module 5: borrowRequests.ts
 
-**Lines**: 492
+**Lines**: 491
 **Responsibility**: Borrow workflow state machine
 
 ```typescript
@@ -424,7 +424,7 @@ borrowRequests/
 
 ### Module 6: messages.ts
 
-**Lines**: 298
+**Lines**: 297
 **Responsibility**: Chat messaging within borrow requests
 
 ```typescript
@@ -494,7 +494,7 @@ export async function sendMessage(requestId, content, { onNotificationCreated }?
 
 ### Module 7: notifications.ts
 
-**Lines**: 270
+**Lines**: 269
 **Responsibility**: User notifications
 
 ```typescript
@@ -556,7 +556,7 @@ This is the only module using RPC for a standard operation. It indicates RLS con
 
 ### Module 8: communities.ts
 
-**Lines**: 762
+**Lines**: 761
 **Responsibility**: Community management
 
 ```typescript
@@ -624,7 +624,7 @@ communities/
 
 ### Module 9: admin.ts
 
-**Lines**: 1573
+**Lines**: 1574
 **Responsibility**: Admin dashboard operations
 
 This is the largest module. It contains:
@@ -698,7 +698,7 @@ Each file would be ~150-200 lines and have a clear responsibility.
 
 ### Module 10: bookSearch.ts
 
-**Lines**: 133
+**Lines**: 132
 **Responsibility**: Google Books API integration
 
 ```typescript

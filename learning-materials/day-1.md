@@ -4,7 +4,7 @@
 
 By the end of today, you will:
 - Understand the overall architecture of the `api-client` package
-- Know how all 13 modules relate to each other
+- Know how all 14 modules relate to each other
 - Grasp the mental models needed before diving deeper
 - Recognize the design principles at play
 
@@ -61,43 +61,44 @@ Your `api-client` is a **backend abstraction layer** - it sits between your fron
 
 ---
 
-## 2. Module Map: The 13 Files
+## 2. Module Map: The 14 Files
 
-Your api-client has 13 source files. Here's what each does:
+Your api-client has 14 source files (plus 1 type declaration file). Here's what each does:
 
-### Core Infrastructure (2 files)
+### Core Infrastructure (3 files)
 
 | File | Purpose | Lines |
 |------|---------|-------|
-| `supabaseClient.ts` | Creates and exports the Supabase client instance | 36 |
-| `types.ts` | All shared TypeScript interfaces and types | 282 |
+| `supabaseClient.ts` | Creates and exports the Supabase client instance | 35 |
+| `types.ts` | All shared TypeScript interfaces and types | 297 |
+| `env.d.ts` | TypeScript declarations for environment variables | 10 |
 
 ### Domain Modules (10 files)
 
 | File | Domain | Key Entities | Lines |
 |------|--------|--------------|-------|
-| `auth.ts` | Authentication | Session, AuthUser | 197 |
-| `books.ts` | Book management | Book, BookWithOwner | 307 |
-| `borrowRequests.ts` | Borrowing workflow | BorrowRequest | 492 |
-| `reviews.ts` | Book reviews | Review | 225 |
-| `notifications.ts` | User notifications | Notification | 270 |
-| `messages.ts` | Chat/messaging | Message | 298 |
-| `users.ts` | User profiles | User | 188 |
-| `userSearch.ts` | User discovery | User | 48 |
-| `communities.ts` | Community features | Community, CommunityMember | 762 |
-| `admin.ts` | Admin dashboard | AdminStats, various | 1573 |
+| `auth.ts` | Authentication | Session, AuthUser | 196 |
+| `books.ts` | Book management | Book, BookWithOwner | 306 |
+| `borrowRequests.ts` | Borrowing workflow | BorrowRequest | 491 |
+| `reviews.ts` | Book reviews | Review | 224 |
+| `notifications.ts` | User notifications | Notification | 269 |
+| `messages.ts` | Chat/messaging | Message | 297 |
+| `users.ts` | User profiles | User | 187 |
+| `userSearch.ts` | User discovery | User | 47 |
+| `communities.ts` | Community features | Community, CommunityMember | 761 |
+| `admin.ts` | Admin dashboard | AdminStats, various | 1574 |
 
 ### External Integration (1 file)
 
 | File | Purpose | Lines |
 |------|---------|-------|
-| `bookSearch.ts` | Google Books API integration | 133 |
+| `bookSearch.ts` | Google Books API integration | 132 |
 
 ### Export Layer (1 file)
 
 | File | Purpose | Lines |
 |------|---------|-------|
-| `index.ts` | Barrel export (public API surface) | 283 |
+| `index.ts` | Barrel export (public API surface) | 323 |
 
 ---
 
@@ -389,7 +390,7 @@ Today, read these files in order:
 
 1. **The api-client is an abstraction layer** - Apps never see the database directly.
 
-2. **13 files, 3 logical layers** - Transport, Domain, Contract.
+2. **14 files, 3 logical layers** - Transport, Domain, Contract.
 
 3. **Every module follows the same patterns** - Throw errors, use filter objects, separate Input types.
 

@@ -15,7 +15,7 @@ By the end of today, you will:
 
 ### Day 1: Architecture Foundation
 - The api-client is a **backend abstraction layer**
-- 13 files organized into Infrastructure, Domain, and External layers
+- 14 files organized into Infrastructure, Domain, and External layers
 - Design principles: single responsibility, abstraction boundaries, throw on error
 
 ### Day 2: Data Modeling
