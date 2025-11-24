@@ -35,7 +35,7 @@ TypeScript will catch breaking changes. Use `// @ts-expect-error` to find all ca
 
 ### Module: supabaseClient.ts
 
-**Current State**: 36 lines, singleton pattern
+**Current State**: 35 lines, singleton pattern
 
 **Issues**:
 1. Not testable (client created at import time)
@@ -99,7 +99,7 @@ export const supabase = new Proxy({} as SupabaseClient, {
 
 ### Module: types.ts
 
-**Current State**: 282 lines, all types centralized
+**Current State**: 297 lines, all types centralized
 
 **Issues**:
 1. Input types scattered in domain modules
@@ -163,7 +163,7 @@ export async function createBook(input: CreateBookInput): Promise<Book> {
 
 ### Module: books.ts
 
-**Current State**: 307 lines, good structure
+**Current State**: 306 lines, good structure
 
 **Issues**:
 1. `uploadBookCover` mixes storage and data concerns
@@ -280,7 +280,7 @@ export async function getBooks(filters?: BookFilters): Promise<Book[]> {
 
 ### Module: borrowRequests.ts
 
-**Current State**: 492 lines, state machine logic mixed with data access
+**Current State**: 491 lines, state machine logic mixed with data access
 
 **Issues**:
 1. Large file with multiple concerns
@@ -371,7 +371,7 @@ export async function approveBorrowRequest(
 
 ### Module: messages.ts
 
-**Current State**: 298 lines, coupled to borrowRequests and notifications
+**Current State**: 297 lines, coupled to borrowRequests and notifications
 
 **Issues**:
 1. Cross-module dependencies create tight coupling
@@ -462,7 +462,7 @@ events.on<MessageSentEvent>('message:sent', async (event) => {
 
 ### Module: admin.ts
 
-**Current State**: 1573 lines, "god module"
+**Current State**: 1574 lines, "god module"
 
 **Issues**:
 1. Violates single responsibility

@@ -75,26 +75,106 @@ bookshare/
 
 ---
 
-## 6. API Layer (Abstraction Example)
-**Purpose:** Prevent direct coupling between frontend and Supabase.
+## 6. API Layer (Backend Abstraction)
+**Purpose:** Prevent direct coupling between frontend and Supabase. All backend operations go through `@repo/api-client` to enable seamless migration to NestJS later.
 
-Example:
-```ts
-// packages/api-client/books.ts
-export async function getBooks() {
-  const { data, error } = await supabase.from('books').select('*')
-  if (error) throw error
-  return data
+### Usage Pattern
+```typescript
+// ✅ Correct - Import from api-client
+import {
+  getBooks,
+  createBook,
+  signIn,
+  type Book,
+  type BookFilters,
+  type CreateBookInput
+} from '@repo/api-client';
+
+// ❌ Wrong - Never import Supabase directly in apps
+import { supabase } from '@repo/api-client/supabaseClient';
+```
+
+### API Client Structure
+The api-client package (`packages/api-client/src/`) is organized by resource:
+
+| Module | Purpose | Key Functions |
+|--------|---------|---------------|
+| `auth.ts` | Authentication | `signIn`, `signUp`, `signOut`, `getSession`, `getCurrentUser` |
+| `books.ts` | Book CRUD | `getBooks`, `createBook`, `updateBook`, `deleteBook`, `getUserBooks` |
+| `bookSearch.ts` | External book search | `searchBooks`, `getBookDetails` |
+| `borrowRequests.ts` | Borrow flow | `createBorrowRequest`, `approveBorrowRequest`, `markBookReturned` |
+| `reviews.ts` | Reviews | `getReviews`, `createReview`, `getBookAverageRating` |
+| `notifications.ts` | Notifications | `getMyNotifications`, `markAsRead`, `subscribeToNotifications` |
+| `messages.ts` | Chat messaging | `sendMessage`, `getMessagesByRequest`, `subscribeToMessages` |
+| `users.ts` | User profiles | `getUserProfile`, `updateProfile`, `uploadAvatar` |
+| `communities.ts` | Communities | `getCommunities`, `joinCommunity`, `addBookToCommunity` |
+| `admin.ts` | Admin panel | `getAdminStats`, `getAllUsers`, `sendBroadcastNotification` |
+
+### Export Categories
+The `index.ts` barrel export organizes exports into categories:
+
+```typescript
+// Types - Use 'import type' for these
+export type { Book, User, BorrowRequest, Community, ... } from './types.js';
+
+// Constants - For validation and UI
+export { BOOK_CONDITIONS, BORROW_REQUEST_STATUSES, ... } from './types.js';
+
+// Zod Schemas - For form validation (from @repo/shared)
+export { bookFormSchema, borrowRequestStatusSchema, ... } from '@repo/shared';
+
+// Resource functions - Organized by domain
+export { getBooks, createBook, updateBook, ... } from './books.js';
+export { signIn, signUp, signOut, ... } from './auth.js';
+// ... other resource exports
+```
+
+### Function Patterns
+All API functions follow these conventions:
+
+```typescript
+// Async functions that throw on error
+export async function getBooks(filters?: BookFilters): Promise<Book[]> {
+  const { data, error } = await supabase.from('books').select('*');
+  if (error) throw error;
+  return data;
+}
+
+// Input types for create/update operations
+export interface CreateBookInput {
+  title: string;
+  author: string;
+  genre?: string;
+  // ...
+}
+
+// Filter types for query operations
+export interface BookFilters {
+  borrowable?: boolean;
+  ownerId?: string;
+  genre?: string;
 }
 ```
-Later replaced by:
-```ts
-// packages/api-client/books.ts
-export async function getBooks() {
-  const { data } = await api.get('/books')
-  return data
+
+### Migration Path
+When migrating to NestJS, only the api-client internals change:
+
+```typescript
+// Before (Supabase)
+export async function getBooks(filters?: BookFilters): Promise<Book[]> {
+  const { data, error } = await supabase.from('books').select('*');
+  if (error) throw error;
+  return data;
+}
+
+// After (NestJS)
+export async function getBooks(filters?: BookFilters): Promise<Book[]> {
+  const { data } = await api.get('/books', { params: filters });
+  return data;
 }
 ```
+
+Apps remain unchanged since they only import from `@repo/api-client`.
 
 ---
 
