@@ -65,60 +65,6 @@ export function useIncomingBorrowRequests(status?: BorrowRequestStatus) {
 }
 
 /**
- * Hook to create a new borrow request
- */
-export function useCreateBorrowRequest() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (input: CreateBorrowRequestInput) => {
-      const request = await createBorrowRequest(input);
-      return request;
-    },
-    onSuccess: async (request: BorrowRequest) => {
-      // Invalidate my borrow requests
-      queryClient.invalidateQueries({ queryKey: borrowRequestKeys.myRequests() });
-
-      // Send notification to book owner
-      try {
-        await notifyBorrowRequest(
-          request.owner_id,
-          request.borrower_id,
-          request.book_id
-        );
-      } catch (error) {
-        logError(error, 'sending borrow request notification');
-      }
-
-      // Create activity records for communities the book belongs to
-      try {
-        const communities = await getBookCommunities(request.book_id);
-        const book = await getBook(request.book_id);
-
-        if (communities.length > 0 && book) {
-          await Promise.all(
-            communities.map((community) =>
-              createActivity({
-                community_id: community.id,
-                type: 'borrow_created',
-                user_id: request.borrower_id,
-                metadata: {
-                  book_id: request.book_id,
-                  borrower_id: request.borrower_id,
-                  book_title: book.title,
-                },
-              })
-            )
-          );
-        }
-      } catch (error) {
-        logError(error, 'creating borrow activity');
-      }
-    },
-  });
-}
-
-/**
  * Hook to approve a borrow request with handover details
  */
 export function useApproveBorrowRequest() {

@@ -187,16 +187,17 @@ export async function deleteNotification(id: string): Promise<void> {
 /**
  * Subscribe to real-time notifications for the current user
  */
-export function subscribeToNotifications(callback: (notification: Notification) => void) {
+export function subscribeToNotifications(userId: string, callback: (notification: Notification) => void) {
   // Current: Supabase implementation
   const subscription = supabase
-    .channel('notifications')
+    .channel(`notifications:${userId}`)
     .on(
       'postgres_changes',
       {
         event: 'INSERT',
         schema: 'public',
         table: 'notifications',
+        filter: `user_id=eq.${userId}`,
       },
       (payload: { new: Notification }) => {
         callback(payload.new as Notification);

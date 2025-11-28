@@ -8,6 +8,7 @@ import {
   deleteNotification,
   subscribeToNotifications,
 } from '@repo/api-client';
+import { useAuth } from '../contexts/AuthContext';
 
 // Query keys
 export const notificationKeys = {
@@ -95,12 +96,12 @@ export function useDeleteNotification() {
  */
 export function useNotificationSubscription() {
   const queryClient = useQueryClient();
-
+  const { user } = useAuth();
   useEffect(() => {
     // Track if component is still mounted
     let isMounted = true;
-
-    const unsubscribe = subscribeToNotifications(() => {
+    if (!user?.id) return;
+    const unsubscribe = subscribeToNotifications(user.id, () => {
       // Only update cache if component is still mounted
       if (!isMounted) return;
 
@@ -112,5 +113,5 @@ export function useNotificationSubscription() {
       isMounted = false;
       unsubscribe();
     };
-  }, [queryClient]);
+  }, [queryClient, user?.id]);
 }
