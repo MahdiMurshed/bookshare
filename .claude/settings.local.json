@@ -10,7 +10,8 @@
       "Bash(pnpm turbo run lint:*)",
       "Bash(pnpm ui:*)",
       "Bash(pnpm add:*)",
-      "Bash(pnpm run build:*)"
+      "Bash(pnpm run build:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

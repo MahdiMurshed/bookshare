@@ -31,26 +31,30 @@ The project will use a **Turborepo monorepo** containing multiple applications a
 ```
 bookshare/
 ├── apps/
-│   ├── web/                 # React + Vite web app
-│   ├── mobile/              # React Native (Expo) app (later)
-│   └── backend/             # Future NestJS backend or Supabase edge functions
+│   ├── web/                 # React + Vite web app (main application)
+│   ├── nextjs/              # Next.js app (minimal setup, not actively used)
+│   ├── mobile/              # React Native (Expo) app (planned, not yet created)
+│   └── backend/             # Future NestJS backend (planned, not yet created)
 │
 ├── packages/
-│   ├── ui/                  # Shared UI components (Tailwind + shadcn)
-│   ├── types/               # Shared TypeScript types
-│   ├── utils/               # Shared utility functions
 │   ├── api-client/          # Supabase/NestJS abstraction layer
-│   └── config/              # Shared constants, env vars
-│
-├── supabase/                # Supabase schema, SQL migrations, policies
-│   ├── migrations/
-│   ├── schema.sql
-│   └── seed.sql
+│   │   ├── src/types.ts     # All shared TypeScript types (consolidated)
+│   │   └── migrations/      # SQL migrations for Supabase
+│   ├── shared/              # Shared Zod schemas and constants
+│   ├── ui/                  # Shared UI components (Tailwind + shadcn)
+│   ├── eslint-config/       # Shared ESLint configuration
+│   └── typescript-config/   # Shared TypeScript configuration
 │
 ├── turbo.json
 ├── package.json
 └── tsconfig.json
 ```
+
+**Note on Package Consolidation:** The originally planned `types/`, `utils/`, and `config/` packages have been consolidated:
+- Types → `packages/api-client/src/types.ts`
+- Schemas/Constants → `packages/shared/src/schemas/`
+- App-specific utils → `apps/web/src/lib/utils/`
+- App-specific constants → `apps/web/src/lib/constants/`
 
 ---
 

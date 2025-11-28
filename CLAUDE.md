@@ -38,17 +38,24 @@ pnpm --filter @repo/ui lint
 ### Monorepo Structure
 This is a **Turborepo** monorepo using **pnpm workspaces**:
 
-- **`apps/`** - Applications (currently `web` and `nextjs`, targeting `web` and `mobile` per technical plan)
+- **`apps/`** - Applications
+  - `web/` - Main React + Vite web application
+  - `nextjs/` - Next.js app (minimal setup, not actively used)
+  - `mobile/` - React Native with Expo (planned, not yet created)
 - **`packages/`** - Shared packages
+  - `api-client/` - Backend abstraction layer (Supabase → future NestJS migration)
+    - `src/types.ts` - All shared TypeScript types (consolidated here)
+    - `migrations/` - SQL migration files for Supabase
+  - `shared/` - Shared Zod schemas and constants
   - `ui/` - Shared UI components using shadcn/ui and Tailwind 4
   - `eslint-config/` - Shared ESLint configuration
   - `typescript-config/` - Shared TypeScript configuration
 
-**Planned packages** (from technical plan):
-- `types/` - Shared TypeScript types
-- `utils/` - Shared utility functions
-- `api-client/` - Backend abstraction layer (Supabase → future NestJS migration)
-- `config/` - Shared constants and environment variables
+**Note:** The technical plan mentioned separate `types/`, `utils/`, and `config/` packages, but these have been consolidated:
+- Types → `packages/api-client/src/types.ts`
+- Schemas/Constants → `packages/shared/src/schemas/`
+- App-specific utils → `apps/web/src/lib/utils/`
+- App-specific constants → `apps/web/src/lib/constants/`
 
 ### Backend Strategy
 
@@ -128,7 +135,7 @@ Uses shadcn/ui with Tailwind 4. Add new components via `pnpm ui <component-name>
 
 2. **Backend Abstraction:** Never couple frontend directly to Supabase. Use `api-client` package for all backend operations.
 
-3. **Type Safety:** Share types via `packages/types/` (when created) to ensure consistency across web and mobile.
+3. **Type Safety:** Share types via `packages/api-client/src/types.ts` to ensure consistency across web and mobile.
 
 4. **Component Reusability:** Use `@repo/ui` for all shared components. Apps should contain only app-specific components.
 
@@ -191,7 +198,7 @@ const handleSubmit = async (data) => {
 
 **Code Reusability (DRY)**
 - Never duplicate code. Extract shared logic to custom hooks in `hooks/`.
-- Move shared utilities to `packages/utils/` (or local `lib/utils.ts`).
+- Move shared utilities to `apps/web/src/lib/utils/` (or `packages/shared/` for cross-app reuse).
 - Move shared UI components to `@repo/ui` for cross-app reuse.
 
 **Best Practices**
@@ -266,5 +273,6 @@ import { getBooks } from '@repo/api-client';
 - `/docs/book_sharing_app_prd.md` - Product requirements and feature specifications
 - `/docs/book_sharing_technical_plan.md` - Detailed technical architecture and implementation roadmap
 - `/docs/book_sharing_user_stories.md` - User stories and acceptance criteria
+- `/packages/api-client/migrations/` - SQL migration files for Supabase database schema
 - `/turbo.json` - Turborepo task configuration (build, dev, lint pipeline)
 - `/pnpm-workspace.yaml` - Workspace package definitions
