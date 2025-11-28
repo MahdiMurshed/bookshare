@@ -33,6 +33,17 @@ pnpm --filter @repo/ui lint
 - `ui-designer` - Invoke ui-designer agent to create visually stunning, modern interfaces for web applications
 - `e2e-test` - Invoke e2e-test agent to write end-to-end tests using Playwright for features, pages, or user flows
 
+### AI Dev Tasks Workflow
+Structured feature development using PRDs and task lists. Use these slash commands:
+
+| Command | Purpose |
+|---------|---------|
+| `/create-prd` | Create a Product Requirements Document for a new feature |
+| `/generate-tasks` | Generate a task list from an existing PRD |
+| `/process-tasks` | Work through tasks one-by-one with checkpoints |
+
+**Output location:** `/tasks/` (PRDs and task lists saved here)
+
 ## Architecture
 
 ### Monorepo Structure
@@ -276,3 +287,4 @@ import { getBooks } from '@repo/api-client';
 - `/packages/api-client/migrations/` - SQL migration files for Supabase database schema
 - `/turbo.json` - Turborepo task configuration (build, dev, lint pipeline)
 - `/pnpm-workspace.yaml` - Workspace package definitions
+- `/tasks/` - Generated PRDs and task lists for feature development
