@@ -152,15 +152,18 @@ export async function createNotification(input: CreateNotificationInput): Promis
 
   if (error) throw error;
 
-  // Fetch the created notification
-  const { data: notification, error: fetchError } = await supabase
-    .from('notifications')
-    .select('*')
-    .eq('id', data)
-    .single();
-
-  if (fetchError) throw fetchError;
-  return notification as Notification;
+  // Return a constructed notification object
+  // Note: We can't fetch the notification because RLS blocks reading other users' notifications
+  return {
+    id: data as string,
+    user_id: input.user_id,
+    type: input.type,
+    title: input.title,
+    message: input.message,
+    payload: input.payload || null,
+    read: false,
+    created_at: new Date().toISOString(),
+  } as Notification;
 
   // Future: NestJS implementation
   // const response = await fetch(`${API_URL}/notifications`, {

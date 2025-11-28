@@ -35,8 +35,8 @@ export function ChatDialog({
   // Fetch messages
   const { data: messages = [], isLoading } = useMessages(open ? requestId : undefined);
 
-  // Send message mutation
-  const sendMessageMutation = useSendMessage(requestId);
+  // Send message mutation with optimistic updates
+  const sendMessageMutation = useSendMessage(requestId, user);
 
   // Mark as read mutation
   const markAsReadMutation = useMarkChatAsRead();

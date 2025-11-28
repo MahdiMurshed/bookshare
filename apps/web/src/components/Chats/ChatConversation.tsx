@@ -29,8 +29,8 @@ export function ChatConversation({ chat }: ChatConversationProps) {
   // Fetch messages
   const { data: messages = [], isLoading } = useMessages(request.id);
 
-  // Send message mutation
-  const sendMessageMutation = useSendMessage(request.id);
+  // Send message mutation with optimistic updates
+  const sendMessageMutation = useSendMessage(request.id, user);
 
   // Mark as read mutation
   const markAsReadMutation = useMarkChatAsRead();
@@ -172,11 +172,7 @@ export function ChatConversation({ chat }: ChatConversationProps) {
                 size="lg"
                 className="h-[56px] w-[56px] rounded-lg p-0 shrink-0"
               >
-                {sendMessageMutation.isPending ? (
-                  <Loader2 className="h-5 w-5 animate-spin" strokeWidth={2} />
-                ) : (
                   <Send className="h-5 w-5" strokeWidth={2} />
-                )}
               </Button>
             </div>
 

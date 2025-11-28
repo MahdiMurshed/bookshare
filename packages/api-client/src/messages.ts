@@ -134,27 +134,35 @@ export function subscribeToMessages(
         filter: `borrow_request_id=eq.${requestId}`,
       },
       async (payload) => {
-        // Fetch the message with sender details
+          // Fetch the message with sender details
         const { data } = await supabase
-          .from('messages')
-          .select(`
-            *,
-            sender:users!sender_id (
-              id,
-              name,
-              email,
-              avatar_url
-            )
-          `)
-          .eq('id', payload.new.id)
-          .single();
+            .from('messages')
+            .select(`
+              *,
+              sender:users!sender_id (
+                id,
+                name,
+                email,
+                avatar_url
+              )
+            `)
+            .eq('id', payload.new.id)
+            .single();
 
-        if (data) {
-          callback(data as MessageWithSender);
-        }
+          if (data) {
+            callback(data as MessageWithSender);
+          }
       }
     )
-    .subscribe();
+    .subscribe((status, err) => {
+      if (status === 'SUBSCRIBED') {
+        console.log(`[Messages] Subscribed to request: ${requestId}`);
+      } else if (status === 'CHANNEL_ERROR') {
+        console.error('[Messages] Subscription error:', err);
+      } else if (status === 'TIMED_OUT') {
+        console.error('[Messages] Subscription timed out');
+      }
+    });
 
   return () => {
     subscription.unsubscribe();
