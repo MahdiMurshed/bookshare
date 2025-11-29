@@ -41,3 +41,4 @@ packages/api-client/.env.test
 
 # Local dev env
 .env.local.dev
+.claude/settings.local.json
