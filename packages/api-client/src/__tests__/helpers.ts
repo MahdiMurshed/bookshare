@@ -150,7 +150,7 @@ export async function deleteTestUser(userId: string): Promise<void> {
 // ============================================================================
 
 const BOOK_GENRES = ['fiction', 'nonfiction', 'scifi', 'mystery', 'romance', 'biography', 'history'];
-const BOOK_CONDITIONS = ['new', 'like_new', 'good', 'fair', 'poor'];
+const BOOK_CONDITIONS = ['excellent', 'good', 'fair', 'poor'];
 
 /**
  * Create a test book using the admin client (bypasses RLS)
