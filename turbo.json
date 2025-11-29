@@ -19,6 +19,10 @@
       "cache": false,
       "persistent": true,
       "env": ["VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "env": ["SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"]
     }
   }
 }

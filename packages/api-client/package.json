@@ -8,15 +8,22 @@
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@repo/shared": "workspace:*",
     "@supabase/supabase-js": "^2.47.10"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.1.0",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "typescript": "^5.7.2"
+    "@vitest/coverage-v8": "^4.0.14",
+    "dotenv": "^17.2.3",
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.14"
   }
 }
